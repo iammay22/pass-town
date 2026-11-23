@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>及格鎮</title>
+<style>
+:root{--ink:#3b2f4a;--paper:#fff8ef;--gold:#f2c14e;--pink:#ff8fb1;--blue:#7ec8f0}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{height:100%;background:#2b2338;overflow:hidden;touch-action:none;color:var(--ink);
+  font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif}
+#game{position:fixed;inset:0;width:100%;height:100%;display:block}
+#zone{position:fixed;left:0;top:0;width:50%;height:100%;z-index:2}
+.hud{position:fixed;z-index:5;pointer-events:none;display:flex;gap:6px;flex-wrap:wrap}
+#hudL{top:calc(env(safe-area-inset-top) + 8px);left:calc(env(safe-area-inset-left) + 10px);max-width:62%}
+#hudR{top:calc(env(safe-area-inset-top) + 8px);right:calc(env(safe-area-inset-right) + 10px);flex-direction:column;align-items:flex-end}
+.chip{background:var(--paper);border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);padding:3px 8px;font-size:13px;font-weight:700;border-radius:4px;line-height:1.3}
+.chip small{font-weight:500;opacity:.8;font-size:11px}
+.chip.btn{pointer-events:auto;cursor:pointer;background:var(--gold)}
+.chip.btn:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.chip.q{background:#fff3c4;max-width:100%}
+.btnrow{display:flex;gap:6px}
+#act{position:fixed;z-index:5;right:calc(env(safe-area-inset-right) + 26px);bottom:calc(env(safe-area-inset-bottom) + 24px);
+  width:78px;height:78px;border-radius:50%;background:var(--gold);border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;color:var(--ink);opacity:.45;transition:opacity .15s}
+#act b{font-size:24px;line-height:1}
+#act span{font-size:12px;margin-top:2px}
+#act.on{opacity:1;background:#ffd45c}
+#act:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+#stickHint,#stickBase{position:fixed;z-index:4;width:108px;height:108px;border-radius:50%;border:3px solid rgba(255,248,239,.8);background:rgba(59,47,74,.25);pointer-events:none}
+#stickHint{left:calc(env(safe-area-inset-left) + 30px);bottom:calc(env(safe-area-inset-bottom) + 24px);opacity:.5}
+#stickBase{display:none}
+#stickKnob{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(255,248,239,.92);border:3px solid var(--ink)}
+#stickHint i{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(255,248,239,.5);border:3px solid rgba(59,47,74,.5)}
+#keys{display:none}
+@media (hover:hover) and (pointer:fine){
+  #stickHint{display:none}
+  #keys{display:block;position:fixed;z-index:5;left:12px;bottom:10px;pointer-events:none}
+}
+#toast{position:fixed;z-index:30;left:50%;top:calc(env(safe-area-inset-top) + 8px);transform:translateX(-50%);
+  background:var(--ink);color:var(--paper);padding:6px 12px;border-radius:4px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .25s;max-width:46vw;text-align:center}
+#toast.on{opacity:1}
+#fade{position:fixed;inset:0;z-index:15;background:#2b2338;opacity:0;pointer-events:none;transition:opacity .18s}
+.ov{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:rgba(43,35,56,.55);padding:10px}
+.ov.on{display:flex}
+.card{background:var(--paper);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--ink);border-radius:6px;padding:14px 16px;width:min(92vw,660px);max-height:92vh;overflow:auto}
+.card h1{font-size:30px;letter-spacing:4px}
+.card h2{font-size:17px;margin-bottom:6px}
+.card .sub{font-size:13px;opacity:.75;margin-bottom:10px}
+.card p{font-size:14px;line-height:1.65;white-space:pre-line}
+.card .note{font-size:12px;opacity:.7;margin-top:8px}
+input{width:100%;padding:9px 10px;font-size:16px;border:2px solid var(--ink);border-radius:4px;background:#fff;color:var(--ink);margin:6px 0;-webkit-user-select:text;user-select:text}
+button{font:inherit;font-weight:700;color:var(--ink);background:#fff;border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);border-radius:4px;padding:9px 12px;font-size:14px;cursor:pointer}
+button:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+button.pri{background:var(--gold)}
+button.tab{box-shadow:none;padding:6px 14px}
+button.tab.on{background:var(--gold)}
+#mc{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:10px}
+#mx{min-height:3.4em;margin-top:4px}
+.sec{margin:8px 0}
+.sec h3{font-size:13px;margin-bottom:4px;opacity:.8}
+.item{border:2px solid var(--ink);border-radius:4px;padding:6px 8px;background:#fff;font-size:13px;line-height:1.5;margin-bottom:6px}
+.item.main{background:#fff3c4}
+.item.done{background:#e9e2ee;color:#7d7390}
+.item b{display:block}
+.row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.credit{text-align:center;font-size:12px;opacity:.65;margin-top:10px}
+.meter{position:relative;height:38px;border:3px solid var(--ink);background:#fff;border-radius:4px;margin:12px 0 6px;overflow:hidden}
+.meter .zone{position:absolute;top:0;bottom:0;background:#9bd8a0}
+.meter .mk{position:absolute;top:0;bottom:0;width:6px;margin-left:-3px;background:var(--ink)}
+.meter.hit{background:#e5ffe0}.meter.miss{background:#ffe0e6}
+.mgInfo{font-size:14px;font-weight:700;min-height:1.6em}
+.big{font-size:20px;padding:16px 10px;flex:1}
+.prog{height:16px;border:2px solid var(--ink);border-radius:4px;background:#fff;margin:10px 0 4px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--pink)}
+#mapCv{display:block;margin:8px auto 0;border:3px solid var(--ink);border-radius:4px;max-width:100%;image-rendering:pixelated}
+#rotate{display:none;position:fixed;inset:0;z-index:50;background:#2b2338;color:var(--paper);align-items:center;justify-content:center;text-align:center;font-size:18px;font-weight:700;line-height:1.7;padding:20px}
+@media (orientation:portrait){#rotate{display:flex}}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="zone"></div>
+<div id="stickHint"><i></i></div>
+<div id="stickBase"><div id="stickKnob"></div></div>
+<div id="keys" class="chip"><small>方向鍵或 WASD 走路 · 空白鍵或 E 互動 · Tab 手冊 · M 地圖</small></div>
+
+<div class="hud" id="hudL">
+  <div class="chip" id="hName">-</div>
+  <div class="chip" id="hMoney">$0</div>
+  <div class="chip"><small id="hRate"></small></div>
+  <div class="chip q" id="hQuest"></div>
+</div>
+<div class="hud" id="hudR">
+  <div class="btnrow"><div class="chip btn" id="mapBtn">地圖</div><div class="chip btn" id="bookBtn">手冊 <small id="hBadge"></small></div></div>
+  <div class="chip"><small id="hDaily"></small></div>
+  <div class="chip"><small id="hPlace"></small></div>
+  <div class="chip"><small id="hOnline"></small></div>
+</div>
+<button id="act" type="button"><b>A</b><span id="actLabel">互動</span></button>
+<div id="toast"></div>
+<div id="fade"></div>
+
+<div class="ov on" id="title">
+  <div class="card">
+    <h1>及格鎮</h1>
+    <div class="sub">人生岔路口的小鎮篇 · 示範版</div>
+    <div id="titleNew">
+      <p>取個角色名就能進去，不用註冊，不用密碼。</p>
+      <input id="nameIn" maxlength="6" placeholder="角色名，最多 6 個字" autocomplete="off">
+      <div class="row"><button class="pri" id="startBtn" type="button">進入小鎮</button></div>
+    </div>
+    <div id="titleBack" style="display:none">
+      <p id="backText"></p>
+      <div class="row"><button class="pri" id="contBtn" type="button">繼續</button><button id="resetBtn" type="button">換新角色</button></div>
+    </div>
+    <p class="note">示範版的其他玩家都是假的，進度只存在這個瀏覽器裡。手機和平板：左手搖桿走路，右手 A 鍵互動。電腦：方向鍵或 WASD 走路，空白鍵或 E 互動，Tab 開手冊，M 開地圖。</p>
+    <div class="credit">made by may22</div>
+  </div>
+</div>
+
+<div class="ov" id="modal"><div class="card"><h2 id="mt"></h2><p id="mx"></p><div id="mc"></div></div></div>
+
+<div class="ov" id="book">
+  <div class="card">
+    <div class="row" style="margin:0 0 8px">
+      <button class="tab on" data-t="d" type="button">每日</button>
+      <button class="tab" data-t="q" type="button">任務簿</button>
+      <button class="tab" data-t="r" type="button">履歷</button>
+    </div>
+    <div id="bookBody"></div>
+    <div class="row">
+      <button id="fastBtn" type="button">示範用：假裝離開 1 小時</button>
+      <button class="pri" id="bookClose" type="button">關閉</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="mapOv">
+  <div class="card">
+    <div class="row" style="margin:0" id="mapTabs"></div>
+    <canvas id="mapCv"></canvas>
+    <p class="note">粉紅色是你，藍點是同屆玩家，黃色驚嘆號是主線，藍色驚嘆號是支線，問號代表可以回報。</p>
+    <div class="row"><button class="pri" id="mapClose" type="button">關閉</button></div>
+  </div>
+</div>
+
+<div class="ov" id="mg">
+  <div class="card">
+    <h2 id="mgT"></h2>
+    <p id="mgD"></p>
+    <div id="mgBody"></div>
+  </div>
+</div>
+
+<div id="rotate">請把手機橫過來玩<br>小鎮是橫的</div>
+
+<script>
+(() => {
+'use strict';
+const T = 16;
+let VH = 180;
+const $ = s => document.querySelector(s);
+const cv = $('#game'), cx = cv.getContext('2d');
+const off = document.createElement('canvas'), oc = off.getContext('2d');
+let S = 1, VW = 320, DPR = 1, OX = 0, OY = 0;
+
+/* ---------- 工具 ---------- */
+const hash = (x, y, k = 0) => { let h = (x * 374761393 + y * 668265263 + k * 2147483647) | 0; h = (h ^ (h >>> 13)) * 1274126177 | 0; return ((h ^ (h >>> 16)) >>> 0) / 4294967295; };
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const fmt = n => '$' + Math.floor(n).toLocaleString('en-US');
+const R = (g, c, x, y, w, h) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+let actx = null;
+function beep(f = 520, d = .06, type = 'square') {
+  try {
+    if (!actx) return;
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.value = f; g.gain.value = .035;
+    o.connect(g); g.connect(actx.destination); o.start();
+    g.gain.exponentialRampToValueAtTime(.0001, actx.currentTime + d); o.stop(actx.currentTime + d + .02);
+  } catch (e) {}
+}
+let toastT = 0;
+function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 3000); }
+
+/* ---------- 場景 ---------- */
+const scenes = {}; let cur = null;
+function mkScene(id, name, w, h, indoor) {
+  const m = document.createElement('canvas'); m.width = w * T; m.height = h * T;
+  const s = { id, name, w, h, indoor, map: m, g: m.getContext('2d'), grid: new Uint8Array(w * h), IT: [], ents: [], dyn: [], exits: [], spots: [], labels: [] };
+  scenes[id] = s; return s;
+}
+const solid = (s, x, y, w = 1, h = 1) => { for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) if (i >= 0 && j >= 0 && i < s.w && j < s.h) s.grid[j * s.w + i] = 1; };
+const isSolid = (s, x, y) => x < 0 || y < 0 || x >= s.w || y >= s.h || s.grid[y * s.w + x] === 1;
+
+/* 建築 */
+const BLD = [
+  { id: 'library', name: '圖書館', scene: 'campus', x: 3, y: 3, w: 6, h: 5, wall: '#dccbf8', roof: '#8e6bd1', trim: '#6b4fb0' },
+  { id: 'classroom', name: '教學大樓', scene: 'campus', x: 11, y: 3, w: 8, h: 5, wall: '#e6f0c8', roof: '#6aa84f', trim: '#4a8235' },
+  { id: 'office', name: '學務處', scene: 'campus', x: 21, y: 3, w: 6, h: 5, wall: '#ffe2bd', roof: '#e8914a', trim: '#b96a2a' },
+  { id: 'club', name: '社團教室', scene: 'campus', x: 29, y: 3, w: 6, h: 5, wall: '#ffc9d8', roof: '#e5607f', trim: '#b53c5a' },
+  { id: 'store', name: '便利商店', scene: 'campus', x: 37, y: 3, w: 6, h: 5, wall: '#cdeefa', roof: '#3ba3d8', trim: '#2578a6', awning: true },
+  { id: 'dorm', name: '宿舍', scene: 'campus', x: 30, y: 17, w: 8, h: 5, wall: '#f8ecb8', roof: '#c9a24b', trim: '#9b7a2c' },
+  { id: 'cafe', name: '學生餐廳', scene: 'campus', x: 39, y: 17, w: 8, h: 5, wall: '#ffe0c2', roof: '#d9534f', trim: '#a93a37' },
+  { id: 'exam', name: '考試中心', scene: 'street', x: 27, y: 1, w: 8, h: 5, wall: '#e2e2ea', roof: '#5c6b8a', trim: '#3f4b66' }
+];
+const door = b => ({ x: (b.x + b.w / 2) * T, y: (b.y + b.h) * T + 6, ix: (b.x + b.w / 2) * T, iy: (b.y + b.h - 2) * T - 6 });
+function drawBld(mc, b) {
+  const px = b.x * T, py = b.y * T, w = b.w * T, h = b.h * T;
+  R(mc, 'rgba(60,40,80,.2)', px + 3, py + h, w, 4); R(mc, b.wall, px, py + 2 * T, w, h - 2 * T); R(mc, 'rgba(60,40,80,.12)', px, py + h - 3, w, 3);
+  R(mc, b.roof, px - 3, py, w + 6, 2 * T); R(mc, b.trim, px - 3, py + 2 * T - 3, w + 6, 3);
+  for (let i = 0; i < w + 6; i += 8) R(mc, 'rgba(255,255,255,.22)', px - 3 + i, py + 3, 4, 2 * T - 8);
+  R(mc, 'rgba(255,255,255,.4)', px - 3, py, w + 6, 2);
+  if (b.awning) for (let i = 0; i < w; i += 8) R(mc, (i / 8) % 2 ? '#fff' : '#e5607f', px + i, py + 2 * T, 8, 6);
+  const wy = py + 2 * T + 9;
+  const wins = b.w >= 8 ? [px + 8, px + 26, px + w - 40, px + w - 22] : [px + 8, px + w - 22];
+  wins.forEach(wx => { R(mc, '#3b2f4a', wx - 1, wy - 1, 16, 14); R(mc, '#bfe6ff', wx, wy, 14, 12); R(mc, 'rgba(255,255,255,.7)', wx + 2, wy + 2, 4, 2); R(mc, 'rgba(255,255,255,.7)', wx + 7, wy, 1, 12); R(mc, 'rgba(255,255,255,.7)', wx, wy + 6, 14, 1); });
+  const dx = (b.x + b.w / 2 - 1) * T, dy = (b.y + b.h - 2) * T;
+  R(mc, '#3b2f4a', dx - 1, dy - 1, 2 * T + 2, 2 * T + 1); R(mc, '#8a5a44', dx, dy, 2 * T, 2 * T);
+  R(mc, '#a8745a', dx + 2, dy + 2, T - 4, 2 * T - 2); R(mc, '#a8745a', dx + T + 2, dy + 2, T - 4, 2 * T - 2);
+  R(mc, '#ffd45c', dx + T - 4, dy + T, 2, 2); R(mc, '#ffd45c', dx + T + 2, dy + T, 2, 2);
+}
+function grass(mc, x, y) {
+  const px = x * T, py = y * T;
+  R(mc, (x + y) % 2 ? '#9bd8a0' : '#94d29a', px, py, T, T);
+  for (let k = 0; k < 3; k++) R(mc, '#7fc388', px + hash(x, y, k) * 14, py + hash(x, y, k + 4) * 13, 1, 2);
+  if (hash(x, y, 77) > .955) { R(mc, hash(x, y, 78) > .5 ? '#fff' : '#ffd0e0', px + 5, py + 6, 2, 2); R(mc, '#ffd45c', px + 6, py + 7, 1, 1); }
+}
+function hedge(mc, x, y) { const px = x * T, py = y * T; R(mc, '#4aa866', px, py, T, T); for (let k = 0; k < 6; k++) R(mc, '#3d9459', px + hash(x, y, k) * 13, py + hash(x, y, k + 9) * 13, 3, 3); }
+function path(mc, x, y, isP) {
+  const px = x * T, py = y * T;
+  R(mc, '#f3e2c4', px, py, T, T);
+  for (let k = 0; k < 3; k++) R(mc, '#e8d1ab', px + hash(x, y, k) * 14, py + hash(x, y, k + 5) * 14, 2, 1);
+  if (!isP(x, y - 1)) R(mc, '#d9bf93', px, py, T, 1); if (!isP(x, y + 1)) R(mc, '#d9bf93', px, py + T - 1, T, 1);
+  if (!isP(x - 1, y)) R(mc, '#d9bf93', px, py, 1, T); if (!isP(x + 1, y)) R(mc, '#d9bf93', px + T - 1, py, 1, T);
+}
+
+/* 角色 */
+function drawChar(g, x, y, dir, step, hair, shirt, pants) {
+  x = Math.round(x); y = Math.round(y);
+  R(g, 'rgba(60,40,80,.22)', x - 5, y - 1, 10, 3);
+  R(g, pants, x - 3, y - 5, 3, step ? 4 : 5); R(g, pants, x, y - 5, 3, step ? 5 : 4);
+  R(g, shirt, x - 4, y - 10, 8, 6);
+  R(g, '#ffd9bb', x - 5, y - 9 + (step ? 1 : 0), 1, 3); R(g, '#ffd9bb', x + 4, y - 9 + (step ? 0 : 1), 1, 3);
+  R(g, '#ffd9bb', x - 4, y - 16, 8, 6);
+  if (dir === 'up') R(g, hair, x - 4, y - 17, 8, 7); else { R(g, hair, x - 4, y - 17, 8, 3); R(g, hair, x - 4, y - 17, 1, 5); R(g, hair, x + 3, y - 17, 1, 5); }
+  if (dir === 'down') { R(g, '#2b2338', x - 2, y - 13, 1, 2); R(g, '#2b2338', x + 1, y - 13, 1, 2); }
+  else if (dir === 'left') R(g, '#2b2338', x - 3, y - 13, 1, 2); else if (dir === 'right') R(g, '#2b2338', x + 2, y - 13, 1, 2);
+}
+function drawTree(g, tx, ty) {
+  const x = tx * T + 8, y = ty * T + 15;
+  R(g, 'rgba(60,40,80,.2)', x - 7, y - 2, 14, 4); R(g, '#8a5a44', x - 2, y - 8, 4, 8);
+  R(g, '#4aa866', x - 9, y - 18, 18, 9); R(g, '#4aa866', x - 6, y - 23, 12, 6); R(g, '#5fbf7a', x - 7, y - 21, 12, 6); R(g, '#5fbf7a', x - 5, y - 25, 9, 3); R(g, '#86d79a', x - 4, y - 23, 4, 2);
+}
+function drawBench(g, b) {
+  const x = b.x * T, y = b.y * T;
+  R(g, 'rgba(60,40,80,.2)', x + 1, y + 13, 30, 3); R(g, '#6f4a3a', x + 2, y + 9, 3, 6); R(g, '#6f4a3a', x + 27, y + 9, 3, 6);
+  R(g, '#b07c5a', x, y + 5, 32, 5); R(g, '#b07c5a', x, y, 32, 3); R(g, '#c99370', x, y + 5, 32, 1);
+}
+function drawBoard(g, b) {
+  const x = b.x * T, y = b.y * T;
+  R(g, 'rgba(60,40,80,.2)', x + 1, y + 14, 30, 3); R(g, '#6f4a3a', x + 4, y + 6, 3, 10); R(g, '#6f4a3a', x + 25, y + 6, 3, 10);
+  R(g, '#3b2f4a', x - 1, y - 12, 34, 20); R(g, '#e8c9a0', x + 1, y - 10, 30, 16);
+  R(g, '#ff8fb1', x + 3, y - 8, 8, 7); R(g, '#7ec8f0', x + 13, y - 8, 7, 9); R(g, '#ffd45c', x + 22, y - 7, 7, 6);
+  R(g, '#3b2f4a', x + 4, y - 6, 6, 1); R(g, '#3b2f4a', x + 14, y - 5, 5, 1); R(g, '#3b2f4a', x + 23, y - 5, 5, 1);
+}
+
+/* ===== 校園 48×30 ===== */
+const campus = mkScene('campus', '校園', 48, 30, false);
+const BENCHES = [{ x: 7, y: 19 }, { x: 15, y: 18 }];
+const BOARD = { x: 8, y: 10 };
+const isRoadC = (x, y) => (y >= 12 && y <= 15 && x >= 1 && x <= 47) || (x >= 22 && x <= 25 && y >= 8 && y <= 29) || (y >= 22 && y <= 23 && x >= 15 && x <= 46)
+  || BLD.some(b => b.scene === 'campus' && b.y < 10 && x >= b.x + b.w / 2 - 1 && x <= b.x + b.w / 2 && y >= b.y + b.h && y <= 11);
+const inBld = (sc, x, y) => BLD.some(b => b.scene === sc && x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
+const TREE_C = [[1,4],[2,7],[9,4],[10,9],[19,5],[20,9],[27,4],[28,9],[35,5],[36,9],[44,4],[45,7],[43,10],[1,17],[2,21],[1,25],[3,28],[6,26],[10,23],[13,27],[17,25],[19,20],[20,27],[12,17],[27,17],[28,20],[27,26],[30,25],[34,27],[38,25],[42,27],[45,25],[4,17],[18,9]]
+  .filter(([x, y]) => !isRoadC(x, y) && !inBld('campus', x, y) && !(y === BOARD.y && (x === BOARD.x || x === BOARD.x + 1)) && !BENCHES.some(b => b.y === y && (x === b.x || x === b.x + 1) || (b.y + 1 === y && (x === b.x || x === b.x + 1))));
+(() => {
+  const s = campus, mc = s.g;
+  for (let i = 0; i < s.w; i++) { solid(s, i, 0); if (i < 22 || i > 25) solid(s, i, s.h - 1); }
+  for (let j = 0; j < s.h; j++) { solid(s, 0, j); if (j < 12 || j > 15) solid(s, s.w - 1, j); }
+  BLD.filter(b => b.scene === 'campus').forEach(b => solid(s, b.x, b.y, b.w, b.h));
+  TREE_C.forEach(t => solid(s, t[0], t[1]));
+  BENCHES.forEach(b => solid(s, b.x, b.y, 2, 1)); solid(s, BOARD.x, BOARD.y, 2, 1); solid(s, 23, 13, 2, 2);
+  for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) {
+    const border = (x === 0 || y === 0 || x === s.w - 1 || y === s.h - 1) && !isRoadC(x, y);
+    if (border) hedge(mc, x, y); else if (isRoadC(x, y)) path(mc, x, y, isRoadC); else grass(mc, x, y);
+  }
+  // 花圃
+  [[3, 22, 4, 2], [11, 20, 3, 2], [17, 27, 3, 1]].forEach(([x, y, w, h]) => {
+    R(mc, '#8a5a44', x * T - 1, y * T - 1, w * T + 2, h * T + 2); R(mc, '#a8745a', x * T, y * T, w * T, h * T);
+    for (let i = 0; i < w * 4; i++) for (let j = 0; j < h * 3; j++) R(mc, ['#ff8fb1', '#ffd45c', '#fff', '#c9b6f5'][(i + j * 3) % 4], x * T + 2 + i * 4, y * T + 3 + j * 5, 3, 3);
+    solid(s, x, y, w, h);
+  });
+  BLD.filter(b => b.scene === 'campus').forEach(b => drawBld(mc, b));
+  // 校門柱
+  [[47, 11], [47, 16]].forEach(([x, y]) => { R(mc, '#d9d0e6', x * T + 2, y * T - 6, 12, 22); R(mc, '#b3a8c8', x * T + 2, y * T - 6, 12, 3); R(mc, '#e5607f', x * T + 4, y * T, 8, 4); });
+  [[21, 29], [26, 29]].forEach(([x, y]) => { R(mc, '#d9d0e6', x * T + 4, y * T - 4, 8, 20); R(mc, '#b3a8c8', x * T + 4, y * T - 4, 8, 3); });
+  // 噴水池
+  const fx = 23 * T, fy = 13 * T;
+  R(mc, 'rgba(60,40,80,.2)', fx + 2, fy + 2 * T - 2, 2 * T, 4); R(mc, '#c9c3d6', fx, fy, 2 * T, 2 * T); R(mc, '#a79fbb', fx, fy + 2 * T - 3, 2 * T, 3);
+  R(mc, '#7ec8f0', fx + 3, fy + 3, 2 * T - 6, 2 * T - 8); R(mc, '#a9defa', fx + 5, fy + 5, 8, 2); R(mc, '#a9defa', fx + 17, fy + 12, 8, 2);
+  R(mc, '#e8e3f2', fx + 12, fy + 8, 8, 10); R(mc, '#fff', fx + 14, fy + 4, 4, 6);
+  s.dyn = TREE_C.map(t => ({ y: t[1] * T + 15, f: g => drawTree(g, t[0], t[1]) }));
+  BENCHES.forEach(b => s.dyn.push({ y: b.y * T + 15, f: g => drawBench(g, b) }));
+  s.dyn.push({ y: BOARD.y * T + 15, f: g => drawBoard(g, BOARD) });
+  BENCHES.forEach(b => s.spots.push({ x: b.x, y: b.y + 1, dir: 'up', stay: [8, 16] }));
+  s.spots.push({ x: 22, y: 16, dir: 'up', stay: [5, 10] }, { x: 9, y: 11, dir: 'up', stay: [4, 9] }, { x: 26, y: 13, dir: 'left', stay: [5, 10] });
+  BLD.filter(b => b.scene === 'campus').forEach(b => s.labels.push({ t: b.name, x: (b.x + b.w / 2) * T, y: (b.y + 1) * T, size: 12 }));
+  s.labels.push({ t: '公佈欄', x: (BOARD.x + 1) * T, y: BOARD.y * T - 22 }, { t: '校外 →', x: 46 * T, y: 11 * T }, { t: '↓ 操場', x: 24 * T, y: 28 * T });
+  s.exits.push({ t: p => p.x > 47 * T + 6, to: 'street', sx: 1.5 * T, sy: 8 * T + 4, dir: 'right' });
+  s.exits.push({ t: p => p.y > 29 * T + 6, to: 'playground', sx: 15 * T, sy: 1 * T + 14, dir: 'down' });
+})();
+
+/* ===== 操場 30×22 ===== */
+const pgd = mkScene('playground', '操場', 30, 22, false);
+const HOOP = { x: 25, y: 4 }, STARTLINE = { x: 11, y: 19 };
+(() => {
+  const s = pgd, mc = s.g;
+  const out = (x, y) => x >= 2 && x <= 20 && y >= 3 && y <= 20 && !((x === 2 || x === 20) && (y === 3 || y === 20));
+  const inn = (x, y) => x >= 4 && x <= 18 && y >= 5 && y <= 18;
+  const court = (x, y) => x >= 22 && x <= 28 && y >= 4 && y <= 17;
+  const entry = (x, y) => y <= 2 && x >= 13 && x <= 16;
+  for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) {
+    const px = x * T, py = y * T, border = x === 0 || y === 0 || x === s.w - 1 || y === s.h - 1;
+    if (entry(x, y)) { path(mc, x, y, entry); continue; }
+    if (border) { hedge(mc, x, y); continue; }
+    if (out(x, y) && !inn(x, y)) { R(mc, '#d6704c', px, py, T, T); R(mc, 'rgba(255,255,255,.5)', px, py + 7, T, 1); if (hash(x, y, 3) > .6) R(mc, '#c9643f', px + hash(x, y, 4) * 12, py + 3, 2, 1); }
+    else if (court(x, y)) R(mc, (x + y) % 2 ? '#e39b62' : '#df955a', px, py, T, T);
+    else grass(mc, x, y);
+  }
+  // 跑道邊線與草地中線
+  mc.strokeStyle = '#fff'; mc.lineWidth = 1;
+  mc.strokeRect(2 * T + .5, 3 * T + .5, 19 * T - 1, 18 * T - 1); mc.strokeRect(4 * T - .5, 5 * T - .5, 15 * T + 1, 14 * T + 1);
+  mc.beginPath(); mc.arc(11.5 * T, 12 * T, 22, 0, 7); mc.stroke(); mc.beginPath(); mc.moveTo(4 * T, 12 * T + .5); mc.lineTo(19 * T, 12 * T + .5); mc.stroke();
+  R(mc, '#fff', STARTLINE.x * T + 7, 19 * T, 2, 2 * T);
+  // 球場線
+  mc.strokeRect(22 * T + 3.5, 4 * T + 3.5, 7 * T - 7, 14 * T - 7); mc.strokeRect(24 * T + .5, 4 * T + 3.5, 3 * T - 1, 4 * T);
+  mc.beginPath(); mc.arc(25.5 * T, 8 * T + 3, 22, 0, Math.PI); mc.stroke();
+  mc.beginPath(); mc.moveTo(22 * T + 4, 11 * T + .5); mc.lineTo(29 * T - 4, 11 * T + .5); mc.stroke();
+  // 籃框
+  R(mc, '#8a8a99', 25 * T + 13, 3 * T + 4, 6, 26); R(mc, '#fff', 25 * T + 2, 3 * T - 6, 28, 16); R(mc, '#3b2f4a', 25 * T + 2, 3 * T - 6, 28, 1); R(mc, '#e5607f', 25 * T + 10, 3 * T, 12, 6);
+  R(mc, '#ff8b3d', 25 * T + 9, 3 * T + 10, 14, 2); for (let i = 0; i < 4; i++) R(mc, '#fff', 25 * T + 10 + i * 4, 3 * T + 12, 1, 5);
+  solid(s, 25, 3, 2, 2);
+  // 看台
+  for (let i = 0; i < 2; i++) { R(mc, '#3b2f4a', 22 * T - 1, (19 + i) * T - 1, 7 * T + 2, T + 2); R(mc, i ? '#7ec8f0' : '#a9defa', 22 * T, (19 + i) * T, 7 * T, T - 2); }
+  solid(s, 22, 19, 7, 2);
+  for (let i = 0; i < s.w; i++) { if (i < 13 || i > 16) solid(s, i, 0); solid(s, i, s.h - 1); }
+  for (let j = 0; j < s.h; j++) { solid(s, 0, j); solid(s, s.w - 1, j); }
+  s.labels.push({ t: '起跑線', x: (STARTLINE.x + .5) * T, y: 18 * T + 8 }, { t: '籃球場', x: 25.5 * T, y: 2 * T + 4 }, { t: '↑ 校園', x: 15 * T, y: 1 * T });
+  s.exits.push({ t: p => p.y < 8, to: 'campus', sx: 24 * T, sy: 28 * T + 4, dir: 'up' });
+  s.spots.push({ x: 23, y: 18, dir: 'up', stay: [6, 12] }, { x: 26, y: 18, dir: 'up', stay: [6, 12] }, { x: 11, y: 11, dir: 'down', stay: [4, 8] });
+  s.IT.push({ id: 'hoop', label: '投籃', x: 26 * T, y: 9 * T + 4, r: 28, ix: 26 * T, iy: 2 * T });
+  s.IT.push({ id: 'run', label: '跑步', x: (STARTLINE.x + .5) * T, y: 20 * T, r: 24, ix: (STARTLINE.x + .5) * T, iy: 17 * T + 2 });
+})();
+
+/* ===== 校外夜市街 40×16 ===== */
+const street = mkScene('street', '校外 · 夜市', 40, 16, false);
+const STALLS = [{ id: 'chicken', n: '雞排', x: 3, c: '#e5607f' }, { id: 'tea', n: '珍奶', x: 9, c: '#c9a24b' }, { id: 'ring', n: '套圈圈', x: 15, c: '#3ba3d8' }, { id: 'corn', n: '烤玉米', x: 21, c: '#6aa84f' }];
+function drawStall(g, st0) {
+  const x = st0.x * T, y = 2 * T;
+  R(g, 'rgba(0,0,0,.25)', x + 2, y + 3 * T - 1, 4 * T, 4);
+  R(g, '#6f4a3a', x + 2, y, 3, 3 * T); R(g, '#6f4a3a', x + 4 * T - 5, y, 3, 3 * T);
+  for (let i = 0; i < 4 * T; i += 8) R(g, (i / 8) % 2 ? '#fff' : st0.c, x + i, y - 6, 8, 12);
+  R(g, '#3b2f4a', x, y + 6, 4 * T, 1);
+  R(g, '#3b2f4a', x - 1, y + 2 * T - 2, 4 * T + 2, T + 4); R(g, '#c99a6b', x, y + 2 * T - 1, 4 * T, 5); R(g, '#8a5a44', x, y + 2 * T + 4, 4 * T, T - 3);
+  for (let i = 0; i < 5; i++) R(g, ['#ffd45c', '#ff8b3d', '#fff', '#e5607f', '#9bd8a0'][(i + st0.x) % 5], x + 6 + i * 11, y + 2 * T - 5, 7, 5);
+  R(g, '#ffef9e', x + 4 * T / 2 - 3, y + 8, 6, 6);
+}
+(() => {
+  const s = street, mc = s.g;
+  for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) {
+    const px = x * T, py = y * T;
+    if (y === 0 || y === s.h - 1) { R(mc, '#3d3550', px, py, T, T); R(mc, '#2f2840', px, py + (x % 2 ? 4 : 10), T, 1); if (y === 0 && hash(x, 0, 1) > .5) R(mc, '#ffd45c', px + 5, py + 6, 5, 4); continue; }
+    if (x === s.w - 1 && !(y >= 6 && y <= 9 && false)) { R(mc, '#3d3550', px, py, T, T); continue; }
+    if (y >= 6 && y <= 9) { R(mc, '#5d566e', px, py, T, T); if (hash(x, y, 2) > .7) R(mc, '#544d64', px + hash(x, y, 3) * 12, py + hash(x, y, 4) * 12, 3, 2); if (y === 7 && x % 3 !== 2) R(mc, '#ffd45c', px, py + T - 1, T - 4, 2); }
+    else { R(mc, (x + y) % 2 ? '#a59cb8' : '#9d94b0', px, py, T, T); R(mc, 'rgba(0,0,0,.08)', px, py + T - 1, T, 1); R(mc, 'rgba(0,0,0,.08)', px + T - 1, py, 1, T); }
+  }
+  // 燈籠
+  for (let x = 1; x < 26; x++) { R(mc, '#3b2f4a', x * T, T + 2 + (x % 2), T, 1); if (x % 2) { R(mc, '#e5607f', x * T + 5, T + 4, 7, 8); R(mc, '#ffd45c', x * T + 7, T + 6, 3, 4); } }
+  BLD.filter(b => b.scene === 'street').forEach(b => { drawBld(mc, b); solid(s, b.x, b.y, b.w, b.h); });
+  R(mc, '#3b2f4a', 29 * T, 2 * T + 3, 4 * T, 10); R(mc, '#fff', 29 * T + 2, 2 * T + 5, 4 * T - 4, 6);
+  // 機車、路燈、長椅
+  [[3, 12], [4, 12], [5, 12], [30, 12], [31, 12]].forEach(([x, y], i) => { const px = x * T, py = y * T; R(mc, '#3b2f4a', px + 2, py + 11, 4, 4); R(mc, '#3b2f4a', px + 10, py + 11, 4, 4); R(mc, ['#e5607f', '#7ec8f0', '#ffd45c', '#fff', '#9bd8a0'][i], px + 3, py + 4, 10, 7); R(mc, '#3b2f4a', px + 11, py, 2, 5); solid(s, x, y); });
+  [[8, 11], [20, 11], [36, 11]].forEach(([x, y]) => { R(mc, '#3b2f4a', x * T + 7, y * T - 14, 2, 28); R(mc, '#fff3c4', x * T + 3, y * T - 18, 10, 5);  solid(s, x, y); });
+  drawBench(mc, { x: 14, y: 12 }); solid(s, 14, 12, 2, 1);
+  for (let x = 0; x < s.w; x++) { solid(s, x, 0); solid(s, x, s.h - 1); }
+  for (let y = 0; y < s.h; y++) { solid(s, s.w - 1, y); if (y < 6 || y > 9) solid(s, 0, y); }
+  STALLS.forEach(t => { solid(s, t.x, 2, 4, 3); s.dyn.push({ y: 4 * T + 15, f: g => drawStall(g, t) }); s.IT.push({ id: 'stall', stall: t.id, label: t.id === 'ring' ? '玩' : '買', x: (t.x + 2) * T, y: 5 * T + 10, r: 24, ix: (t.x + 2) * T, iy: T - 6 }); s.labels.push({ t: t.n, x: (t.x + 2) * T, y: 2 * T - 14, size: 10 }); });
+  s.labels.push({ t: '考試中心', x: 31 * T, y: 2 * T, size: 12 }, { t: '← 校園', x: 1.5 * T, y: 5 * T + 4 });
+  s.exits.push({ t: p => p.x < 6, to: 'campus', sx: 46 * T, sy: 14 * T + 4, dir: 'left' });
+  s.spots.push({ x: 14, y: 13, dir: 'up', stay: [6, 12] }, { x: 5, y: 5, dir: 'up', stay: [4, 8] }, { x: 17, y: 5, dir: 'up', stay: [4, 8] });
+})();
+
+/* ===== 室內 ===== */
+function wood(g, x, y, w, h, c = '#c99a6b') { R(g, '#3b2f4a', x - 1, y - 1, w + 2, h + 2); R(g, c, x, y, w, h); R(g, 'rgba(255,255,255,.3)', x, y, w, 2); R(g, 'rgba(0,0,0,.15)', x, y + h - 2, w, 2); }
+const FURN = {
+  shelf(g, x, y, w) { wood(g, x, y - 12, w * T, 28, '#8a5a44'); for (let r = 0; r < 2; r++) { const yy = y - 10 + r * 13; R(g, '#5d3b2c', x + 1, yy + 11, w * T - 2, 2); for (let i = 0; i < w * T - 4; i += 4) { const hh = 7 + Math.floor(hash(i, r, w) * 4); R(g, ['#e5607f', '#7ec8f0', '#ffd45c', '#9bd8a0', '#c9b6f5', '#ffb86b'][Math.floor(hash(i, r, 3) * 6)], x + 2 + i, yy + 11 - hh, 3, hh); } } },
+  counter(g, x, y, w) { R(g, 'rgba(60,40,80,.18)', x + 2, y + 15, w * T, 3); R(g, '#3b2f4a', x - 1, y + 1, w * T + 2, 15); R(g, '#e0b98a', x, y + 2, w * T, 6); R(g, '#a8745a', x, y + 8, w * T, 8); R(g, 'rgba(255,255,255,.35)', x, y + 2, w * T, 1); },
+  trays(g, x, y, w) { FURN.counter(g, x, y, w); for (let i = 0; i < w * 2; i++) { R(g, '#c9c3d6', x + 2 + i * 8, y + 2, 7, 5); R(g, ['#ffb86b', '#9bd8a0', '#e5607f', '#ffd45c', '#a8745a'][i % 5], x + 3 + i * 8, y + 3, 5, 3); } },
+  table(g, x, y, w, h) { R(g, 'rgba(60,40,80,.18)', x + 2, y + 3, w * T, h * T); wood(g, x, y, w * T, h * T - 4, '#d4a574'); },
+  desk(g, x, y, w) { R(g, '#3b2f4a', x - 1, y + 3, w * T + 2, 13); R(g, '#d4a574', x, y + 4, w * T, 6); R(g, '#a8745a', x, y + 10, w * T, 6); R(g, '#fff', x + 4, y, 8, 5); R(g, '#7ec8f0', x + 5, y + 1, 6, 3); },
+  sdesk(g, x, y) { R(g, 'rgba(60,40,80,.18)', x + 2, y + 13, 14, 3); R(g, '#3b2f4a', x + 1, y + 2, 14, 10); R(g, '#d4a574', x + 2, y + 3, 12, 5); R(g, '#a8745a', x + 2, y + 8, 12, 3); R(g, '#6f4a3a', x + 3, y + 11, 2, 4); R(g, '#6f4a3a', x + 11, y + 11, 2, 4); },
+  blackboard(g, x, y, w) { R(g, '#6f4a3a', x - 2, y - 2, w * T + 4, 24); R(g, '#2f5d4a', x, y, w * T, 20); R(g, 'rgba(255,255,255,.7)', x + 6, y + 5, 20, 1); R(g, 'rgba(255,255,255,.7)', x + 6, y + 9, 34, 1); R(g, 'rgba(255,255,255,.7)', x + 6, y + 13, 14, 1); R(g, 'rgba(255,255,255,.5)', x + w * T - 30, y + 6, 18, 9); },
+  board(g, x, y, w) { R(g, '#3b2f4a', x - 1, y - 15, w * T + 2, 30); R(g, '#d9b48a', x, y - 14, w * T, 28); const c = ['#ff8fb1', '#7ec8f0', '#ffd45c', '#b5e48c', '#c9b6f5']; for (let i = 0; i < w * 2; i++) { R(g, c[i % 5], x + 4 + i * 14 % (w * T - 12), y - 10 + (i % 2) * 12, 9, 9); R(g, '#3b2f4a', x + 6 + i * 14 % (w * T - 12), y - 7 + (i % 2) * 12, 5, 1); } },
+  copier(g, x, y) { R(g, '#3b2f4a', x - 1, y - 7, 2 * T + 2, 2 * T + 6); R(g, '#d9d0e6', x, y - 6, 2 * T, 2 * T + 4); R(g, '#a79fbb', x, y + 8, 2 * T, 2); R(g, '#7ec8f0', x + 4, y - 2, 10, 5); R(g, '#e5607f', x + 20, y - 2, 4, 3); },
+  rack(g, x, y, w) { wood(g, x, y - 8, w * T, 24, '#e8e8ee'); for (let r = 0; r < 2; r++) for (let i = 0; i < w * T - 4; i += 6) R(g, ['#e5607f', '#ffd45c', '#3ba3d8', '#9bd8a0', '#ffb86b'][Math.floor(hash(i, r, 9) * 5)], x + 3 + i, y - 5 + r * 11, 5, 8); R(g, '#a79fbb', x, y + 1, w * T, 1); },
+  fridge(g, x, y, w) { R(g, '#3b2f4a', x - 1, y - 15, w * T + 2, 32); R(g, '#bfe6ff', x, y - 14, w * T, 30); for (let i = 0; i < w * T; i += 16) R(g, 'rgba(255,255,255,.5)', x + i, y - 14, 1, 30); for (let r = 0; r < 3; r++) for (let i = 0; i < w * T - 4; i += 5) R(g, ['#e5607f', '#ffd45c', '#9bd8a0', '#c9b6f5'][Math.floor(hash(i, r, 5) * 4)], x + 3 + i, y - 11 + r * 9, 3, 7); },
+  window(g, x, y, w) { R(g, '#3b2f4a', x, y, w * T, 30); R(g, '#bfe6ff', x + 2, y + 2, w * T - 4, 26); R(g, '#fff', x + w * T / 2 - 1, y + 2, 2, 26); R(g, 'rgba(255,255,255,.6)', x + 4, y + 4, 6, 3); },
+  plant(g, x, y) { R(g, 'rgba(60,40,80,.2)', x + 2, y + 13, 12, 3); R(g, '#c97a5a', x + 4, y + 7, 8, 8); R(g, '#4aa866', x + 2, y, 12, 8); R(g, '#5fbf7a', x + 4, y - 4, 8, 6); R(g, '#86d79a', x + 6, y - 2, 3, 3); },
+  chair(g, x, y) { R(g, '#a8745a', x + 3, y + 2, 10, 7); R(g, '#8a5a44', x + 3, y + 8, 10, 3); },
+  stool(g, x, y) { R(g, '#3b2f4a', x + 4, y + 3, 8, 6); R(g, '#e5607f', x + 5, y + 4, 6, 4); R(g, '#6f4a3a', x + 7, y + 9, 2, 5); },
+  bed(g, x, y, c) { R(g, 'rgba(60,40,80,.2)', x + 2, y + 2 * T - 1, 2 * T, 3); R(g, '#3b2f4a', x - 1, y - 1, 2 * T + 2, 2 * T + 2); R(g, '#8a5a44', x, y, 2 * T, 2 * T); R(g, '#fff', x + 3, y + 3, 26, 9); R(g, c, x + 2, y + 13, 28, 16); R(g, 'rgba(255,255,255,.3)', x + 2, y + 13, 28, 2); },
+  poster(g, x, y) { R(g, '#3b2f4a', x, y, 26, 26); R(g, '#ffd1de', x + 2, y + 2, 22, 22); R(g, '#e5607f', x + 6, y + 6, 14, 8); R(g, '#7ec8f0', x + 6, y + 16, 8, 5); R(g, '#ffd45c', x + 16, y + 16, 4, 5); },
+  lamp(g, x, y) { R(g, '#6f4a3a', x + 5, y - 2, 2, 6); R(g, '#ffd45c', x + 1, y - 8, 10, 7); R(g, '#fff3c4', x + 3, y - 6, 6, 3); },
+  rug(g, x, y, w, h) { R(g, '#b53c5a', x, y, w * T, h * T); R(g, '#ff8fb1', x + 2, y + 2, w * T - 4, h * T - 4); R(g, '#fff3c4', x + 6, y + 6, w * T - 12, h * T - 12); },
+  beanbag(g, x, y) { R(g, 'rgba(60,40,80,.2)', x + 1, y + 12, 14, 3); R(g, '#3ba3d8', x + 1, y + 2, 14, 11); R(g, '#7ec8f0', x + 3, y, 10, 5); R(g, 'rgba(255,255,255,.3)', x + 3, y + 3, 5, 2); },
+  guitar(g, x, y) { R(g, '#6f4a3a', x + 7, y, 2, 12); R(g, '#d4a574', x + 3, y + 12, 10, 12); R(g, '#3b2f4a', x + 6, y + 16, 4, 4); R(g, '#8a5a44', x + 2, y + 26, 12, 3); },
+  tank(g, x, y, w) { R(g, '#3b2f4a', x - 1, y - 5, w * T + 2, 20); R(g, '#7ec8f0', x, y - 4, w * T, 16); R(g, '#a9defa', x + 2, y - 2, w * T - 4, 4); R(g, '#ff8b3d', x + 6, y + 3, 5, 3); R(g, '#ffd45c', x + 18, y + 5, 4, 3); R(g, '#e5607f', x + 4, y + 10, 24, 2); R(g, '#6f4a3a', x, y + 12, w * T, 4); },
+  box(g, x, y, w) { R(g, 'rgba(60,40,80,.2)', x + 1, y + 14, w * T, 3); R(g, '#3b2f4a', x - 1, y - 3, w * T + 2, 19); R(g, '#c99a6b', x, y - 2, w * T, 17); R(g, '#8a5a44', x, y + 2, w * T, 2); R(g, '#ffd45c', x + w * T / 2 - 2, y + 5, 4, 4); },
+  doll(g, x, y) { R(g, 'rgba(60,40,80,.2)', x + 1, y + 13, 14, 3); R(g, '#c99a6b', x + 2, y + 4, 12, 10); R(g, '#c99a6b', x + 3, y - 4, 10, 9); R(g, '#c99a6b', x + 2, y - 6, 4, 4); R(g, '#c99a6b', x + 10, y - 6, 4, 4); R(g, '#3b2f4a', x + 5, y - 1, 1, 2); R(g, '#3b2f4a', x + 10, y - 1, 1, 2); R(g, '#e5607f', x + 6, y + 6, 4, 3); }
+};
+const RW = 14, RH = 10;
+function roomShell(s, wall, fa, fb) {
+  const g = s.g; s.grid.fill(0);
+  for (let y = 0; y < RH; y++) for (let x = 0; x < RW; x++) {
+    const px = x * T, py = y * T;
+    if (y < 2 || x === 0 || x === RW - 1 || y === RH - 1) { R(g, wall, px, py, T, T); if (y === 1) R(g, 'rgba(60,40,80,.14)', px, py + 12, T, 4); }
+    else R(g, (x + y) % 2 ? fa : fb, px, py, T, T);
+  }
+  R(g, 'rgba(60,40,80,.1)', 0, 0, RW * T, 3); R(g, '#3b2f4a', 0, 2 * T - 2, RW * T, 2);
+  R(g, wall, 6 * T, 9 * T, 2 * T, T); R(g, '#c99a6b', 6 * T, 9 * T + 4, 2 * T, 8); R(g, '#a8745a', 6 * T + 2, 9 * T + 6, 2 * T - 4, 4);
+  R(g, '#3b2f4a', 5 * T + 12, 9 * T, 4, T); R(g, '#3b2f4a', 8 * T, 9 * T, 4, T);
+  for (let x = 0; x < RW; x++) { solid(s, x, 0); solid(s, x, 1); if (x < 6 || x > 7) solid(s, x, RH - 1); }
+  for (let y = 0; y < RH; y++) { solid(s, 0, y); solid(s, RW - 1, y); }
+}
+const put = (s, kind, x, y, w, h, solidOn = true, a, b) => { FURN[kind](s.g, x * T, y * T, a === undefined ? w : a, b === undefined ? h : b); if (solidOn) solid(s, x, y, w, h); };
+const mkRoom = (id, name, wall, fa, fb) => { const s = mkScene(id, name, RW, RH, true); roomShell(s, wall, fa, fb); return s; };
+
+const rOffice = mkRoom('office', '學務處', '#ffe9cc', '#eadcc4', '#e3d3b8');
+put(rOffice, 'window', 2, 0, 2, 0, false); put(rOffice, 'window', 10, 0, 2, 0, false);
+put(rOffice, 'counter', 3, 3, 8, 1); put(rOffice, 'copier', 11, 2, 2, 2);
+put(rOffice, 'desk', 2, 6, 3, 1); put(rOffice, 'chair', 3, 7, 1, 1, false); put(rOffice, 'plant', 11, 6, 1, 1);
+FURN.board(rOffice.g, 7 * T, 7 * T + 8, 3); solid(rOffice, 7, 7, 3, 1);
+rOffice.IT.push({ id: 'copier', label: '看看', x: 12 * T, y: 4 * T + 8, r: 22, ix: 12 * T, iy: 2 * T });
+
+const rLib = mkRoom('library', '圖書館', '#e8dcf8', '#e6d3b0', '#dfcba6');
+put(rLib, 'shelf', 1, 2, 4, 1); put(rLib, 'shelf', 9, 2, 4, 1); put(rLib, 'counter', 5, 3, 4, 1);
+put(rLib, 'table', 2, 6, 3, 2); put(rLib, 'table', 9, 6, 3, 2); put(rLib, 'plant', 6, 6, 1, 1);
+rLib.IT.push({ id: 'study', label: '讀書', x: 3.5 * T, y: 8 * T + 6, r: 26, ix: 3.5 * T, iy: 5 * T }, { id: 'study', label: '讀書', x: 10.5 * T, y: 8 * T + 6, r: 26, ix: 10.5 * T, iy: 5 * T });
+
+const rClass = mkRoom('classroom', '教學大樓 · 教室', '#eef5d8', '#e6dcc6', '#dfd4bc');
+put(rClass, 'blackboard', 4, 0, 6, 0, false); FURN.blackboard(rClass.g, 4 * T, 6, 6);
+put(rClass, 'counter', 6, 3, 2, 1);
+[[2, 5], [4, 5], [9, 5], [11, 5], [2, 7], [9, 7], [11, 7]].forEach(([x, y]) => put(rClass, 'sdesk', x, y, 1, 1));
+put(rClass, 'sdesk', 4, 7, 1, 1); put(rClass, 'plant', 12, 2, 1, 1);
+rClass.IT.push({ id: 'class', label: '上課', x: 4.5 * T, y: 8 * T + 8, r: 22, ix: 4.5 * T, iy: 5 * T + 6 });
+
+const rClub = mkRoom('club', '社團教室', '#ffd9e4', '#efdcc9', '#e8d3be');
+put(rClub, 'window', 2, 0, 2, 0, false); put(rClub, 'board', 5, 2, 4, 1); put(rClub, 'guitar', 11, 2, 1, 2);
+put(rClub, 'table', 6, 5, 3, 2); put(rClub, 'plant', 1, 6, 1, 1); put(rClub, 'beanbag', 11, 6, 1, 1);
+rClub.IT.push({ id: 'clubboard', label: '看布告欄', x: 7 * T, y: 3 * T + 12, r: 26, ix: 7 * T, iy: 1 * T });
+
+const rStore = mkRoom('store', '便利商店', '#dff3fa', '#f4f4f7', '#e9e9f0');
+put(rStore, 'rack', 2, 2, 4, 1); put(rStore, 'rack', 7, 2, 2, 1); put(rStore, 'fridge', 10, 2, 3, 1);
+put(rStore, 'rack', 3, 5, 4, 1); put(rStore, 'counter', 10, 6, 3, 1);
+[[4, 3.5], [8, 3.5], [11.5, 3.5]].forEach(p => rStore.IT.push({ id: 'shop', label: '看貨架', x: p[0] * T, y: p[1] * T + 6, r: 26, ix: p[0] * T, iy: 2 * T }));
+
+const rCafe = mkRoom('cafe', '學生餐廳', '#ffe7d1', '#f2e6d6', '#ebdecb');
+put(rCafe, 'window', 10, 0, 2, 0, false); put(rCafe, 'trays', 2, 3, 6, 1); put(rCafe, 'plant', 12, 2, 1, 1);
+put(rCafe, 'table', 2, 6, 3, 1); put(rCafe, 'table', 9, 6, 3, 1); put(rCafe, 'table', 9, 3, 3, 1);
+[[2, 7], [4, 7], [9, 7], [11, 7], [9, 4], [11, 4]].forEach(([x, y]) => put(rCafe, 'stool', x, y, 1, 1, false));
+rCafe.IT.push({ id: 'meal', label: '打菜', x: 5 * T, y: 4 * T + 12, r: 26, ix: 5 * T, iy: 1 * T });
+
+const rExam = mkRoom('exam', '考試中心', '#e9e9f2', '#dcdce6', '#d3d3df');
+put(rExam, 'counter', 4, 3, 6, 1); put(rExam, 'board', 10, 2, 3, 1); put(rExam, 'plant', 1, 2, 1, 1);
+[[2, 6], [3, 6], [4, 6], [9, 6], [10, 6], [11, 6]].forEach(([x, y]) => put(rExam, 'sdesk', x, y, 1, 1));
+rExam.IT.push({ id: 'notice', label: '看公告', x: 11.5 * T, y: 3 * T + 12, r: 24, ix: 11.5 * T, iy: 1 * T });
+
+/* 宿舍：可換裝潢，之後重畫 */
+const rDorm = mkScene('dorm', '宿舍', RW, RH, true);
+const WALLS = [{ n: '奶油白', c: '#fff1e0', p: 0 }, { n: '薄荷綠', c: '#cdeedd', p: 300 }, { n: '櫻花粉', c: '#ffd1de', p: 300 }, { n: '夜空藍', c: '#b9c8f2', p: 400 }];
+const FLOORS = [{ n: '原木', a: '#d9b48a', b: '#cfa87d', p: 0 }, { n: '灰地毯', a: '#bdb7c9', b: '#b2abc0', p: 300 }, { n: '淺藍磁磚', a: '#cfe7f5', b: '#c3dff0', p: 300 }];
+const ITEMS = [{ id: 'poster', n: '海報', p: 200 }, { id: 'lamp', n: '檯燈', p: 250 }, { id: 'plant', n: '小盆栽', p: 150 }, { id: 'rug', n: '地毯', p: 400 }, { id: 'beanbag', n: '豆袋椅', p: 600 }, { id: 'guitar', n: '吉他架', p: 500 }, { id: 'tank', n: '魚缸', p: 900 }, { id: 'doll', n: '大熊娃娃', p: 0, prize: true }];
+function buildDorm() {
+  const d = st && st.dorm ? st.dorm : { wall: 0, floor: 0, placed: [] }, w = WALLS[d.wall], f = FLOORS[d.floor];
+  const s = rDorm; s.g.clearRect(0, 0, RW * T, RH * T); roomShell(s, w.c, f.a, f.b);
+  put(s, 'window', 6, 0, 2, 0, false);
+  if (d.placed.includes('poster')) FURN.poster(s.g, 9 * T - 2, 2);
+  if (d.placed.includes('rug')) FURN.rug(s.g, 5 * T, 5 * T, 4, 2);
+  put(s, 'bed', 1, 2, 2, 2, true, '#7ec8f0'); put(s, 'bed', 11, 2, 2, 2, true, '#ffb86b');
+  put(s, 'desk', 4, 2, 2, 1, true, 2);
+  if (d.placed.includes('lamp')) FURN.lamp(s.g, 5 * T + 2, 2 * T + 4);
+  put(s, 'box', 7, 2, 1, 1, true, 2);
+  if (d.placed.includes('plant')) put(s, 'plant', 9, 2, 1, 1);
+  if (d.placed.includes('beanbag')) put(s, 'beanbag', 2, 6, 1, 1);
+  if (d.placed.includes('guitar')) put(s, 'guitar', 1, 5, 1, 2);
+  if (d.placed.includes('tank')) put(s, 'tank', 11, 6, 2, 1);
+  if (d.placed.includes('doll')) put(s, 'doll', 3, 7, 1, 1);
+}
+rDorm.IT.push({ id: 'decor', label: '布置房間', x: 7.5 * T, y: 3 * T + 10, r: 26, ix: 7.5 * T, iy: 1 * T }, { id: 'bed', label: '睡一下', x: 2 * T, y: 4 * T + 8, r: 24, ix: 2 * T, iy: 1.5 * T });
+
+/* ---------- 狀態 ---------- */
+const KEY = 'jige-town-v1', OLDKEY = 'lifefork-town-demo-v2';
+let st = null, started = false;
+function newState(name) {
+  return { name, money: 0, exp: 0, track: null, clubs: [], lib: 0, log: [], lastSeen: Date.now(), storeAt: 0, fedUntil: 0,
+    inv: { coffee: 0, bag: 0, card: 0 }, dorm: { wall: 0, floor: 0, wallOwn: [0], floorOwn: [0], own: [], placed: [] },
+    q: { main: 0, side: {}, notified: {}, c: { work: 0, workAt: 0, workAll: 0, waves: [], study: 0, hoop4: 0 } },
+    daily: { date: '', ids: [], prog: {}, done: {}, bonus: false }, best: { hoop: 0, run: 0 }, met: {}, pos: null };
+}
+function fill(def, s) { for (const k in def) { if (s[k] === undefined) s[k] = def[k]; else if (def[k] && typeof def[k] === 'object' && !Array.isArray(def[k]) && typeof s[k] === 'object') fill(def[k], s[k]); } return s; }
+function loadSave() {
+  try {
+    let s = JSON.parse(localStorage.getItem(KEY));
+    if (!s) { s = JSON.parse(localStorage.getItem(OLDKEY)); if (s) { delete s.cx; delete s.cy; } }
+    return s && s.name ? fill(newState(s.name), s) : null;
+  } catch (e) { return null; }
+}
+function persist() { if (!st || !started) return; st.lastSeen = Date.now(); if (!cur.indoor) st.pos = { s: cur.id, x: P.x, y: P.y }; try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
+const rate = () => 30 + ({ sci: 12, art: 5, biz: 9 }[st.track] || 0) + 3 * st.clubs.length + 3 * Math.floor(st.exp / 50) + st.dorm.placed.length;
+const logLine = t => { st.log.push(t); if (st.log.length > 30) st.log.shift(); toast('履歷更新：' + t); beep(880, .08); setTimeout(() => beep(1175, .1), 90); };
+
+/* ---------- 每日任務 ---------- */
+const DAILY = {
+  eat: { n: '去學生餐廳吃一餐', g: 1 }, class: { n: '去教學大樓上一堂課', g: 1 }, hoop: { n: '在操場投籃，一場投進 3 球', g: 1 },
+  run: { n: '在操場跑一次步', g: 1 }, work: { n: '在便利商店排一次班', g: 1 }, wave: { n: '跟同學揮手 2 次', g: 2 },
+  market: { n: '在夜市買一樣吃的', g: 1 }, study: { n: '在圖書館讀一次書', g: 1 }
+};
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+function checkDay(quiet) {
+  const t = today(); if (st.daily.date === t) return;
+  let h = 7; for (const ch of t + st.name) h = (Math.imul(h, 31) + ch.charCodeAt(0)) >>> 0;
+  const ids = Object.keys(DAILY), out = [];
+  while (out.length < 3) { h = (Math.imul(h, 1103515245) + 12345) >>> 0; const id = ids[(h >>> 16) % ids.length]; if (!out.includes(id)) out.push(id); }
+  st.daily = { date: t, ids: out, prog: {}, done: {}, bonus: false };
+  if (!quiet) toast('今天的每日任務更新了，打開手冊看看');
+}
+function dHit(id, n = 1) {
+  const d = st.daily; if (!d.ids.includes(id) || d.done[id]) return;
+  d.prog[id] = (d.prog[id] || 0) + n;
+  if (d.prog[id] >= DAILY[id].g) {
+    d.done[id] = 1; st.money += 300; st.exp += 5; beep(988, .08); setTimeout(() => beep(1319, .12), 90);
+    toast('每日任務完成：' + DAILY[id].n + '　$300、知識 +5');
+    if (d.ids.every(i => d.done[i]) && !d.bonus) { d.bonus = true; st.money += 500; setTimeout(() => toast('今天三個每日任務都完成了，再加 $500'), 1600); if (!st.met.dailyAll) { st.met.dailyAll = 1; setTimeout(() => logLine('第一次做完一整天的每日任務'), 3200); } }
+  }
+  hud(); persist();
+}
+
+/* ---------- 尋路 ---------- */
+function findPath(s, sx, sy, tx, ty) {
+  if (isSolid(s, tx, ty) || isSolid(s, sx, sy)) return null;
+  const W = s.w, N = s.w * s.h, prev = new Int32Array(N).fill(-1), q = new Int32Array(N);
+  let h = 0, t = 0; const start = sy * W + sx, goal = ty * W + tx; q[t++] = start; prev[start] = start;
+  while (h < t) {
+    const c = q[h++]; if (c === goal) break;
+    const x = c % W, y = (c / W) | 0;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + dx, ny = y + dy; if (isSolid(s, nx, ny)) continue; const n = ny * W + nx;
+      if (prev[n] !== -1) continue; prev[n] = c; q[t++] = n;
+    }
+  }
+  if (prev[goal] === -1) return null;
+  const out = []; let c = goal; while (c !== start) { out.push([(c % W) * T + 8, ((c / W) | 0) * T + 10]); c = prev[c]; }
+  return out.reverse();
+}
+function randFree(s) {
+  for (let k = 0; k < 80; k++) { const tx = 1 + Math.floor(Math.random() * (s.w - 2)), ty = 1 + Math.floor(Math.random() * (s.h - 2)); if (!isSolid(s, tx, ty)) return [tx, ty]; }
+  return null;
+}
+
+/* ---------- 實體 ---------- */
+const P = { x: 24 * T, y: 17 * T, dir: 'down', anim: 0, step: 0, bubble: null };
+function blocked(x, y) {
+  const s = cur;
+  return [[x - 4, y - 2], [x + 3, y - 2], [x - 4, y + 1], [x + 3, y + 1]].some(p => isSolid(s, Math.floor(p[0] / T), Math.floor(p[1] / T)));
+}
+function move(e, dx, dy) { let m = false; if (dx && !blocked(e.x + dx, e.y)) { e.x += dx; m = true; } if (dy && !blocked(e.x, e.y + dy)) { e.y += dy; m = true; } return m; }
+function say(e, text, sec = 2.4) { e.bubble = { text, until: performance.now() + sec * 1000 }; }
+function mkEnt(scene, o) { const e = Object.assign({ scene, dir: 'down', anim: 0, step: 0, wait: rand(0, 3), bubble: null, sayT: rand(6, 16), path: null, prog: 0 }, o); scenes[scene].ents.push(e); return e; }
+const at = (tx, ty) => [tx * T + 8, ty * T + 14];
+function spawnAt(s) { const t = randFree(s); return t ? [t[0] * T + 8, t[1] * T + 10] : [s.w * 8, s.h * 8]; }
+function faceToward(e, x, y) { const dx = x - e.x, dy = y - e.y; e.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'); }
+function updateWander(b, dt) {
+  const s = scenes[b.scene];
+  if (b.wait > 0) { b.wait -= dt; b.step = 0; return; }
+  if (!b.path || !b.path.length) {
+    const useSpot = s.spots.length && Math.random() < .35;
+    let tgt = useSpot ? pick(s.spots) : null;
+    if (tgt && s.ents.some(o => o !== b && o.spot === tgt)) tgt = null;
+    const t = tgt ? [tgt.x, tgt.y] : randFree(s);
+    b.spot = tgt; b.path = t ? findPath(s, Math.floor(b.x / T), Math.floor(b.y / T), t[0], t[1]) : null;
+    if (!b.path) { b.wait = rand(.5, 1.5); b.spot = null; } b.prog = 0; b.stuck = 0; return;
+  }
+  const [nx, ny] = b.path[0], dx = nx - b.x, dy = ny - b.y, d = Math.hypot(dx, dy), sp = (b.speed || 24) * dt;
+  if (d <= sp) { b.x = nx; b.y = ny; b.path.shift(); b.stuck = 0;
+    if (!b.path.length) { if (b.spot) { b.dir = b.spot.dir; b.wait = rand(b.spot.stay[0], b.spot.stay[1]); } else b.wait = rand(1, 4); }
+  } else { b.x += dx / d * sp; b.y += dy / d * sp; faceToward(b, nx, ny); }
+  b.anim += dt; b.step = Math.floor(b.anim / .18) % 2;
+}
+function updateLoop(b, dt) {
+  const [nx, ny] = b.loop[b.li], dx = nx - b.x, dy = ny - b.y, d = Math.hypot(dx, dy), sp = (b.speed || 40) * dt;
+  if (d <= sp) { b.x = nx; b.y = ny; b.li = (b.li + 1) % b.loop.length; } else { b.x += dx / d * sp; b.y += dy / d * sp; faceToward(b, nx, ny); }
+  b.anim += dt; b.step = Math.floor(b.anim / .12) % 2;
+}
+function updateEnt(b, dt) {
+  if (b.wander) updateWander(b, dt); else if (b.loop) updateLoop(b, dt);
+  if (b.money !== undefined) b.money += b.rate / 60 * dt;
+  if (b.lines) { b.sayT -= dt; if (b.sayT <= 0) { b.sayT = rand(10, 24); say(b, pick(b.lines)); } }
+}
+/* 假玩家 */
+const PL_SAY = ['嗨!', '午安', '你也在這裡', '報告寫完了嗎', '我超累', '今天人好多', '誰有帶傘', '好想放假', '有人要去夜市嗎'];
+const PL_LOOK = [['#3b2f4a', '#7ec8f0', '#4a5d8a'], ['#8a4b2a', '#b5e48c', '#5b6c8f'], ['#e5a43b', '#c9b6f5', '#6b5b95'], ['#2b2338', '#ffd45c', '#3d5a80'], ['#6b3a2a', '#ff9e7a', '#4a4a5e']];
+const PLAYERS = [];
+['阿凱', '小安', '林林', '肉鬆', '小魚'].forEach((n, i) => {
+  const sc = i < 3 ? 'campus' : i === 3 ? 'playground' : 'street', [x, y] = spawnAt(scenes[sc]);
+  PLAYERS.push(mkEnt(sc, { kind: 'player', name: n, x, y, look: PL_LOOK[i], wander: true, money: rand(300, 2600), rate: rand(22, 48), lines: PL_SAY }));
+});
+/* 路人 */
+const PASS_LINES = {
+  campus: ['期中考範圍到底是誰決定的。', '我只是路過，真的。', '學餐今天的菜，我不敢說。', '聽說隔壁班有人在研究怎麼少讀書。', '我的傘呢，算了，沒下雨。', '你看起來很有精神，不像我。'],
+  office: ['我是來蓋章的，已經排了二十分鐘。', '影印機剛剛吐了一張全黑的紙，我沒碰。'],
+  library: ['噓，我正在假裝很認真。', '這個位子有人，是我的書。'],
+  classroom: ['老師剛剛說這題會考，我沒聽到是哪題。', '我坐最後一排是為了看清楚全場。'],
+  club: ['我只是來看有沒有人要組隊。', '這裡的零食都是學長姐拿來釣新生的。'],
+  store: ['我只是來看有沒有折扣。', '你要結帳嗎？我後面還有人。'],
+  cafe: ['今天的三杯雞沒有雞，只有三杯。', '我每天都點一樣的，這樣比較不用做決定。'],
+  exam: ['我只是來看看，還沒有要考。', '這裡的冷氣比圖書館還冷。'],
+  playground: ['我在等我的朋友，他說五分鐘，已經二十分鐘了。', '跑道一圈四百公尺，我跑了兩百就決定散步。'],
+  street: ['雞排要排二十分鐘，我在思考人生。', '老闆說珍奶半糖，我覺得是全糖。', '我只是來散步，手上的東西都是不小心買的。']
+};
+const PLOOK = [['#6b5b4a', '#a8c0a0', '#5a5a6e'], ['#c9a24b', '#d9a6a6', '#4a4a5e'], ['#3b2f4a', '#b8b8c9', '#6a5a4a'], ['#8a8a99', '#c9a98a', '#4a5568'], ['#5a3a2a', '#9ec5e8', '#3a3a4a']];
+const passTalk = sc => () => ok('路人', pick(PASS_LINES[sc]));
+[['campus', 4], ['street', 3], ['playground', 1]].forEach(([sc, n]) => { for (let i = 0; i < n; i++) { const [x, y] = spawnAt(scenes[sc]); mkEnt(sc, { kind: 'passer', name: '路人', x, y, look: PLOOK[(i + sc.length) % 5], wander: true, speed: rand(18, 26), lines: ['嗯。', '好熱。', '又要上課了。', '肚子餓。'], talk: passTalk(sc) }); } });
+const stat = (scene, tx, ty, look, dir = 'down') => { const [x, y] = at(tx, ty); return mkEnt(scene, { kind: 'passer', name: '路人', x, y, look, dir, talk: passTalk(scene) }); };
+stat('office', 4, 7.1, PLOOK[0], 'up'); stat('library', 5.6, 7, PLOOK[1]); stat('library', 8.4, 6, PLOOK[2]);
+stat('club', 10, 5, PLOOK[3], 'left'); stat('store', 8, 7, PLOOK[1], 'up');
+stat('classroom', 2, 5.4, PLOOK[2], 'up'); stat('classroom', 11, 7.4, PLOOK[4], 'up'); stat('classroom', 9, 5.4, PLOOK[0], 'up');
+stat('cafe', 3, 5.6, PLOOK[3], 'down'); stat('cafe', 10, 5.6, PLOOK[1], 'down'); stat('exam', 3, 5.4, PLOOK[4], 'up');
+/* 跑步的人 */
+mkEnt('playground', { kind: 'passer', name: '路人', x: 3.5 * T, y: 4.6 * T, look: ['#2b2338', '#ffffff', '#e5607f'], loop: [[3.5 * T, 4.6 * T], [19.5 * T, 4.6 * T], [19.5 * T, 19.7 * T], [3.5 * T, 19.7 * T]], li: 1, speed: 42, lines: ['呼。', '還有兩圈。', '不要跟我說話，我會停下來。'], talk: () => ok('跑步的人', '我還要跑兩圈，你要一起嗎？不要也沒關係，我也不想。') });
+/* 攤販 */
+STALLS.forEach((t, i) => mkEnt('street', { kind: 'deco', name: '', x: (t.x + 2) * T, y: 3 * T + 12, look: [['#3b2f4a', '#fff', '#4a4a5e'], ['#8a8a99', '#ffd45c', '#3a3a4a'], ['#6b3a2a', '#7ec8f0', '#3a3a4a'], ['#2b2338', '#9bd8a0', '#4a4a5e']][i] }));
+/* 任務 NPC */
+const QN = {};
+const qnpc = (id, scene, name, tx, ty, look, dir = 'down') => { const [x, y] = at(tx, ty); QN[id] = mkEnt(scene, { kind: 'quest', id, name, x, y, look, dir }); return QN[id]; };
+qnpc('chen', 'office', '陳老師', 7, 2.95, ['#9a9aa8', '#7a8fb5', '#4a4a5e']);
+qnpc('lib', 'library', '館員伯伯', 7, 2.95, ['#6b6b6b', '#a8745a', '#3a3a4a']);
+qnpc('xun', 'club', '學姊小薰', 3.5, 4.5, ['#e5607f', '#ffb7c9', '#6a5a7a'], 'right');
+qnpc('boss', 'store', '店長', 11, 5.95, ['#3b2f4a', '#e5607f', '#3a3a4a']);
+qnpc('yun', 'dorm', '室友阿芸', 9.5, 5, ['#5a3a2a', '#b5e48c', '#4a5d8a']);
+qnpc('late', 'campus', '遲到的同學', 27, 10.6, ['#2b2338', '#f5a5a5', '#3d5a80']);
+qnpc('zhe', 'playground', '籃球隊阿哲', 23, 10, ['#2b2338', '#ff8b3d', '#3a3a4a'], 'right');
+qnpc('prof', 'classroom', '王教授', 7, 2.95, ['#c9c3d6', '#8a6bb5', '#3a3a4a']);
+qnpc('aunt', 'cafe', '打菜阿姨', 5, 2.95, ['#3b2f4a', '#fff', '#e5607f']);
+qnpc('desk', 'exam', '櫃台人員', 7, 2.95, ['#3b2f4a', '#5c6b8a', '#3a3a4a']);
+
+/* ---------- 互動點與最近目標 ---------- */
+BLD.forEach(b => { const d = door(b); scenes[b.scene].IT.push({ id: 'enter', to: b.id, label: '進入', x: d.x, y: d.y, ix: d.ix, iy: d.iy, r: 22 }); });
+campus.IT.push({ id: 'board', label: '看公佈欄', x: BOARD.x * T + 16, y: BOARD.y * T + 20, ix: BOARD.x * T + 16, iy: BOARD.y * T - 16, r: 24 });
+BENCHES.forEach(b => campus.IT.push({ id: 'bench', label: '坐下', x: b.x * T + 16, y: b.y * T + 14, ix: b.x * T + 16, iy: b.y * T - 8, r: 22 }));
+street.IT.push({ id: 'bench', label: '坐下', x: 15 * T, y: 12 * T + 14, ix: 15 * T, iy: 12 * T - 8, r: 22 });
+function nearest() {
+  let best = null, bd = 1e9;
+  for (const it of cur.IT) { const d = Math.hypot(P.x - it.x, P.y - it.y); if (d < it.r && d < bd) { best = it; bd = d; } }
+  for (const e of cur.ents) { if (e.kind === 'deco') continue; const d = Math.hypot(P.x - e.x, P.y - e.y); if (d < 24 && d < bd) { best = { id: 'ent', ent: e, label: e.kind === 'player' ? '揮手' : e.kind === 'quest' ? '對話' : '聊聊', ix: e.x, iy: e.y - 32 }; bd = d; } }
+  return best;
+}
+
+/* ---------- 對話框 ---------- */
+let modalOpen = false, busy = false, typeT = null, mg = null;
+const locked = () => modalOpen || busy || !!mg;
+function closeModal() { modalOpen = false; $('#modal').classList.remove('on'); clearInterval(typeT); }
+function showModal(o) {
+  modalOpen = true; clearInterval(typeT); $('#modal').classList.add('on'); $('#mt').textContent = o.title || '';
+  const mx = $('#mx'), mcc = $('#mc'), full = o.text || ''; let i = 0;
+  mx.textContent = ''; mcc.innerHTML = ''; mcc.style.visibility = 'hidden';
+  (o.choices && o.choices.length ? o.choices : [{ label: '好' }]).forEach(c => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = c.label;
+    b.onclick = () => { closeModal(); beep(660, .05); if (c.fn) c.fn(); }; mcc.appendChild(b);
+  });
+  const done = () => { clearInterval(typeT); mx.textContent = full; mcc.style.visibility = 'visible'; };
+  typeT = setInterval(() => { i += 2; mx.textContent = full.slice(0, i); if (i >= full.length) done(); }, 24);
+  mx.onpointerdown = done;
+}
+const ok = (title, text, fn) => showModal({ title, text, choices: [{ label: '好', fn }] });
+function dialog(title, pages, end) {
+  let i = 0;
+  const step = () => {
+    if (i < pages.length - 1) showModal({ title, text: pages[i++], choices: [{ label: '繼續', fn: step }] });
+    else showModal({ title, text: pages[i], choices: end || [{ label: '好' }] });
+  };
+  step();
+}
+
+/* ---------- 小遊戲 ---------- */
+function openMg(title, desc) { $('#mgT').textContent = title; $('#mgD').textContent = desc; $('#mg').classList.add('on'); }
+function closeMg() { mg = null; $('#mg').classList.remove('on'); }
+function meterGame(o) {
+  openMg(o.title, o.desc);
+  $('#mgBody').innerHTML = '<div class="meter" id="mgM"><div class="zone" id="mgZ"></div><div class="mk" id="mgK"></div></div><div class="mgInfo" id="mgI"></div><div class="row"><button class="pri big" id="mgP" type="button">' + o.btn + '</button></div>';
+  mg = { type: 'meter', o, round: 0, hits: 0, pos: 0, dir: 1, speed: o.speed || 1, zone: o.zone || .3, center: .5, wait: 0 };
+  newRound(); $('#mgP').onpointerdown = e => { e.preventDefault(); mgPress(); };
+}
+function newRound() { mg.center = mg.zone / 2 + Math.random() * (1 - mg.zone); mg.pos = Math.random() < .5 ? 0 : 1; mg.dir = mg.pos ? -1 : 1; $('#mgZ').style.left = (mg.center - mg.zone / 2) * 100 + '%'; $('#mgZ').style.width = mg.zone * 100 + '%'; $('#mgM').className = 'meter'; $('#mgI').textContent = '第 ' + (mg.round + 1) + ' / ' + mg.o.rounds + ' 次　命中 ' + mg.hits; }
+function mgPress(side) {
+  if (!mg) return;
+  if (mg.type === 'mash') { if (mg.t <= 0 || !side) return; if (side !== mg.last) { mg.taps++; mg.last = side; beep(side === 'L' ? 400 : 480, .03); } return; }
+  if (mg.wait > 0) return;
+  const hit = Math.abs(mg.pos - mg.center) <= mg.zone / 2;
+  if (hit) { mg.hits++; beep(988, .08); } else beep(220, .12, 'sawtooth');
+  $('#mgM').className = 'meter ' + (hit ? 'hit' : 'miss'); $('#mgI').textContent = hit ? pick(mg.o.hitT) : pick(mg.o.missT);
+  mg.round++; mg.wait = .75;
+}
+function mashGame(o) {
+  openMg(o.title, o.desc);
+  $('#mgBody').innerHTML = '<div class="prog"><i id="mgBar"></i></div><div class="mgInfo" id="mgI"></div><div class="row"><button class="big" id="mgL" type="button">左腳</button><button class="big" id="mgR" type="button">右腳</button></div>';
+  mg = { type: 'mash', o, t: o.time, taps: 0, last: null, end: false };
+  $('#mgL').onpointerdown = e => { e.preventDefault(); mgPress('L'); }; $('#mgR').onpointerdown = e => { e.preventDefault(); mgPress('R'); };
+}
+function mgTick(dt) {
+  if (!mg) return;
+  if (mg.type === 'meter') {
+    if (mg.wait > 0) { mg.wait -= dt; if (mg.wait <= 0) { if (mg.round >= mg.o.rounds) { const o = mg.o, h = mg.hits; closeMg(); o.end(h); return; } mg.zone *= mg.o.shrink || .85; mg.speed *= 1.1; newRound(); } }
+    else { mg.pos += mg.dir * mg.speed * dt; if (mg.pos >= 1) { mg.pos = 1; mg.dir = -1; } if (mg.pos <= 0) { mg.pos = 0; mg.dir = 1; } }
+    $('#mgK').style.left = mg.pos * 100 + '%';
+  } else {
+    mg.t -= dt; const laps = mg.taps / mg.o.perLap;
+    $('#mgBar').style.width = Math.min(100, (laps % 1) * 100) + '%';
+    $('#mgI').textContent = '剩 ' + Math.max(0, mg.t).toFixed(1) + ' 秒　已跑 ' + Math.floor(laps * 400) + ' 公尺';
+    if (mg.t <= 0 && !mg.end) { mg.end = true; setTimeout(() => { const o = mg.o, n = mg.taps; closeMg(); o.end(n); }, 500); }
+  }
+}
+
+/* ---------- 任務 ---------- */
+const MAIN = ['去學務處找陳老師報到', '去宿舍找室友阿芸', '去社團教室，加入一個社團', '去圖書館找館員伯伯，領期中考範圍', '在圖書館自習區讀書兩次', '回學務處向陳老師報告'];
+const sideSt = id => st.q.side[id] || 0;
+const SIDE = {
+  store: { n: '店長的缺人手', who: '便利商店店長', desc: '幫店長排班兩次', ready: () => st.q.c.work - st.q.c.workAt >= 2, prog: () => Math.min(2, st.q.c.work - st.q.c.workAt) + ' / 2', reward: '$500' },
+  wave: { n: '迎新活動缺人', who: '社團教室的學姊小薰', desc: '向兩位不同的同屆玩家揮手', ready: () => st.q.c.waves.length >= 2, prog: () => Math.min(2, st.q.c.waves.length) + ' / 2', reward: '知識 +20、$200' },
+  bag: { n: '宿舍的垃圾袋', who: '室友阿芸', desc: '去便利商店買一包垃圾袋', ready: () => st.inv.bag > 0, prog: () => st.inv.bag > 0 ? '已買到' : '還沒買', reward: '$100' },
+  coffee: { n: '遲到同學的咖啡', who: '校園裡的同學', desc: '去便利商店買一杯咖啡給他', ready: () => st.inv.coffee > 0, prog: () => st.inv.coffee > 0 ? '已買到' : '還沒買', reward: '$150' },
+  card: { n: '不見的借書證', who: '圖書館館員伯伯', desc: '去校園長椅找借書證', ready: () => st.inv.card > 0, prog: () => st.inv.card > 0 ? '已找到' : '還沒找到', reward: '知識 +15' },
+  hoop: { n: '籃球隊缺一個人', who: '操場的阿哲', desc: '一場投籃投進 4 球', ready: () => st.q.c.hoop4 > 0, prog: () => st.q.c.hoop4 ? '做到了' : '還沒做到', reward: '$400、知識 +10' }
+};
+function setMain(n) { st.q.main = n; if (n < MAIN.length) toast('主線更新：' + MAIN[n]); hud(); persist(); }
+function chkReady() { for (const id in SIDE) if (sideSt(id) === 1 && SIDE[id].ready() && !st.q.notified[id]) { st.q.notified[id] = 1; toast('支線可以回報了：' + SIDE[id].n); } hud(); }
+function acceptSide(id) { st.q.side[id] = 1; if (id === 'store') st.q.c.workAt = st.q.c.work; if (id === 'wave') st.q.c.waves = []; if (id === 'hoop') st.q.c.hoop4 = 0; toast('接下支線：' + SIDE[id].n); chkReady(); persist(); }
+function finishSide(id) {
+  st.q.side[id] = 3; beep(1047, .12);
+  if (id === 'store') st.money += 500;
+  if (id === 'wave') { st.exp += 20; st.money += 200; }
+  if (id === 'bag') { st.inv.bag--; st.money += 100; }
+  if (id === 'coffee') { st.inv.coffee--; st.money += 150; }
+  if (id === 'card') { st.inv.card--; st.exp += 15; }
+  if (id === 'hoop') { st.money += 400; st.exp += 10; }
+  logLine('完成支線：' + SIDE[id].n); hud(); persist();
+}
+function sideFlow(npcName, id, offer, hint, thanks) {
+  const s = sideSt(id);
+  if (s === 0) { dialog(npcName, offer, [{ label: '好，我去', fn: () => acceptSide(id) }, { label: '再說' }]); return true; }
+  if (s === 1) { if (SIDE[id].ready()) dialog(npcName, thanks, [{ label: '收下', fn: () => finishSide(id) }]); else ok(npcName, hint); return true; }
+  return false;
+}
+function markOf(e) {
+  if (e.kind !== 'quest' || !st) return null; const m = st.q.main;
+  const side = id => { const s = sideSt(id); return s === 0 ? 'side' : (s === 1 && SIDE[id].ready()) ? 'turn' : null; };
+  if (e.id === 'chen') return m === 0 ? 'main' : m === 5 ? 'turn' : null;
+  if (e.id === 'yun') return m === 1 ? 'main' : (m >= 2 ? side('bag') : null);
+  if (e.id === 'xun') return m === 2 ? 'main' : (m >= 3 ? side('wave') : null);
+  if (e.id === 'lib') return m === 3 ? 'main' : (m >= 3 ? side('card') : null);
+  if (e.id === 'boss') return side('store');
+  if (e.id === 'late') return side('coffee');
+  if (e.id === 'zhe') return side('hoop');
+  return null;
+}
+/* NPC 對話 */
+QN.chen.talk = () => {
+  const m = st.q.main, name = st.name;
+  if (m === 0) return dialog('陳老師', ['來報到的對吧？' + name + '，名單上有你。', '學生證、選課、宿舍，這三件事今天會一件一件處理完。先從選課開始。', '傾向先填一個。填完還可以改，只是改的時候會有人嘆氣。'], [
+    { label: '理工類', fn: () => pickTrack('sci', '好，理工類。以後會有很多公式，希望其中一些會對你友善。') },
+    { label: '人文類', fn: () => pickTrack('art', '好，人文類。薪水之後再說，至少你讀的東西是你自己覺得有意思的。') },
+    { label: '商管類', fn: () => pickTrack('biz', '好，商管類。從今天起，你說話前會多一句「我們來對齊一下」。') }]);
+  if (m === 1) return ok('陳老師', '鑰匙還沒拿嗎？宿舍在校園右下角，找你的室友阿芸。');
+  if (m === 2) return ok('陳老師', '社團教室就在這排。社團不用一次選好，也不用待一輩子。');
+  if (m === 3) return ok('陳老師', '期中考範圍在圖書館館員伯伯那裡。他很準時，你要比他更準時。');
+  if (m === 4) return ok('陳老師', '讀書兩次，是讀進去兩次，不是坐著兩次。');
+  if (m === 5) return dialog('陳老師', ['來了。這學期的第一個月，你算有把作業交出去。', '我看了你的紀錄：' + (st.clubs.length ? '參加了 ' + st.clubs.length + ' 個社團' : '沒參加社團') + '，打工 ' + st.q.c.workAll + ' 次，知識 ' + st.exp + '。', '不算漂亮，但是真的。這樣就夠第一章了。'], [{ label: '收下 $2,000', fn: () => { st.money += 2000; setMain(6); logLine('完成第一章：大一新生'); ok('第一章 · 大一新生 完成', '下一章在校門外的考試中心。那裡還在準備，下次來再開放。\n\n現在可以去做每日任務、做支線，或把宿舍布置成你喜歡的樣子。'); } }]);
+  ok('陳老師', '下個階段還在準備。先把這個月過好。');
+};
+function pickTrack(t, text) { st.track = t; logLine('選課傾向：' + { sci: '理工類', art: '人文類', biz: '商管類' }[t]); ok('陳老師', text + '\n\n接下來去宿舍找室友阿芸，她會給你鑰匙。宿舍在校園右下角。', () => setMain(1)); }
+QN.yun.talk = () => {
+  const m = st.q.main;
+  if (m === 0) return ok('室友阿芸', '你是新生吧？先去學務處報到，不然你連床位都沒有。');
+  if (m === 1) return dialog('室友阿芸', ['你是新室友？我是阿芸，已經住兩天了。這裡的蚊子比人熱情。', '鑰匙給你。左邊那張床是你的，右邊是我的領土，請不要越界。', '中間那個箱子你可以拿來布置房間，宿舍沒有明文禁止。'], [{ label: '收下鑰匙', fn: () => { logLine('拿到宿舍鑰匙'); setMain(2); } }]);
+  if (sideFlow('室友阿芸', 'bag', ['垃圾袋用完了，我又沒空出門。', '你能幫我去便利商店買一包嗎？我會給你一點謝禮。'], '垃圾袋，便利商店，謝謝。我現在連站起來的力氣都沒有。', ['有了有了！你真的買回來了。', '我說的謝禮是真的，不是客套。'])) return;
+  ok('室友阿芸', pick(['你的床位在左邊，右邊是我的領土。', '我又忘記帶傘了。', '昨天半夜有人在走廊練吉他，我決定不報警。', '房間布置得怎麼樣？記得別把我這邊也布置了。', '夜市的雞排很大，大到我吃完不想動。']));
+};
+QN.xun.talk = () => {
+  const m = st.q.main;
+  if (m < 2) return ok('學姊小薰', '迎新還沒開始，你先把該報到的報到完。');
+  if (m === 2) return ok('學姊小薰', '新生？太好了，迎新缺人缺到我都要親自拉人。\n\n社團不用一次選好，也不用一輩子參加。去看看布告欄，想加幾個都可以。');
+  if (sideFlow('學姊小薰', 'wave', ['迎新活動缺人，我需要有人去認識同屆的新生。', '你去跟兩個不同的同學揮個手就好，不用說話，說話我怕你們都尷尬。'], '還差一點。同屆的人在校園、操場和夜市走動，靠近他們按揮手。', ['兩位都揮到了？很好，你比我想像的社交。', '這是一點小心意，別跟學長說。'])) return;
+  ok('學姊小薰', pick(['社團多加幾個也沒關係，只是你的讀書時間會跟著變少。', '想退社也可以，我們不會追，大概。', '迎新那天拍的照片，我決定都不要放出來。']));
+};
+QN.lib.talk = () => {
+  const m = st.q.main;
+  if (m === 3) return dialog('館員伯伯', ['期中考範圍在這。整理好放在最上面那疊，別弄亂。', '到後面自習區坐著讀。你站在這裡，我也沒辦法幫你讀。'], [{ label: '收下範圍', fn: () => { st.exp += 20; st.q.c.study = 0; toast('知識 +20'); setMain(4); } }]);
+  if (m >= 3 && sideFlow('館員伯伯', 'card', ['你有沒有看到一張借書證？我找了一整天。', '我印象中是在校園的長椅附近弄丟的。你要是路過，幫我看看。'], '還沒找到嗎？長椅那邊，記得坐下去看。', ['就是這張！謝謝你，我已經準備要重辦了。', '重辦要填三張表，你幫我省了很多事。'])) return;
+  if (m === 4) return ok('館員伯伯', '自習區在後面。讀完兩次再去找陳老師。');
+  ok('館員伯伯', pick(['噓。', '這裡不能吃東西，我知道你口袋裡有餅乾。', '書要放回原本的位置，不是放回你覺得合理的位置。']));
+};
+QN.boss.talk = () => {
+  const first = !st.met.boss; st.met.boss = 1;
+  const pay = (n, t) => () => { st.money += n; st.storeAt = Date.now(); st.q.c.work++; st.q.c.workAll++; if (st.q.c.workAll === 1) logLine('第一份打工：便利商店'); chkReady(); dHit('work'); ok('下班', t + '\n\n你領到 ' + fmt(n) + '。'); beep(1047, .1); };
+  const wait = 25000 - (Date.now() - st.storeAt);
+  const menu = () => showModal({
+    title: '店長', text: '要排班嗎？',
+    choices: [
+      { label: '值晚班 · $1,200', fn: wait > 0 ? () => ok('店長', '剛下班先休息啦。') : pay(1200, '凌晨三點的便利商店很安靜，只有冰櫃在嗡嗡叫。') },
+      { label: '值早班 · $600', fn: wait > 0 ? () => ok('店長', '剛下班先休息啦。') : pay(600, '早班一直在補貨。客人只問兩種問題：廁所在哪裡，有沒有加熱。') },
+      { label: '店裡有缺人手嗎', fn: () => { if (!sideFlow('店長', 'store', ['缺啊，每天都缺。', '你這個月幫我排兩次班，我給你一點額外的。'], '還沒排滿兩次班。先去排，排完回來領。', ['兩次都排完了？你比我上一個店員撐得久。', '這是額外的，不要跟別的店員說。'])) ok('店長', '你已經幫過我了，現在沒有缺。'); } },
+      { label: '先不用' }]
+  });
+  if (first) dialog('店長', ['新來的？不用緊張，工作很簡單。', '然後我會花二十分鐘教你發票載具。'], [{ label: '開始', fn: menu }]); else menu();
+};
+QN.late.talk = () => {
+  if (sideFlow('遲到的同學', 'coffee', ['我快遲到了，可是還沒喝咖啡。', '你能幫我去便利商店買一杯嗎？我會還你，還會多給一點。'], '咖啡在便利商店的冰櫃。我再不喝，今天的課我不確定我會不會醒。', ['喔喔，咖啡！你真的買來了。', '拿去，我說過會多給一點。'])) return;
+  ok('遲到的同學', '謝啦，我今天終於醒了。');
+};
+QN.zhe.talk = () => {
+  if (sideFlow('籃球隊阿哲', 'hoop', ['欸，你會投籃嗎？系隊下週比賽，我們少一個人。', '你一場能投進 4 球，我就讓你來湊人數。真的只是湊人數。'], '還沒投到 4 球嗎？籃框就在旁邊，多投幾場。', ['4 球！可以，下週來坐板凳。', '這是隊費退給你的，我們本來就沒在收。'])) return;
+  ok('籃球隊阿哲', pick(['我們隊的戰術是：傳給我。', '投籃最重要的是手感，還有不要看籃框以外的地方。', '下週比賽記得來坐板凳。']));
+};
+QN.prof.talk = () => classFlow();
+QN.aunt.talk = () => meal();
+QN.desk.talk = () => {
+  if (st.q.main < 6) return ok('櫃台人員', '你還是大一吧？考試中心是第二章的地方。先把第一章過完再來。');
+  ok('櫃台人員', '第二章還在準備。報名表印好了，但上面的日期還沒填。\n\n下次更新再來。');
+};
+
+/* ---------- 事件 ---------- */
+function study() {
+  const fed = Date.now() < st.fedUntil, p = Math.max(.2, .6 - .1 * st.clubs.length + (fed ? .2 : 0));
+  showModal({
+    title: '圖書館 · 自習區', text: '自習區只剩一個位子，旁邊的人正對著筆電嘆氣。\n社團加得越多，讀得進去的機率越低。現在是 ' + Math.round(p * 100) + '%。' + (fed ? '\n（剛吃飽，比較讀得進去。）' : ''),
+    choices: [
+      { label: '認真讀書', fn: () => {
+        st.q.c.study++; st.lib++; dHit('study');
+        if (Math.random() < p) { st.exp += 15; ok('自習區', '這次居然讀進去了。知識 +15。'); } else { st.exp += 3; ok('自習區', '你翻開第一頁，再睜開眼睛的時候，臉上多了一道書頁印子。知識 +3。'); }
+        if (st.q.main === 4 && st.q.c.study >= 2) setMain(5);
+        persist();
+      } },
+      { label: '坐窗邊發呆', fn: () => { st.exp += 2; ok('自習區', '窗外有人在打籃球。你有一種自己也有在生活的錯覺。知識 +2。'); } },
+      { label: '先離開' }]
+  });
+}
+const COURSES = ['微積分', '普通心理學', '經濟學原理', '大學國文', '程式設計', '通識：生活中的統計'];
+function classFlow() {
+  const c = pick(COURSES);
+  showModal({ title: '教室 · ' + c, text: '王教授站在講台上，投影片停在第 3 頁，已經停了十分鐘。\n抄筆記的時候，要在重點出現的那一刻按下去。', choices: [
+    { label: '認真抄筆記', fn: () => meterGame({ title: c + ' · 抄筆記', desc: '指針跑到綠色區域時按「抄」。綠色區域就是教授說「這個會考」的時候。', btn: '抄', rounds: 3, speed: .9, zone: .32, shrink: .82,
+      hitT: ['抄到了，字還算看得懂。', '教授剛好轉頭，你剛好在抄。', '這一頁你抄得比投影片還清楚。'], missT: ['你抄到的是上一頁。', '筆沒水了。', '你寫了一行字，後來發現是在寫購物清單。'],
+      end: h => { st.exp += 4 * h + 2; dHit('class'); if (!st.met.class) { st.met.class = 1; logLine('第一次上課：' + c); } ok('下課', ['你的筆記只有標題。知識 +2。', '筆記有一點內容，但有一半是塗鴉。知識 +6。', '筆記寫得不錯，可以借同學了。知識 +10。', '這份筆記之後會被全班拍照傳來傳去。知識 +14。'][h]); persist(); } }) },
+    { label: '趴著睡', fn: () => { st.exp += 1; dHit('class'); ok('下課', '你醒來的時候，黑板上的字已經換過兩輪。旁邊的同學說教授有點你的名字，但你沒有證據。知識 +1。'); } },
+    { label: '先離開' }] });
+}
+function meal() {
+  const eat = (p, t) => () => { if (st.money < p) return ok('打菜阿姨', '同學，錢不夠喔。要不要先去打工？'); st.money -= p; st.fedUntil = Date.now() + 180000; dHit('eat'); ok('學生餐廳', t + '\n\n吃飽了，接下來三分鐘讀書比較讀得進去。'); persist(); };
+  showModal({ title: '打菜阿姨', text: '今天要吃什麼？後面還有人在排喔。\n你現在有 ' + fmt(st.money) + '。', choices: [
+    { label: '自助餐 $85', fn: eat(85, '你夾了四樣菜，阿姨算了 $85。你到現在還不知道她是怎麼算的。') },
+    { label: '牛肉麵 $110', fn: eat(110, '湯頭很香，牛肉要用找的，找到的時候很感動。') },
+    { label: '素食便當 $70', fn: eat(70, '便當裡的豆皮做得比肉還像肉，你有點佩服。') },
+    { label: '只是看看' }] });
+}
+function stall(id) {
+  const buy = (p, t) => { if (st.money < p) return ok('攤販', '錢包比你的心情還輕。'); st.money -= p; dHit('market'); ok('夜市', t); persist(); };
+  if (id === 'chicken') return showModal({ title: '雞排攤', text: '老闆說今天的雞排比你的臉大。', choices: [{ label: '買一份 $85', fn: () => buy(85, '雞排真的比你的臉大。你決定邊走邊吃，然後被燙到。') }, { label: '不要切不要辣', fn: () => buy(85, '老闆點頭，然後切了，也加辣了。') }, { label: '先不用' }] });
+  if (id === 'tea') return showModal({ title: '珍奶攤', text: '菜單上有四十種飲料，你只看得懂珍奶。', choices: [{ label: '珍奶全糖 $65', fn: () => buy(65, '全糖去冰。你的牙醫看不到，所以沒關係。') }, { label: '珍奶半糖 $65', fn: () => buy(65, '你點半糖，喝起來還是全糖。夜市的半糖是一種精神。') }, { label: '先不用' }] });
+  if (id === 'corn') return showModal({ title: '烤玉米攤', text: '老闆一邊刷醬一邊跟隔壁攤聊天。', choices: [{ label: '一支 $70', fn: () => buy(70, '烤玉米刷了三次醬，你的袖子也被刷到一次。') }, { label: '先不用' }] });
+  if (id === 'ring') return showModal({ title: '套圈圈', text: '三個圈 $50。套到兩個以上可以換大獎。\n老闆的表情看起來不太擔心。', choices: [{ label: '玩一次 $50', fn: () => {
+    if (st.money < 50) return ok('套圈圈', '老闆說錢不夠不能玩，態度很溫柔，但很堅定。');
+    st.money -= 50;
+    meterGame({ title: '套圈圈', desc: '指針停在綠色區域時按「丟」。', btn: '丟', rounds: 3, speed: 1.35, zone: .24, shrink: .85,
+      hitT: ['圈圈穩穩套住了。', '套到了！老闆的眉毛動了一下。'], missT: ['圈圈彈出去，滾到隔壁攤。', '差一點，老闆說差一點是常態。', '圈圈卡在瓶口上，然後掉下來了。'],
+      end: h => {
+        const prize = ['安慰獎：一包衛生紙。老闆說很實用。', '小獎：一個小熊吊飾。', '大獎：一隻大熊娃娃。它可以放在宿舍，佔掉你一半的床。', '老闆把大熊娃娃給你，說你下次可以不用來了。'][h];
+        if (h >= 2 && !st.dorm.own.includes('doll')) { st.dorm.own.push('doll'); logLine('在夜市套到大熊娃娃'); }
+        ok('套圈圈', prize + (h >= 2 ? '\n\n娃娃已經送到宿舍的裝潢箱，可以去擺出來。' : '')); persist();
+      } });
+  } }, { label: '先不用' }] });
+}
+const CLUBS = [
+  { id: 'guitar', n: '吉他社', join: '你抱著吉他彈了三個和弦，學姊說你很有天份。你懷疑她對每個人都這麼說。', quit: '你跟學姊說想退社。她說「沒關係，有空再來」，你們都知道你不會再來。' },
+  { id: 'board', n: '桌遊社', join: '第一局就被朋友背叛，你決定留下來。', quit: '退社的時候他們剛好在玩背叛局。你覺得這樣也算有始有終。' },
+  { id: 'photo', n: '攝影社', join: '學長說光圈不重要，重要的是你走過去。你點點頭，聽不太懂。', quit: '你把借來的鏡頭還了回去，手上輕了一點，錢包也是。' },
+  { id: 'hike', n: '登山社', join: '社長說第一次爬郊山就好。你看了行程表，郊山要爬六個小時。', quit: '你說膝蓋不太好。社長點點頭，說他第一次也是這樣講的。' }
+];
+function clubBoard() {
+  showModal({
+    title: '社團布告欄', text: '想加幾個都可以，想退也可以。每個社團每分鐘收益 +$3，但會壓縮讀書時間。\n目前參加：' + (st.clubs.length ? st.clubs.map(i => CLUBS.find(c => c.id === i).n).join('、') : '還沒有'),
+    choices: CLUBS.map(c => { const has = st.clubs.includes(c.id); return { label: (has ? '退出 ' : '加入 ') + c.n, fn: () => {
+      if (has) { st.clubs = st.clubs.filter(x => x !== c.id); logLine('退出' + c.n); ok(c.n, c.quit, clubBoard); }
+      else { st.clubs.push(c.id); logLine('加入' + c.n); ok(c.n, c.join, clubBoard); if (st.q.main === 2) setTimeout(() => setMain(3), 600); }
+      persist();
+    } }; }).concat([{ label: '看完了' }])
+  });
+}
+function shop() {
+  const buy = (id, p, n) => () => { if (st.money < p) return ok('便利商店', '錢包比你的心情還輕。', shop); st.money -= p; if (id !== 'snack') st.inv[id]++; else toast('餅乾渣掉在口袋裡了'); toast('買了：' + n); chkReady(); persist(); shop(); };
+  showModal({ title: '便利商店 · 貨架', text: '冰櫃裡的飲料標價每個人都看不懂，但大家照買。\n你現在有 ' + fmt(st.money) + '。', choices: [
+    { label: '咖啡 $60', fn: buy('coffee', 60, '咖啡') }, { label: '垃圾袋 $40', fn: buy('bag', 40, '垃圾袋') }, { label: '零食 $30', fn: buy('snack', 30, '零食') }, { label: '離開' }] });
+}
+function board() {
+  const all = PLAYERS.map(b => ({ n: b.name, m: b.money })).concat([{ n: st.name + '（你）', m: st.money }]).sort((a, b) => b.m - a.m);
+  ok('公佈欄 · 同屆動態', '本週同屆事件：期中考週。全校的咖啡因存量正在下降。\n夜市新開了套圈圈攤，老闆說今年的大獎很難套。\n\n同屆存款排行（示範資料）\n' + all.slice(0, 5).map((a, i) => (i + 1) + '. ' + a.n + '　' + fmt(a.m)).join('\n'));
+}
+function bench() {
+  if (cur.id === 'campus' && sideSt('card') === 1 && !st.inv.card) { st.inv.card = 1; chkReady(); return ok('長椅', '你坐下來，椅縫裡夾著一張借書證。照片上是館員伯伯年輕的時候。\n\n找到借書證了。'); }
+  if (cur.id === 'street') return ok('長椅', '你坐在夜市旁邊的長椅上。路過的每個人手上都拿著吃的，只有你沒有。');
+  const near = cur.ents.some(b => b.kind === 'player' && Math.hypot(b.x - P.x, b.y - P.y) < 48);
+  ok('長椅', near ? '旁邊也有人在發呆。你們默契地誰都沒有說話。' : '你坐下來發了五分鐘的呆。沒有人需要你做任何事，這種時候其實不多。');
+}
+function hoop() {
+  showModal({ title: '籃球場', text: '五次投籃。指針跑到綠色區域時按「投」，綠色區域會越來越窄。\n你目前的最佳紀錄是 ' + st.best.hoop + ' 球。', choices: [{ label: '開始', fn: () => meterGame({ title: '投籃', desc: '指針在綠色區域時按「投」。', btn: '投', rounds: 5, speed: 1.05, zone: .3, shrink: .82,
+    hitT: ['唰，空心。', '打板進了，算你的。', '在框上轉了兩圈，進了！'], missT: ['麵包球。', '打到籃框彈出來了。', '球飛到隔壁場，有人幫你撿回來。'],
+    end: h => {
+      if (h >= 3) dHit('hoop'); if (sideSt('hoop') === 1 && h >= 4 && !st.q.c.hoop4) { st.q.c.hoop4 = 1; chkReady(); }
+      const best = h > st.best.hoop; if (best) st.best.hoop = h; st.money += h * 40;
+      if (h === 5 && !st.met.hoop5) { st.met.hoop5 = 1; logLine('投籃五投五中'); }
+      ok('投籃結果', '五投 ' + h + ' 中。' + ['你決定以後專心當觀眾。', '至少有一球是進的。', '普通，但比昨天的你好。', '旁邊有人開始看你投。', '阿哲在旁邊吹口哨。', '全場安靜了一秒。'][h] + (best ? '\n新紀錄！' : '') + '\n\n撿球的時候在地上撿到 ' + fmt(h * 40) + '。'); persist();
+    } }) }, { label: '先不要' }] });
+}
+function runGame() {
+  showModal({ title: '起跑線', text: '跑 10 秒，輪流按「左腳」「右腳」。電腦可以按左右方向鍵。\n同一隻腳連按不算數。你的最佳紀錄是 ' + st.best.run + ' 公尺。', choices: [{ label: '開始', fn: () => mashGame({ title: '跑操場', desc: '輪流按左腳、右腳。', time: 10, perLap: 80,
+    end: n => {
+      const m = Math.floor(n / 80 * 400), best = m > st.best.run; if (best) st.best.run = m; if (m > 0) dHit('run');
+      st.exp += Math.min(8, Math.floor(m / 60));
+      ok('跑完了', '你跑了 ' + m + ' 公尺。' + (m < 100 ? '這比較像散步，但散步也是運動。' : m < 250 ? '跑到一半你開始思考為什麼要跑步。' : m < 400 ? '風在耳邊，腿在抗議。' : '你跑完一整圈，旁邊跑步的人對你點了點頭。') + (best ? '\n新紀錄！' : '')); persist();
+    } }) }, { label: '先不要' }] });
+}
+function decor() {
+  if (st.q.main < 2) return ok('裝潢箱', '你還沒有自己的床位。先去學務處報到，再找室友阿芸拿鑰匙。');
+  const d = st.dorm;
+  showModal({ title: '布置房間', text: '宿舍是你自己的。每擺一件家具，每分鐘收益 +$1。\n你現在有 ' + fmt(st.money) + '，已擺 ' + d.placed.length + ' 件。', choices: [
+    { label: '壁紙', fn: () => listPick('壁紙', WALLS, 'wall', 'wallOwn') }, { label: '地板', fn: () => listPick('地板', FLOORS, 'floor', 'floorOwn') }, { label: '家具', fn: furnMenu }, { label: '完成' }] });
+}
+function listPick(title, arr, key, ownKey) {
+  const d = st.dorm;
+  showModal({ title, text: '你有 ' + fmt(st.money) + '。', choices: arr.map((a, i) => { const own = d[ownKey].includes(i), use = d[key] === i; return { label: use ? '✓ ' + a.n : own ? '換上 ' + a.n : a.n + ' $' + a.p, fn: () => {
+    if (use) return listPick(title, arr, key, ownKey);
+    if (!own) { if (st.money < a.p) return ok(title, '錢還不夠。', () => listPick(title, arr, key, ownKey)); st.money -= a.p; d[ownKey].push(i); }
+    d[key] = i; buildDorm(); persist(); toast('換上：' + a.n); listPick(title, arr, key, ownKey);
+  } }; }).concat([{ label: '返回', fn: decor }]) });
+}
+function furnMenu() {
+  const d = st.dorm;
+  const list = ITEMS.filter(it => !it.prize || d.own.includes(it.id));
+  showModal({ title: '家具', text: '你有 ' + fmt(st.money) + '。買了會直接擺上，之後也可以收起來。', choices: list.map(it => { const own = d.own.includes(it.id), pl = d.placed.includes(it.id); return { label: pl ? '收起 ' + it.n : own ? '擺出 ' + it.n : it.n + ' $' + it.p, fn: () => {
+    if (pl) d.placed = d.placed.filter(x => x !== it.id);
+    else if (own) d.placed.push(it.id);
+    else { if (st.money < it.p) return ok('家具', '錢還不夠。', furnMenu); st.money -= it.p; d.own.push(it.id); d.placed.push(it.id); if (d.placed.length === 1) logLine('第一件宿舍家具：' + it.n); }
+    buildDorm(); persist(); hud(); furnMenu();
+  } }; }).concat([{ label: '返回', fn: decor }]) });
+}
+function sleep() { busy = true; $('#fade').style.opacity = 1; setTimeout(() => { $('#fade').style.opacity = 0; busy = false; ok('宿舍', pick(['你躺下去，三分鐘後睜開眼睛，外面的天已經變了顏色。', '你睡了一覺。夢裡的期中考範圍比現實更友善。'])); }, 700); }
+function wave(b) {
+  say(P, '👋', 1.6); beep(780, .05); dHit('wave');
+  if (!st.q.c.waves.includes(b.name)) st.q.c.waves.push(b.name);
+  if (b.wander) { b.wait = Math.max(b.wait, 2.5); faceToward(b, P.x, P.y); }
+  setTimeout(() => { say(b, pick(['嗨!', '午安', '你也在這裡', '我超累', '報告寫完了嗎']), 2); beep(990, .05); chkReady(); }, 700);
+}
+function goScene(id, sx, sy, dir) {
+  if (busy) return; busy = true; $('#fade').style.opacity = 1; beep(440, .06);
+  setTimeout(() => {
+    cur = scenes[id]; P.x = sx; P.y = sy; P.dir = dir || 'down'; snapCam();
+    busy = false; $('#fade').style.opacity = 0; hud(); persist();
+  }, 200);
+}
+function interact() {
+  if (!started || locked()) return;
+  const it = nearest(); if (!it) return;
+  if (it.id === 'ent') { const e = it.ent; if (e.kind === 'player') return wave(e); if (!e.loop) faceToward(e, P.x, P.y); if (e.wander) e.wait = Math.max(e.wait, 3); return e.talk(); }
+  if (it.id === 'enter') return goScene(it.to, 7 * T, 8 * T + 12, 'up');
+  if (it.id === 'stall') return stall(it.stall);
+  const f = { board, bench, study, clubboard: clubBoard, shop, decor, bed: sleep, class: classFlow, meal, hoop, run: runGame,
+    notice: () => ok('考試中心 · 公告', '本中心辦理：學測、分科測驗、轉學考、研究所考試、各類國家考試、駕照筆試。\n\n人生的考試比你以為的多。第二章開放後，這裡每一場都能報名。'),
+    copier: () => ok('影印機', '影印機吐出一張全黑的紙。沒有人知道它印的是什麼。') }[it.id];
+  f && f();
+}
+
+/* ---------- 輸入 ---------- */
+const keys = {}; let joy = { x: 0, y: 0 }, joyId = null, jbx = 0, jby = 0;
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return; keys[e.code] = true;
+  if (mg) {
+    if (mg.type === 'meter' && ['Space', 'Enter', 'KeyE'].includes(e.code)) { e.preventDefault(); if (!e.repeat) mgPress(); }
+    if (mg.type === 'mash') { if (['ArrowLeft', 'KeyA', 'KeyJ'].includes(e.code)) { e.preventDefault(); if (!e.repeat) mgPress('L'); } if (['ArrowRight', 'KeyD', 'KeyL'].includes(e.code)) { e.preventDefault(); if (!e.repeat) mgPress('R'); } }
+    return;
+  }
+  if (['Space', 'Enter', 'KeyE'].includes(e.code)) { e.preventDefault(); if (!e.repeat) { if (modalOpen && $('#modal').classList.contains('on')) { const b = $('#mc').querySelectorAll('button'); if (b.length === 1 && $('#mc').style.visibility === 'visible') b[0].click(); } else interact(); } }
+  if (e.code === 'Tab') { e.preventDefault(); if ($('#book').classList.contains('on')) closeBook(); else if (started && !locked()) openBook(); }
+  if (e.code === 'KeyM') { if ($('#mapOv').classList.contains('on')) closeMap(); else if (started && !locked()) openMap(); }
+  if (e.code === 'Escape') { if ($('#book').classList.contains('on')) closeBook(); if ($('#mapOv').classList.contains('on')) closeMap(); }
+  if (e.code.startsWith('Arrow')) e.preventDefault();
+});
+addEventListener('keyup', e => { keys[e.code] = false; });
+addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+const zone = $('#zone'), base = $('#stickBase'), knob = $('#stickKnob'), hint = $('#stickHint');
+zone.addEventListener('pointerdown', e => {
+  if (joyId !== null) return; joyId = e.pointerId; zone.setPointerCapture(e.pointerId);
+  jbx = e.clientX; jby = e.clientY; base.style.display = 'block'; hint.style.opacity = 0;
+  base.style.left = (jbx - 54) + 'px'; base.style.top = (jby - 54) + 'px'; base.style.bottom = 'auto'; knob.style.transform = 'translate(0,0)';
+});
+zone.addEventListener('pointermove', e => {
+  if (e.pointerId !== joyId) return;
+  let dx = e.clientX - jbx, dy = e.clientY - jby; const d = Math.hypot(dx, dy), Rr = 46;
+  if (d > Rr) { dx = dx / d * Rr; dy = dy / d * Rr; }
+  knob.style.transform = `translate(${dx}px,${dy}px)`; joy.x = dx / Rr; joy.y = dy / Rr;
+});
+const endJoy = e => { if (e.pointerId !== joyId) return; joyId = null; joy = { x: 0, y: 0 }; base.style.display = 'none'; hint.style.opacity = .5; };
+zone.addEventListener('pointerup', endJoy); zone.addEventListener('pointercancel', endJoy);
+$('#act').addEventListener('pointerdown', e => { e.preventDefault(); interact(); });
+
+/* ---------- 離線結算 ---------- */
+function settle(minutes, fake) {
+  const cap = 480, gain = Math.floor(Math.min(minutes, cap) * rate()); st.money += gain; beep(1047, .1);
+  const act = { sci: '在實驗室和作業之間來回', art: '在讀東西和寫東西之間來回', biz: '開了一場不知道為什麼要開的會' }[st.track] || '在校園裡晃來晃去';
+  const dur = minutes >= 60 ? (Math.floor(minutes / 60) + ' 小時' + (Math.floor(minutes % 60) ? ' ' + Math.floor(minutes % 60) + ' 分鐘' : '')) : (Math.floor(minutes) + ' 分鐘');
+  showModal({ title: fake ? '假裝離開了一下' : '歡迎回來，' + st.name, text: '你離開了 ' + dur + '。這段時間 ' + st.name + ' ' + act + '，替你存了 ' + fmt(gain) + '。' + (minutes > cap ? '\n\n（放置收益最多累積 8 小時，再久就領不到了。）' : ''), choices: [{ label: '收下' }] });
+}
+
+/* ---------- 畫面 ---------- */
+const cam = { x: 0, y: 0 };
+function snapCam() {
+  const s = cur, sw = s.w * T, sh = s.h * T, px = Math.round(P.x), py = Math.round(P.y);
+  cam.x = sw <= VW ? -Math.floor((VW - sw) / 2) : Math.max(0, Math.min(sw - VW, px - (VW >> 1)));
+  cam.y = sh <= VH ? -Math.floor((VH - sh) / 2) : Math.max(0, Math.min(sh - VH, py - (VH >> 1) - 8));
+}
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 3);
+  cv.width = Math.floor(innerWidth * DPR); cv.height = Math.floor(innerHeight * DPR);
+  S = Math.max(1, Math.round(cv.height / 180)); VH = Math.ceil(cv.height / S); VW = Math.ceil(cv.width / S);
+  off.width = VW; off.height = VH; OX = Math.floor((cv.width - VW * S) / 2); OY = Math.floor((cv.height - VH * S) / 2);
+}
+addEventListener('resize', () => { resize(); snapCam(); });
+const rr = (g, x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+const FONT = '"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif';
+const toScr = (wx, wy) => [OX + (wx - cam.x) * S, OY + (wy - cam.y) * S];
+function label(text, x, y, o = {}) {
+  const fs = (o.size || 11) * DPR; cx.font = `700 ${fs}px ${FONT}`;
+  const w = cx.measureText(text).width + 8 * DPR, h = fs + 5 * DPR;
+  cx.fillStyle = o.bg || 'rgba(255,248,239,.88)'; rr(cx, x - w / 2, y - h / 2, w, h, 4 * DPR); cx.fill();
+  cx.lineWidth = 1.5 * DPR; cx.strokeStyle = '#3b2f4a'; cx.stroke();
+  cx.fillStyle = '#3b2f4a'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText(text, x, y + DPR * .5);
+}
+function bubble(e) {
+  if (!e.bubble || performance.now() > e.bubble.until) { e.bubble = null; return; }
+  const [sx, sy] = toScr(Math.round(e.x), Math.round(e.y) - 20), fs = 12 * DPR; cx.font = `700 ${fs}px ${FONT}`;
+  const w = cx.measureText(e.bubble.text).width + 12 * DPR, h = fs + 9 * DPR, bx = sx - w / 2, by = sy - h - 6 * DPR;
+  cx.fillStyle = '#fff'; rr(cx, bx, by, w, h, 6 * DPR); cx.fill(); cx.lineWidth = 2 * DPR; cx.strokeStyle = '#3b2f4a'; cx.stroke();
+  cx.beginPath(); cx.moveTo(sx - 4 * DPR, by + h - 1); cx.lineTo(sx, by + h + 5 * DPR); cx.lineTo(sx + 4 * DPR, by + h - 1); cx.fillStyle = '#fff'; cx.fill();
+  cx.fillStyle = '#3b2f4a'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText(e.bubble.text, sx, by + h / 2 + DPR * .5);
+}
+function badge(sx, sy, ch, c) {
+  cx.fillStyle = c; cx.beginPath(); cx.arc(sx, sy, 8 * DPR, 0, 7); cx.fill(); cx.lineWidth = 2 * DPR; cx.strokeStyle = '#3b2f4a'; cx.stroke();
+  cx.fillStyle = '#3b2f4a'; cx.font = `800 ${12 * DPR}px sans-serif`; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText(ch, sx, sy + DPR);
+}
+let nearIt = null;
+function render(t) {
+  const s = cur;
+  oc.imageSmoothingEnabled = false; oc.fillStyle = s.id === 'street' ? '#2f2840' : '#2b2338'; oc.fillRect(0, 0, VW, VH);
+  oc.save(); oc.translate(-cam.x, -cam.y); oc.drawImage(s.map, 0, 0);
+  const list = s.dyn.slice();
+  s.ents.forEach(e => list.push({ y: e.y, f: g => drawChar(g, e.x, e.y, e.dir, e.step, e.look[0], e.look[1], e.look[2]) }));
+  list.push({ y: P.y, f: g => drawChar(g, P.x, P.y, P.dir, P.step, '#5a3a2a', '#ff8fb1', '#4a5d8a') });
+  list.sort((a, b) => a.y - b.y).forEach(o => o.f(oc)); oc.restore();
+  if (s.id === 'street') { oc.fillStyle = 'rgba(40,30,80,.18)'; oc.fillRect(0, 0, VW, VH); }
+  cx.setTransform(1, 0, 0, 1, 0, 0); cx.fillStyle = '#2b2338'; cx.fillRect(0, 0, cv.width, cv.height);
+  cx.imageSmoothingEnabled = false; cx.drawImage(off, 0, 0, VW, VH, OX, OY, VW * S, VH * S);
+  s.labels.forEach(l => { const [sx, sy] = toScr(l.x, l.y); if (sx > -200 && sx < cv.width + 200 && sy > -50 && sy < cv.height + 50) label(l.t, sx, sy, { size: l.size || 11, bg: 'rgba(255,248,239,.92)' }); });
+  s.ents.forEach(e => {
+    if (e.kind === 'passer' || e.kind === 'deco') return;
+    const [sx, sy] = toScr(Math.round(e.x), Math.round(e.y) + 9); label(e.name, sx, sy, { size: 10, bg: e.kind === 'quest' ? '#ffe9a8' : '#cdeaff' });
+    const m = markOf(e); if (m) { const [mx, my] = toScr(e.x, e.y - 30 + Math.sin(t / 200) * 2); badge(mx, my, m === 'turn' ? '?' : '!', m === 'side' ? '#7ec8f0' : '#ffd45c'); }
+  });
+  if (started) { const [sx, sy] = toScr(Math.round(P.x), Math.round(P.y) + 9); label(st.name, sx, sy, { size: 10, bg: '#ffd45c' }); }
+  bubble(P); s.ents.forEach(bubble);
+  if (started && nearIt && !locked() && nearIt.id !== 'ent') { const [sx, sy] = toScr(nearIt.ix, nearIt.iy + Math.sin(t / 160) * 2); badge(sx, sy, '!', '#ffd45c'); }
+}
+
+/* ---------- 小地圖 ---------- */
+let mapView = 'campus';
+const OUT = [['campus', '校園'], ['playground', '操場'], ['street', '校外']];
+function parentOf(sceneId) { const s = scenes[sceneId]; if (!s.indoor) return { scene: sceneId }; const b = BLD.find(b => b.id === sceneId); const d = door(b); return { scene: b.scene, x: d.x, y: d.y - 10 }; }
+function openMap() { mapView = parentOf(cur.id).scene; drawMap(); $('#mapOv').classList.add('on'); modalOpen = true; }
+function closeMap() { $('#mapOv').classList.remove('on'); modalOpen = false; }
+function drawMap() {
+  $('#mapTabs').innerHTML = OUT.map(([id, n]) => '<button class="tab' + (id === mapView ? ' on' : '') + '" data-m="' + id + '" type="button">' + n + '</button>').join('');
+  $('#mapTabs').querySelectorAll('button').forEach(b => b.onclick = () => { mapView = b.dataset.m; drawMap(); });
+  const s = scenes[mapView], c = $('#mapCv'), g = c.getContext('2d');
+  const maxW = Math.min(innerWidth * .86, 620), maxH = innerHeight * .58, k = Math.min(maxW / (s.w * T), maxH / (s.h * T)), d = Math.min(DPR, 2);
+  c.style.width = Math.floor(s.w * T * k) + 'px'; c.style.height = Math.floor(s.h * T * k) + 'px';
+  c.width = Math.floor(s.w * T * k * d); c.height = Math.floor(s.h * T * k * d); const K = k * d;
+  g.imageSmoothingEnabled = false; g.drawImage(s.map, 0, 0, c.width, c.height);
+  s.dyn.forEach(o => { g.save(); g.scale(K, K); o.f(g); g.restore(); });
+  const dot = (x, y, col, r) => { g.fillStyle = col; g.beginPath(); g.arc(x * K, y * K, r * d, 0, 7); g.fill(); g.lineWidth = 2 * d; g.strokeStyle = '#3b2f4a'; g.stroke(); };
+  const txt = (t, x, y, size = 11) => { g.font = `700 ${size * d}px ${FONT}`; const w = g.measureText(t).width + 8 * d; g.fillStyle = 'rgba(255,248,239,.92)'; rr(g, x * K - w / 2, y * K - 9 * d, w, 17 * d, 4 * d); g.fill(); g.lineWidth = 1.5 * d; g.strokeStyle = '#3b2f4a'; g.stroke(); g.fillStyle = '#3b2f4a'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(t, x * K, y * K); };
+  s.labels.forEach(l => txt(l.t, l.x, l.y + 4, 11));
+  s.ents.forEach(e => { if (e.kind === 'player') dot(e.x, e.y - 4, '#7ec8f0', 4); });
+  Object.values(QN).forEach(e => {
+    const m = markOf(e); if (!m) return; const p = parentOf(e.scene); if (p.scene !== mapView) return;
+    const x = p.x === undefined ? e.x : p.x, y = p.y === undefined ? e.y : p.y;
+    g.fillStyle = m === 'side' ? '#7ec8f0' : '#ffd45c'; g.beginPath(); g.arc(x * K, (y - 24) * K, 8 * d, 0, 7); g.fill(); g.lineWidth = 2 * d; g.strokeStyle = '#3b2f4a'; g.stroke();
+    g.fillStyle = '#3b2f4a'; g.font = `800 ${11 * d}px sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(m === 'turn' ? '?' : '!', x * K, (y - 24) * K + d);
+  });
+  const me = parentOf(cur.id); if (me.scene === mapView) dot(me.x === undefined ? P.x : me.x, (me.y === undefined ? P.y : me.y) - 4, '#ff8fb1', 6);
+}
+$('#mapBtn').addEventListener('click', () => { if (started && !locked()) openMap(); });
+$('#mapClose').addEventListener('click', closeMap);
+
+/* ---------- 迴圈與 HUD ---------- */
+let last = performance.now(), hudT = 0, saveT = 0, mutT = 12;
+function mutter() {
+  const g = ['今天也只是普通地過去了一天。', '這個月的錢怎麼又剩一半。', '好像忘了什麼事，算了。', '明天一定開始認真。', '咖啡是不是又漲價了。', '有人知道下一堂在哪間教室嗎。'];
+  const by = { sci: ['微積分，我們又見面了。', '這題我昨天明明會的。'], art: ['這篇報告可以寫成散文嗎。', '想寫的東西很多，交稿的時間只有一個。'], biz: ['我們來對齊一下。', '這件事先放進待辦。'] };
+  const pool = g.concat(by[st.track] || []);
+  if (st.q.c.workAll) pool.push('發票載具到底是什麼。'); if (st.clubs.length >= 2) pool.push('我是不是參加太多社團了。');
+  if (st.dorm.placed.length) pool.push('宿舍越來越像我的地方了。'); if (cur.id === 'street') pool.push('只是來看看，不會買的。'); if (cur.id === 'playground') pool.push('今天就跑一圈，一圈就好。');
+  say(P, pick(pool), 3);
+}
+function loop(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  let vx = joy.x, vy = joy.y;
+  if (started && !locked()) { if (keys.ArrowLeft || keys.KeyA) vx -= 1; if (keys.ArrowRight || keys.KeyD) vx += 1; if (keys.ArrowUp || keys.KeyW) vy -= 1; if (keys.ArrowDown || keys.KeyS) vy += 1; } else { vx = vy = 0; }
+  const mag = Math.hypot(vx, vy);
+  if (mag > .18) {
+    const k = Math.min(1, mag) / mag, sp = 60 * dt;
+    move(P, vx * k * sp, 0); move(P, 0, vy * k * sp);
+    P.dir = Math.abs(vx) > Math.abs(vy) ? (vx > 0 ? 'right' : 'left') : (vy > 0 ? 'down' : 'up'); P.anim += dt; P.step = Math.floor(P.anim / .15) % 2;
+  } else P.step = 0;
+  Object.values(scenes).forEach(s => s.ents.forEach(e => updateEnt(e, dt)));
+  mgTick(dt);
+  if (started) {
+    if (!busy) {
+      if (cur.indoor) { if (P.y >= 9 * T + 4) { const b = BLD.find(b => b.id === cur.id), d = door(b); goScene(b.scene, d.x, d.y + 10, 'down'); } }
+      else for (const ex of cur.exits) if (ex.t(P)) { goScene(ex.to, ex.sx, ex.sy, ex.dir); break; }
+    }
+    st.money += rate() / 60 * dt;
+    mutT -= dt; if (mutT <= 0) { mutT = rand(11, 19); if (!locked()) mutter(); }
+    nearIt = locked() ? null : nearest();
+    $('#act').classList.toggle('on', !!nearIt); $('#actLabel').textContent = nearIt ? nearIt.label : '互動';
+    hudT -= dt; if (hudT <= 0) { hudT = .25; checkDay(); hud(); }
+    saveT -= dt; if (saveT <= 0) { saveT = 5; persist(); }
+  }
+  snapCam();
+  render(now); requestAnimationFrame(loop);
+}
+const TRACK_NAME = { sci: '理工類', art: '人文類', biz: '商管類' };
+function hud() {
+  if (!st || !started) return;
+  $('#hName').textContent = st.name + ' · 大一'; $('#hMoney').textContent = fmt(st.money);
+  $('#hRate').textContent = '每分鐘 +$' + rate() + (st.track ? ' · ' + TRACK_NAME[st.track] : '');
+  const m = st.q.main; $('#hQuest').textContent = m < MAIN.length ? '主線：' + MAIN[m] : '第一章完成 · 去做每日任務吧';
+  const act = Object.keys(SIDE).filter(id => sideSt(id) === 1).length, rd = Object.keys(SIDE).filter(id => sideSt(id) === 1 && SIDE[id].ready()).length;
+  $('#hBadge').textContent = act ? '支線 ' + act + (rd ? '·可回報' : '') : '';
+  $('#hDaily').textContent = '每日 ' + st.daily.ids.filter(i => st.daily.done[i]).length + ' / 3';
+  $('#hPlace').textContent = cur.name; $('#hOnline').textContent = '同屆在線 6 人 · 示範';
+}
+
+/* ---------- 手冊 ---------- */
+let tab = 'd';
+function bookHTML() {
+  if (tab === 'd') {
+    const d = st.daily; let h = '<div class="sec"><h3>今天的每日任務 · 每天半夜換新</h3>';
+    d.ids.forEach(id => { const q = DAILY[id], p = Math.min(q.g, d.prog[id] || 0); h += '<div class="item ' + (d.done[id] ? 'done' : '') + '"><b>' + (d.done[id] ? '✓ ' : '') + q.n + '</b>' + (d.done[id] ? '已完成，拿到 $300、知識 +5' : '進度 ' + p + ' / ' + q.g + '　獎勵 $300、知識 +5') + '</div>'; });
+    h += '<div class="item ' + (d.bonus ? 'done' : 'main') + '"><b>' + (d.bonus ? '✓ ' : '') + '三個都完成</b>' + (d.bonus ? '已拿到額外的 $500' : '額外再給 $500') + '</div></div>';
+    h += '<div class="sec"><h3>個人紀錄</h3><div class="item">投籃最佳：' + st.best.hoop + ' / 5 球<br>跑步最佳：' + st.best.run + ' 公尺</div></div>';
+    return h;
+  }
+  if (tab === 'q') {
+    const m = st.q.main; let h = '<div class="sec"><h3>主線 · 第一章 大一新生</h3>';
+    MAIN.forEach((t, i) => { h += '<div class="item ' + (i === m ? 'main' : i < m ? 'done' : '') + '"><b>' + (i < m ? '✓ ' : i === m ? '▶ ' : '・') + t + '</b></div>'; });
+    h += '</div><div class="sec"><h3>支線</h3>';
+    Object.keys(SIDE).forEach(id => { const q = SIDE[id], s = sideSt(id); h += '<div class="item ' + (s === 3 ? 'done' : '') + '"><b>' + (s === 3 ? '✓ ' : '') + q.n + '</b>' + (s === 0 ? '還沒遇到委託人：' + q.who : s === 3 ? '已完成' : q.desc + '（' + q.prog() + '）<br>獎勵：' + q.reward) + '</div>'; });
+    return h + '</div>';
+  }
+  const cl = st.clubs.map(i => CLUBS.find(c => c.id === i).n).join('、') || '無';
+  let h = '<div class="sec"><h3>基本</h3><div class="item"><b>' + st.name + ' · 大一</b>選課傾向：' + (TRACK_NAME[st.track] || '未選') + '<br>知識：' + st.exp + '<br>社團：' + cl + '<br>便利商店打工：' + st.q.c.workAll + ' 次<br>宿舍家具：' + st.dorm.placed.length + ' 件</div></div>';
+  h += '<div class="sec"><h3>人生紀錄</h3>' + (st.log.length ? st.log.slice().reverse().map(l => '<div class="item">' + l + '</div>').join('') : '<div class="item done">還沒有紀錄。去走走。</div>') + '</div>';
+  return h;
+}
+function openBook() { $('#bookBody').innerHTML = bookHTML(); document.querySelectorAll('#book .tab').forEach(b => b.classList.toggle('on', b.dataset.t === tab)); $('#book').classList.add('on'); modalOpen = true; }
+function closeBook() { $('#book').classList.remove('on'); modalOpen = false; }
+$('#bookBtn').addEventListener('click', () => { if (started && !locked()) openBook(); });
+document.querySelectorAll('#book .tab').forEach(b => b.onclick = () => { tab = b.dataset.t; openBook(); });
+$('#bookClose').addEventListener('click', closeBook);
+$('#fastBtn').addEventListener('click', () => { closeBook(); setTimeout(() => settle(60, true), 50); });
+
+/* ---------- 開始 ---------- */
+function begin() {
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) {}
+  $('#title').classList.remove('on'); started = true; buildDorm(); cur = campus; P.x = 24 * T; P.y = 17 * T;
+  if (st.pos && scenes[st.pos.s] && !scenes[st.pos.s].indoor) { cur = scenes[st.pos.s]; P.x = st.pos.x; P.y = st.pos.y; if (blocked(P.x, P.y)) { cur = campus; P.x = 24 * T; P.y = 17 * T; } }
+  checkDay(true); snapCam(); hud();
+  const away = (Date.now() - (st.lastSeen || Date.now())) / 60000;
+  if (st.fresh) { delete st.fresh; toast('先去學務處找陳老師報到。右上角的地圖可以看路。'); }
+  else if (away >= 1) setTimeout(() => settle(away, false), 300);
+  persist();
+}
+const saved = loadSave();
+if (saved) { $('#titleNew').style.display = 'none'; $('#titleBack').style.display = 'block'; $('#backText').textContent = '歡迎回來，' + saved.name + '。'; $('#contBtn').onclick = () => { st = saved; begin(); }; $('#resetBtn').onclick = () => { try { localStorage.removeItem(KEY); localStorage.removeItem(OLDKEY); } catch (e) {} $('#titleBack').style.display = 'none'; $('#titleNew').style.display = 'block'; }; }
+$('#startBtn').addEventListener('click', () => {
+  const n = $('#nameIn').value.trim().slice(0, 6); if (!n) { $('#nameIn').focus(); toast('先取個名字吧'); return; }
+  st = newState(n); st.fresh = true; begin();
+});
+$('#nameIn').addEventListener('keydown', e => { if (e.key === 'Enter') $('#startBtn').click(); });
+cur = campus; st = newState('');
+resize(); snapCam();
+document.addEventListener('visibilitychange', () => { if (document.hidden && started) persist(); });
+addEventListener('pagehide', () => { if (started) persist(); });
+requestAnimationFrame(loop);
+window.__town = { get st() { return st; }, P, scenes, get cur() { return cur; }, interact, nearest, QN, SIDE, goScene, setMain, cam, get S() { return S; }, get mg() { return mg; }, mgPress, findPath, BLD };
+})();
+</script>
+</body>
+</html>
