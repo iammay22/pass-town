@@ -1527,7 +1527,7 @@ $('#cardClose').onclick = () => { $('#cardOv').classList.remove('on'); modalOpen
 
 /* ---------- 樹洞留言牆 ---------- */
 // Supabase：把 Project Settings → API Keys 裡的 anon（publishable）key 貼到 SB_KEY，留言牆就會變成真的多人版
-const SB_URL = 'https://sgnjiqxkkjifjffgmlzf.supabase.co', SB_KEY = '';
+const SB_URL = 'https://sgnjiqxkkjifjffgmlzf.supabase.co', SB_KEY = 'sb_publishable_hpVB6Rmssc2a6OaB28G5Pg_bDzPH95S';
 let sb = null, sbUid = null;
 async function sbInit() {
   if (sb || !SB_KEY) return sb;
