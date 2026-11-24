@@ -70,6 +70,10 @@ button.tab.on{background:var(--gold)}
 .meter .mk{position:absolute;top:0;bottom:0;width:6px;margin-left:-3px;background:var(--ink)}
 .meter.hit{background:#e5ffe0}.meter.miss{background:#ffe0e6}
 .mgInfo{font-size:14px;font-weight:700;min-height:1.6em}
+.qgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.qgrid button.right{background:#9bd8a0}.qgrid button.wrong{background:#ffb3c1}.qgrid button.gone{opacity:.25}
+.passage{background:#fff;border:2px dashed var(--ink);border-radius:4px;padding:6px 10px;margin:6px 0;font-size:14px;line-height:1.55;white-space:pre-line}
+.qq{font-size:15px;font-weight:700;margin-top:6px}
 .big{font-size:20px;padding:16px 10px;flex:1}
 .prog{height:16px;border:2px solid var(--ink);border-radius:4px;background:#fff;margin:10px 0 4px;overflow:hidden}
 .prog i{display:block;height:100%;width:0;background:var(--pink)}
@@ -93,7 +97,7 @@ button.tab.on{background:var(--gold)}
 </div>
 <div class="hud" id="hudR">
   <div class="btnrow"><div class="chip btn" id="mapBtn">地圖</div><div class="chip btn" id="bookBtn">手冊 <small id="hBadge"></small></div></div>
-  <div class="chip"><small id="hDaily"></small></div>
+  <div class="chip btn" id="dailyBtn">每日任務 <small id="hDaily"></small></div>
   <div class="chip"><small id="hPlace"></small></div>
   <div class="chip"><small id="hOnline"></small></div>
 </div>
@@ -140,7 +144,7 @@ button.tab.on{background:var(--gold)}
   <div class="card">
     <div class="row" style="margin:0" id="mapTabs"></div>
     <canvas id="mapCv"></canvas>
-    <p class="note">粉紅色是你，藍點是同屆玩家，黃色驚嘆號是主線，藍色驚嘆號是支線，問號代表可以回報。</p>
+    <p class="note">粉紅色是你，藍點是同屆玩家。黃色驚嘆號是主線，藍色驚嘆號是支線，問號代表可以回報，綠色「日」是今天的每日任務。</p>
     <div class="row"><button class="pri" id="mapClose" type="button">關閉</button></div>
   </div>
 </div>
@@ -475,7 +479,7 @@ rCafe.IT.push({ id: 'meal', label: '打菜', x: 5 * T, y: 4 * T + 12, r: 26, ix:
 const rExam = mkRoom('exam', '考試中心', '#e9e9f2', '#dcdce6', '#d3d3df');
 put(rExam, 'counter', 4, 3, 6, 1); put(rExam, 'board', 10, 2, 3, 1); put(rExam, 'plant', 1, 2, 1, 1);
 [[2, 6], [3, 6], [4, 6], [9, 6], [10, 6], [11, 6]].forEach(([x, y]) => put(rExam, 'sdesk', x, y, 1, 1));
-rExam.IT.push({ id: 'notice', label: '看公告', x: 11.5 * T, y: 3 * T + 12, r: 24, ix: 11.5 * T, iy: 1 * T });
+rExam.IT.push({ id: 'notice', label: '看公告', x: 11.5 * T, y: 3 * T + 12, r: 24, ix: 11.5 * T, iy: 1 * T }, { id: 'examseat', label: '應考', x: 3 * T + 8, y: 7 * T + 12, r: 22, ix: 3 * T + 8, iy: 4 * T + 10 });
 
 /* 宿舍：可換裝潢，之後重畫 */
 const rDorm = mkScene('dorm', '宿舍', RW, RH, true);
@@ -505,9 +509,9 @@ const KEY = 'jige-town-v1', OLDKEY = 'lifefork-town-demo-v2';
 let st = null, started = false;
 function newState(name) {
   return { name, money: 0, exp: 0, track: null, clubs: [], lib: 0, log: [], lastSeen: Date.now(), storeAt: 0, fedUntil: 0,
-    inv: { coffee: 0, bag: 0, card: 0 }, dorm: { wall: 0, floor: 0, wallOwn: [0], floorOwn: [0], own: [], placed: [] },
-    q: { main: 0, side: {}, notified: {}, c: { work: 0, workAt: 0, workAll: 0, waves: [], study: 0, hoop4: 0 } },
-    daily: { date: '', ids: [], prog: {}, done: {}, bonus: false }, best: { hoop: 0, run: 0 }, met: {}, pos: null };
+    inv: { coffee: 0, bag: 0, card: 0, past: 0 }, dorm: { wall: 0, floor: 0, wallOwn: [0], floorOwn: [0], own: [], placed: [] },
+    q: { main: 0, side: {}, notified: {}, c: { work: 0, workAt: 0, workAll: 0, waves: [], study: 0, hoop4: 0, eng: 0, examTry: 0, examScore: 0 } },
+    daily: { date: '', ids: [], prog: {}, done: {}, bonus: false }, best: { hoop: 0, run: 0, exam: 0 }, met: {}, pos: null };
 }
 function fill(def, s) { for (const k in def) { if (s[k] === undefined) s[k] = def[k]; else if (def[k] && typeof def[k] === 'object' && !Array.isArray(def[k]) && typeof s[k] === 'object') fill(def[k], s[k]); } return s; }
 function loadSave() {
@@ -523,10 +527,19 @@ const logLine = t => { st.log.push(t); if (st.log.length > 30) st.log.shift(); t
 
 /* ---------- 每日任務 ---------- */
 const DAILY = {
-  eat: { n: '去學生餐廳吃一餐', g: 1 }, class: { n: '去教學大樓上一堂課', g: 1 }, hoop: { n: '在操場投籃，一場投進 3 球', g: 1 },
-  run: { n: '在操場跑一次步', g: 1 }, work: { n: '在便利商店排一次班', g: 1 }, wave: { n: '跟同學揮手 2 次', g: 2 },
-  market: { n: '在夜市買一樣吃的', g: 1 }, study: { n: '在圖書館讀一次書', g: 1 }
+  eat: { n: '去學生餐廳吃一餐', g: 1, place: '學生餐廳，校園右下角。找打菜阿姨', at: 'cafe' },
+  class: { n: '去教學大樓上一堂課', g: 1, place: '教學大樓，校園上排左邊第二棟。找王教授或空位', at: 'classroom' },
+  hoop: { n: '在操場投籃，一場投進 3 球', g: 1, place: '操場右邊的籃球場。從校園往下走', at: { scene: 'playground', x: 26 * T, y: 9 * T } },
+  run: { n: '在操場跑一次步', g: 1, place: '操場跑道下方的起跑線。從校園往下走', at: { scene: 'playground', x: 11.5 * T, y: 20 * T } },
+  work: { n: '在便利商店排一次班', g: 1, place: '便利商店，校園上排最右邊。找店長', at: 'store' },
+  wave: { n: '跟同學揮手 2 次', g: 2, place: '頭上有藍色名牌的人就是同學，校園、操場、夜市都有', at: null },
+  market: { n: '在夜市買一樣吃的', g: 1, place: '校外夜市的雞排、珍奶或烤玉米攤。從校門往右走', at: { scene: 'street', x: 13 * T, y: 5 * T } },
+  study: { n: '在圖書館讀一次書', g: 1, place: '圖書館，校園上排最左邊。後面的自習區', at: 'library' }
 };
+function introDaily() {
+  st.met.dailyIntro = 1;
+  dialog('每日任務', ['除了主線，每天還有三個小目標，叫每日任務。做完一個拿 $300 和知識，三個都做完再多 $500。', '今天的是：\n' + st.daily.ids.map((id, i) => (i + 1) + '. ' + DAILY[id].n).join('\n'), '要去的地方會出現綠色的「日」字，地圖上也看得到。右上角「每日任務」按鈕可以隨時打開來看。半夜十二點會換新的。']);
+}
 const today = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
 function checkDay(quiet) {
   const t = today(); if (st.daily.date === t) return;
@@ -636,7 +649,7 @@ const stat = (scene, tx, ty, look, dir = 'down') => { const [x, y] = at(tx, ty);
 stat('office', 4, 7.1, PLOOK[0], 'up'); stat('library', 5.6, 7, PLOOK[1]); stat('library', 8.4, 6, PLOOK[2]);
 stat('club', 10, 5, PLOOK[3], 'left'); stat('store', 8, 7, PLOOK[1], 'up');
 stat('classroom', 2, 5.4, PLOOK[2], 'up'); stat('classroom', 11, 7.4, PLOOK[4], 'up'); stat('classroom', 9, 5.4, PLOOK[0], 'up');
-stat('cafe', 3, 5.6, PLOOK[3], 'down'); stat('cafe', 10, 5.6, PLOOK[1], 'down'); stat('exam', 3, 5.4, PLOOK[4], 'up');
+stat('cafe', 3, 5.6, PLOOK[3], 'down'); stat('cafe', 10, 5.6, PLOOK[1], 'down'); stat('exam', 10, 5.4, PLOOK[4], 'up');
 /* 跑步的人 */
 mkEnt('playground', { kind: 'passer', name: '路人', x: 3.5 * T, y: 4.6 * T, look: ['#2b2338', '#ffffff', '#e5607f'], loop: [[3.5 * T, 4.6 * T], [19.5 * T, 4.6 * T], [19.5 * T, 19.7 * T], [3.5 * T, 19.7 * T]], li: 1, speed: 42, lines: ['呼。', '還有兩圈。', '不要跟我說話，我會停下來。'], talk: () => ok('跑步的人', '我還要跑兩圈，你要一起嗎？不要也沒關係，我也不想。') });
 /* 攤販 */
@@ -654,6 +667,7 @@ qnpc('zhe', 'playground', '籃球隊阿哲', 23, 10, ['#2b2338', '#ff8b3d', '#3a
 qnpc('prof', 'classroom', '王教授', 7, 2.95, ['#c9c3d6', '#8a6bb5', '#3a3a4a']);
 qnpc('aunt', 'cafe', '打菜阿姨', 5, 2.95, ['#3b2f4a', '#fff', '#e5607f']);
 qnpc('desk', 'exam', '櫃台人員', 7, 2.95, ['#3b2f4a', '#5c6b8a', '#3a3a4a']);
+qnpc('proctor', 'exam', '監考老師', 7, 6.4, ['#8a8a99', '#5a6b7a', '#3a3a4a']);
 
 /* ---------- 互動點與最近目標 ---------- */
 BLD.forEach(b => { const d = door(b); scenes[b.scene].IT.push({ id: 'enter', to: b.id, label: '進入', x: d.x, y: d.y, ix: d.ix, iy: d.iy, r: 22 }); });
@@ -718,8 +732,33 @@ function mashGame(o) {
   mg = { type: 'mash', o, t: o.time, taps: 0, last: null, end: false };
   $('#mgL').onpointerdown = e => { e.preventDefault(); mgPress('L'); }; $('#mgR').onpointerdown = e => { e.preventDefault(); mgPress('R'); };
 }
+function quizGame(o) { openMg(o.title, o.desc); mg = { type: 'quiz', o, i: 0, c: 0, t: o.time, elim: o.elim || 0, used: 0, lock: false }; renderQ(); }
+function renderQ() {
+  const q = mg.o.qs[mg.i];
+  $('#mgBody').innerHTML = '<div class="mgInfo">第 ' + (mg.i + 1) + ' / ' + mg.o.qs.length + ' 題　答對 ' + mg.c + '</div><div class="prog"><i id="mgBar" style="width:100%;background:var(--blue)"></i></div>'
+    + (q.p ? '<div class="passage">' + q.p + '</div>' : '') + '<div class="qq">' + q.q + '</div><div class="qgrid">'
+    + q.opts.map((o, k) => '<button type="button" data-k="' + k + '">' + (k + 1) + '. ' + o + '</button>').join('') + '</div>'
+    + (mg.elim > 0 ? '<div class="row"><button type="button" id="mgE">刪去法（剩 ' + mg.elim + ' 次）</button></div>' : '');
+  $('#mgBody').querySelectorAll('.qgrid button').forEach(b => b.onclick = () => quizAnswer(+b.dataset.k));
+  if ($('#mgE')) $('#mgE').onclick = quizElim;
+}
+function quizElim() {
+  if (!mg || mg.type !== 'quiz' || mg.lock || mg.elim <= 0) return; const q = mg.o.qs[mg.i], bs = [...$('#mgBody').querySelectorAll('.qgrid button')];
+  const cand = bs.filter(b => +b.dataset.k !== q.ans && !b.classList.contains('gone')); if (cand.length <= 1) return;
+  const b = pick(cand); b.classList.add('gone'); b.disabled = true; mg.elim--; mg.used++; beep(600, .04);
+  $('#mgE').textContent = '刪去法（剩 ' + mg.elim + ' 次）'; if (!mg.elim) $('#mgE').disabled = true;
+}
+function quizAnswer(k) {
+  if (!mg || mg.type !== 'quiz' || mg.lock) return; const q = mg.o.qs[mg.i], right = k === q.ans;
+  if (k >= 0) { const b = $('#mgBody').querySelector('.qgrid button[data-k="' + k + '"]'); if (!b || b.disabled) return; }
+  mg.lock = true;
+  if (right) { mg.c++; beep(988, .08); } else beep(220, .12, 'sawtooth');
+  $('#mgBody').querySelectorAll('.qgrid button').forEach(b => { const kk = +b.dataset.k; if (kk === q.ans) b.classList.add('right'); else if (kk === k) b.classList.add('wrong'); });
+  setTimeout(() => { if (!mg) return; mg.i++; if (mg.i >= mg.o.qs.length) { const o = mg.o, c = mg.c, u = mg.used; closeMg(); o.end(c, u); } else { mg.t = mg.o.time; mg.lock = false; renderQ(); } }, 800);
+}
 function mgTick(dt) {
   if (!mg) return;
+  if (mg.type === 'quiz') { if (!mg.lock) { mg.t -= dt; const b = $('#mgBar'); if (b) b.style.width = Math.max(0, mg.t / mg.o.time * 100) + '%'; if (mg.t <= 0) quizAnswer(-1); } return; }
   if (mg.type === 'meter') {
     if (mg.wait > 0) { mg.wait -= dt; if (mg.wait <= 0) { if (mg.round >= mg.o.rounds) { const o = mg.o, h = mg.hits; closeMg(); o.end(h); return; } mg.zone *= mg.o.shrink || .85; mg.speed *= 1.1; newRound(); } }
     else { mg.pos += mg.dir * mg.speed * dt; if (mg.pos >= 1) { mg.pos = 1; mg.dir = -1; } if (mg.pos <= 0) { mg.pos = 0; mg.dir = 1; } }
@@ -733,7 +772,10 @@ function mgTick(dt) {
 }
 
 /* ---------- 任務 ---------- */
-const MAIN = ['去學務處找陳老師報到', '去宿舍找室友阿芸', '去社團教室，加入一個社團', '去圖書館找館員伯伯，領期中考範圍', '在圖書館自習區讀書兩次', '回學務處向陳老師報告'];
+const MAIN = ['去學務處找陳老師報到', '去宿舍找室友阿芸', '去社團教室，加入一個社團', '去圖書館找館員伯伯，領期中考範圍', '在圖書館自習區讀書兩次', '回學務處向陳老師報告',
+  '去校外的考試中心報名英檢', '在圖書館讀英文三次', '去社團教室找學姊小薰借考古題', '去考試中心考英檢，60 分及格', '回學務處給陳老師看成績'];
+const CHAPTERS = [{ n: '第一章 大一新生', a: 0, b: 6 }, { n: '第二章 畢業門檻', a: 6, b: 11 }];
+const ENG_PROG = () => st.q.main === 7 ? '（' + Math.min(3, st.q.c.eng) + ' / 3）' : '';
 const sideSt = id => st.q.side[id] || 0;
 const SIDE = {
   store: { n: '店長的缺人手', who: '便利商店店長', desc: '幫店長排班兩次', ready: () => st.q.c.work - st.q.c.workAt >= 2, prog: () => Math.min(2, st.q.c.work - st.q.c.workAt) + ' / 2', reward: '$500' },
@@ -765,9 +807,11 @@ function sideFlow(npcName, id, offer, hint, thanks) {
 function markOf(e) {
   if (e.kind !== 'quest' || !st) return null; const m = st.q.main;
   const side = id => { const s = sideSt(id); return s === 0 ? 'side' : (s === 1 && SIDE[id].ready()) ? 'turn' : null; };
-  if (e.id === 'chen') return m === 0 ? 'main' : m === 5 ? 'turn' : null;
+  if (e.id === 'chen') return m === 0 ? 'main' : (m === 5 || m === 10) ? 'turn' : null;
+  if (e.id === 'desk') return m === 6 ? 'main' : null;
+  if (e.id === 'proctor') return m === 9 ? 'main' : null;
   if (e.id === 'yun') return m === 1 ? 'main' : (m >= 2 ? side('bag') : null);
-  if (e.id === 'xun') return m === 2 ? 'main' : (m >= 3 ? side('wave') : null);
+  if (e.id === 'xun') return (m === 2 || m === 8) ? 'main' : (m >= 3 ? side('wave') : null);
   if (e.id === 'lib') return m === 3 ? 'main' : (m >= 3 ? side('card') : null);
   if (e.id === 'boss') return side('store');
   if (e.id === 'late') return side('coffee');
@@ -785,9 +829,17 @@ QN.chen.talk = () => {
   if (m === 2) return ok('陳老師', '社團教室就在這排。社團不用一次選好，也不用待一輩子。');
   if (m === 3) return ok('陳老師', '期中考範圍在圖書館館員伯伯那裡。他很準時，你要比他更準時。');
   if (m === 4) return ok('陳老師', '讀書兩次，是讀進去兩次，不是坐著兩次。');
-  if (m === 5) return dialog('陳老師', ['來了。這學期的第一個月，你算有把作業交出去。', '我看了你的紀錄：' + (st.clubs.length ? '參加了 ' + st.clubs.length + ' 個社團' : '沒參加社團') + '，打工 ' + st.q.c.workAll + ' 次，知識 ' + st.exp + '。', '不算漂亮，但是真的。這樣就夠第一章了。'], [{ label: '收下 $2,000', fn: () => { st.money += 2000; setMain(6); logLine('完成第一章：大一新生'); ok('第一章 · 大一新生 完成', '下一章在校門外的考試中心。那裡還在準備，下次來再開放。\n\n現在可以去做每日任務、做支線，或把宿舍布置成你喜歡的樣子。'); } }]);
-  ok('陳老師', '下個階段還在準備。先把這個月過好。');
+  if (m === 5) return dialog('陳老師', ['來了。這學期的第一個月，你算有把作業交出去。', '我看了你的紀錄：' + (st.clubs.length ? '參加了 ' + st.clubs.length + ' 個社團' : '沒參加社團') + '，打工 ' + st.q.c.workAll + ' 次，知識 ' + st.exp + '。', '不算漂亮，但是真的。這樣就夠第一章了。'], [{ label: '收下 $2,000', fn: () => { st.money += 2000; logLine('完成第一章：大一新生'); ch2Start(); } }]);
+  if (m === 6) return ch2Start();
+  if (m === 7) return ok('陳老師', '報名了？很好。圖書館自習區可以讀英文，讀三次再去考，不要裸考。');
+  if (m === 8) return ok('陳老師', '小薰手上有考古題，她每年都借，每年都說是最後一次。');
+  if (m === 9) return ok('陳老師', '考試中心在校門外。記得帶學生證，手機要關機。');
+  if (m === 10) { const sc = st.q.c.examScore; return dialog('陳老師', ['給我看看。' + sc + ' 分。', sc >= 90 ? '這分數我可以拿去跟其他老師炫耀，我不會說是你的。' : sc >= 70 ? '穩穩過了。英文這件事，以後至少不會卡你畢業。' : '剛好及格。我跟你說實話，及格就是及格，畢業證書上不會寫幾分。', '畢業門檻過了一個。接下來的路會開始分岔：轉系、雙主修、交換學生、直接工作。那是第三章的事。'], [{ label: '收下 $3,000', fn: () => { st.money += 3000; setMain(11); logLine('完成第二章：畢業門檻'); ok('第二章 · 畢業門檻 完成', '第三章「岔路」還在準備：大二了，每個人開始往不同方向走。\n\n現在可以繼續做每日任務和支線，或回考試中心挑戰更高分。'); } }]); }
+  ok('陳老師', '第三章還在準備。先把每天過好。');
 };
+function ch2Start() {
+  dialog('陳老師', ['對了，有件事入學說明會應該講過，但大家通常沒在聽。', '學校規定，畢業前要通過英文檢定。沒過的話，學分修滿也拿不到畢業證書。', '考試中心在校門外，往右走過夜市就到了。先去櫃台報名，報名費 $800。'], [{ label: '知道了', fn: () => { if (st.q.main < 6) setMain(6); else toast('主線：' + MAIN[6]); } }]);
+}
 function pickTrack(t, text) { st.track = t; logLine('選課傾向：' + { sci: '理工類', art: '人文類', biz: '商管類' }[t]); ok('陳老師', text + '\n\n接下來去宿舍找室友阿芸，她會給你鑰匙。宿舍在校園右下角。', () => setMain(1)); }
 QN.yun.talk = () => {
   const m = st.q.main;
@@ -800,6 +852,7 @@ QN.xun.talk = () => {
   const m = st.q.main;
   if (m < 2) return ok('學姊小薰', '迎新還沒開始，你先把該報到的報到完。');
   if (m === 2) return ok('學姊小薰', '新生？太好了，迎新缺人缺到我都要親自拉人。\n\n社團不用一次選好，也不用一輩子參加。去看看布告欄，想加幾個都可以。');
+  if (m === 8) return dialog('學姊小薰', ['考古題？陳老師又跟你說了對不對。', '拿去。這是我學長給我的，他的學長給他的。上面的筆記至少有三種筆跡。', '考試的時候可以用刪去法，這份考古題大概能幫你刪三次。用完記得還我，雖然沒人還過。'], [{ label: '收下考古題', fn: () => { st.inv.past = 3; logLine('借到英檢考古題'); setMain(9); } }]);
   if (sideFlow('學姊小薰', 'wave', ['迎新活動缺人，我需要有人去認識同屆的新生。', '你去跟兩個不同的同學揮個手就好，不用說話，說話我怕你們都尷尬。'], '還差一點。同屆的人在校園、操場和夜市走動，靠近他們按揮手。', ['兩位都揮到了？很好，你比我想像的社交。', '這是一點小心意，別跟學長說。'])) return;
   ok('學姊小薰', pick(['社團多加幾個也沒關係，只是你的讀書時間會跟著變少。', '想退社也可以，我們不會追，大概。', '迎新那天拍的照片，我決定都不要放出來。']));
 };
@@ -835,8 +888,16 @@ QN.zhe.talk = () => {
 QN.prof.talk = () => classFlow();
 QN.aunt.talk = () => meal();
 QN.desk.talk = () => {
-  if (st.q.main < 6) return ok('櫃台人員', '你還是大一吧？考試中心是第二章的地方。先把第一章過完再來。');
-  ok('櫃台人員', '第二章還在準備。報名表印好了，但上面的日期還沒填。\n\n下次更新再來。');
+  const m = st.q.main;
+  if (m < 6) return ok('櫃台人員', '這裡是英檢考場。先把學校那邊的事處理完，陳老師會叫你來的。');
+  if (m === 6) return dialog('櫃台人員', ['要報名英檢嗎？畢業門檻那個對吧，你們學校的人每年都這樣來。', '報名費 $800。考場在後面，準備好了找監考老師或直接坐下就可以考。'], [{ label: '報名 $800', fn: () => { if (st.money < 800) return ok('櫃台人員', '錢不太夠喔。便利商店在缺人，排個班再來。'); st.money -= 800; logLine('報名英檢'); ok('櫃台人員', '好了，這是你的准考證。照片拍得不錯，大家都這樣說。', () => setMain(7)); } }, { label: '再想想' }]);
+  if (m < 9) return ok('櫃台人員', '准考證收好。考試前先去讀點書，考場不會等你。');
+  if (m === 9) return ok('櫃台人員', '考場在後面，找監考老師或直接坐下。' + (st.q.c.examTry ? '\n補考要付 $400，在座位那邊付就好。' : ''));
+  ok('櫃台人員', '想再考一次刷高分也可以，報名費 $400。成績以最高的那次算。');
+};
+QN.proctor.talk = () => {
+  if (st.q.main < 9) return ok('監考老師', pick(['考場現在沒有考試。你可以坐坐看，椅子很硬。', '我監考二十年了，什麼樣的作弊都看過。我不說是哪些。']));
+  ok('監考老師', '考試規則：學生證放桌上，手機關機，不能講話。\n一共十題，每題 20 秒。準備好了就到左邊的座位坐下。');
 };
 
 /* ---------- 事件 ---------- */
@@ -851,9 +912,56 @@ function study() {
         if (st.q.main === 4 && st.q.c.study >= 2) setMain(5);
         persist();
       } },
+      ...(st.q.main >= 6 ? [{ label: '讀英文' + ENG_PROG(), fn: engPractice }] : []),
       { label: '坐窗邊發呆', fn: () => { st.exp += 2; ok('自習區', '窗外有人在打籃球。你有一種自己也有在生活的錯覺。知識 +2。'); } },
       { label: '先離開' }]
   });
+}
+/* 英文題庫 */
+const VOCAB = [['deadline', '截止期限'], ['receipt', '收據'], ['refund', '退款'], ['schedule', '時間表'], ['tuition', '學費'], ['dormitory', '宿舍'], ['assignment', '作業'], ['graduate', '畢業'], ['attendance', '出席'], ['scholarship', '獎學金'], ['internship', '實習'], ['postpone', '延後'], ['available', '有空的'], ['apply', '申請'], ['borrow', '借入'], ['semester', '學期'], ['lecture', '講課'], ['crowded', '擁擠的'], ['delicious', '好吃的'], ['exhausted', '累壞的']];
+const READ = [
+  { p: 'NOTICE\nThe library will be closed on Monday for cleaning. It opens again on Tuesday at 8 a.m.', q: '哪一天不能去圖書館？', a: ['星期一', '星期二', '星期日'] },
+  { p: 'Hi Amy,\nThe meeting is moved from 2 p.m. to 4 p.m. Please bring your report.\nBen', q: '會議改到幾點？', a: ['下午四點', '下午兩點', '早上八點'] },
+  { p: 'SALE\nBuy one coffee, get the second one half price. Today only.', q: '第二杯咖啡怎麼算？', a: ['半價', '免費', '原價'] },
+  { p: 'Students must show their ID card to enter the exam room. Phones must be turned off.', q: '進考場一定要帶什麼？', a: ['學生證', '手機', '咖啡'] },
+  { p: 'The bus to the night market leaves every 20 minutes. The last bus is at 11 p.m.', q: '去夜市的末班車是幾點？', a: ['晚上十一點', '晚上八點', '每二十分鐘一班'] },
+  { p: 'Room 302 is full. Please go to Room 305 for the English class.', q: '英文課要去哪一間教室？', a: ['305', '302', '203'] },
+  { p: 'Lost: a black umbrella near the cafeteria on Friday. If you find it, please call Kevin.', q: 'Kevin 掉了什麼？', a: ['黑色雨傘', '學生證', '錢包'] }
+];
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+function readQ(r) { const opts = shuffle(r.a); return { p: r.p, q: r.q, opts, ans: opts.indexOf(r.a[0]) }; }
+function uniqVocab(n) { return shuffle(VOCAB).slice(0, n).map(([w, m]) => { const opts = shuffle([m, ...shuffle(VOCAB.filter(v => v[0] !== w)).slice(0, 3).map(v => v[1])]); return { q: '「' + w + '」的意思是？', opts, ans: opts.indexOf(m) }; }); }
+function engPractice() {
+  quizGame({ title: '讀英文', desc: '三題單字，每題 20 秒。電腦可以按數字鍵 1 到 4 作答。', qs: uniqVocab(3), time: 20, elim: 0,
+    end: c => {
+      st.exp += 3 * c + 1; dHit('study');
+      let extra = '';
+      if (st.q.main === 7) { st.q.c.eng++; if (st.q.c.eng >= 3) { extra = '\n\n讀了三次，可以去社團教室找學姊小薰借考古題了。'; setTimeout(() => setMain(8), 400); } else extra = '\n\n英文讀了 ' + st.q.c.eng + ' / 3 次。'; }
+      ok('讀英文', ['三題都錯。你懷疑單字書印錯了。', '對一題。單字背了就忘，忘了再背，大家都這樣。', '對兩題，還不錯。', '三題全對。旁邊的人看了你一眼。'][c] + '知識 +' + (3 * c + 1) + '。' + extra); persist();
+    } });
+}
+function examSeat() {
+  const m = st.q.main;
+  if (m < 9) return ok('考場座位', m < 6 ? '空的考場。桌上有前一個人留下的橡皮擦屑。' : '還沒到考試的時候。先把主線上的準備做完。');
+  const retake = st.q.c.examTry > 0, fee = retake ? 400 : 0;
+  showModal({ title: '英檢考場', text: '十題：前六題是單字，後四題是閱讀。每題 20 秒，60 分及格。' + (st.inv.past ? '\n你帶著考古題，可以用「刪去法」' + st.inv.past + ' 次，每次拿掉一個錯的選項。' : '') + (retake ? '\n補考要再付 $400。' : ''), choices: [
+    { label: retake ? '付 $400 開始考' : '開始考', fn: () => {
+      if (st.money < fee) return ok('監考老師', '補考費不夠。去打個工再來。');
+      st.money -= fee; st.q.c.examTry++;
+      const qs = uniqVocab(6).concat(shuffle(READ).slice(0, 4).map(readQ));
+      quizGame({ title: '英檢', desc: '電腦可以按數字鍵 1 到 4 作答，X 是刪去法。', qs, time: 20, elim: st.inv.past, end: examEnd });
+    } }, { label: '再準備一下' }] });
+}
+function examEnd(c, used) {
+  const sc = c * 10; st.inv.past = Math.max(0, st.inv.past - used);
+  const best = sc > st.best.exam; if (best) st.best.exam = sc;
+  if (st.q.main === 9 && sc >= 60) { st.q.c.examScore = sc; logLine('英檢通過：' + sc + ' 分'); setTimeout(() => setMain(10), 400); }
+  else if (st.q.main > 9 && best) { st.q.c.examScore = Math.max(st.q.c.examScore, sc); logLine('英檢刷新紀錄：' + sc + ' 分'); }
+  const t = sc < 60 ? '你考了 ' + sc + ' 分。' + (sc >= 40 ? '離及格差 ' + (60 - sc) + ' 分，大概是一杯咖啡的距離。' : '監考老師收卷的時候，表情很溫柔。')+ '\n可以再考，補考費 $400。去圖書館讀一下英文再來。'
+    : sc < 80 ? sc + ' 分，及格了。剛好過，這就是及格鎮的精神。'
+    : sc < 100 ? sc + ' 分。旁邊的人偷看了你的成績單，然後默默收起他的。'
+    : '100 分。監考老師看了你兩次，確定你不是作弊。';
+  ok('英檢成績', t + (st.q.main === 9 && sc >= 60 ? '\n\n拿去學務處給陳老師看吧。' : '')); persist();
 }
 const COURSES = ['微積分', '普通心理學', '經濟學原理', '大學國文', '程式設計', '通識：生活中的統計'];
 function classFlow() {
@@ -983,8 +1091,8 @@ function interact() {
   if (it.id === 'ent') { const e = it.ent; if (e.kind === 'player') return wave(e); if (!e.loop) faceToward(e, P.x, P.y); if (e.wander) e.wait = Math.max(e.wait, 3); return e.talk(); }
   if (it.id === 'enter') return goScene(it.to, 7 * T, 8 * T + 12, 'up');
   if (it.id === 'stall') return stall(it.stall);
-  const f = { board, bench, study, clubboard: clubBoard, shop, decor, bed: sleep, class: classFlow, meal, hoop, run: runGame,
-    notice: () => ok('考試中心 · 公告', '本中心辦理：學測、分科測驗、轉學考、研究所考試、各類國家考試、駕照筆試。\n\n人生的考試比你以為的多。第二章開放後，這裡每一場都能報名。'),
+  const f = { board, bench, study, clubboard: clubBoard, shop, decor, bed: sleep, class: classFlow, examseat: examSeat, meal, hoop, run: runGame,
+    notice: () => ok('考試中心 · 公告', '本中心辦理：英文檢定、學測、分科測驗、轉學考、研究所考試、各類國家考試、駕照筆試。\n\n本週考試：大學英檢，畢業門檻用。60 分及格，補考費 $400。\n\n人生的考試比你以為的多，這裡只是其中一間。'),
     copier: () => ok('影印機', '影印機吐出一張全黑的紙。沒有人知道它印的是什麼。') }[it.id];
   f && f();
 }
@@ -994,6 +1102,7 @@ const keys = {}; let joy = { x: 0, y: 0 }, joyId = null, jbx = 0, jby = 0;
 addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT') return; keys[e.code] = true;
   if (mg) {
+    if (mg.type === 'quiz') { const n = '1234'.indexOf(e.key); if (n >= 0 && !e.repeat) quizAnswer(n); if (e.code === 'KeyX' && !e.repeat) quizElim(); return; }
     if (mg.type === 'meter' && ['Space', 'Enter', 'KeyE'].includes(e.code)) { e.preventDefault(); if (!e.repeat) mgPress(); }
     if (mg.type === 'mash') { if (['ArrowLeft', 'KeyA', 'KeyJ'].includes(e.code)) { e.preventDefault(); if (!e.repeat) mgPress('L'); } if (['ArrowRight', 'KeyD', 'KeyL'].includes(e.code)) { e.preventDefault(); if (!e.repeat) mgPress('R'); } }
     return;
@@ -1063,8 +1172,9 @@ function bubble(e) {
   cx.fillStyle = '#3b2f4a'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText(e.bubble.text, sx, by + h / 2 + DPR * .5);
 }
 function badge(sx, sy, ch, c) {
-  cx.fillStyle = c; cx.beginPath(); cx.arc(sx, sy, 8 * DPR, 0, 7); cx.fill(); cx.lineWidth = 2 * DPR; cx.strokeStyle = '#3b2f4a'; cx.stroke();
-  cx.fillStyle = '#3b2f4a'; cx.font = `800 ${12 * DPR}px sans-serif`; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText(ch, sx, sy + DPR);
+  const u = Math.max(DPR, S / 3);
+  cx.fillStyle = c; cx.beginPath(); cx.arc(sx, sy, 10 * u, 0, 7); cx.fill(); cx.lineWidth = 2.5 * u; cx.strokeStyle = '#3b2f4a'; cx.stroke();
+  cx.fillStyle = '#3b2f4a'; cx.font = `800 ${13 * u}px sans-serif`; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText(ch, sx, sy + DPR);
 }
 let nearIt = null;
 function render(t) {
@@ -1086,9 +1196,22 @@ function render(t) {
   });
   if (started) { const [sx, sy] = toScr(Math.round(P.x), Math.round(P.y) + 9); label(st.name, sx, sy, { size: 10, bg: '#ffd45c' }); }
   bubble(P); s.ents.forEach(bubble);
+  if (started && !cur.indoor) goalBadges(t);
   if (started && nearIt && !locked() && nearIt.id !== 'ent') { const [sx, sy] = toScr(nearIt.ix, nearIt.iy + Math.sin(t / 160) * 2); badge(sx, sy, '!', '#ffd45c'); }
 }
 
+/* ---------- 目標標記 ---------- */
+function goals() {
+  const out = [], m = st.q.main;
+  if (m === 4 || m === 7) out.push({ at: 'library', c: '#ffd45c', ch: '!' });
+  if (m === 9) out.push({ at: 'exam', c: '#ffd45c', ch: '!' });
+  st.daily.ids.forEach(id => { if (!st.daily.done[id] && DAILY[id].at) out.push({ at: DAILY[id].at, c: '#9bd8a0', ch: '日' }); });
+  return out.map(g => typeof g.at === 'string' ? Object.assign(g, parentOf(g.at)) : Object.assign(g, g.at));
+}
+function goalBadges(t) {
+  const seen = {};
+  goals().forEach(g => { if (g.scene !== cur.id) return; const key = Math.round(g.x) + ',' + Math.round(g.y); const n = seen[key] = (seen[key] || 0) + 1; const [sx, sy] = toScr(g.x + (n - 1) * 18, g.y - 40 + Math.sin(t / 220) * 2); badge(sx, sy, g.ch, g.c); });
+}
 /* ---------- 小地圖 ---------- */
 let mapView = 'campus';
 const OUT = [['campus', '校園'], ['playground', '操場'], ['street', '校外']];
@@ -1114,6 +1237,9 @@ function drawMap() {
     g.fillStyle = m === 'side' ? '#7ec8f0' : '#ffd45c'; g.beginPath(); g.arc(x * K, (y - 24) * K, 8 * d, 0, 7); g.fill(); g.lineWidth = 2 * d; g.strokeStyle = '#3b2f4a'; g.stroke();
     g.fillStyle = '#3b2f4a'; g.font = `800 ${11 * d}px sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(m === 'turn' ? '?' : '!', x * K, (y - 24) * K + d);
   });
+  const seenM = {};
+  goals().forEach(gl => { if (gl.scene !== mapView) return; const key = Math.round(gl.x) + ',' + Math.round(gl.y); const n = seenM[key] = (seenM[key] || 0) + 1; const x = gl.x + 18 + (n - 1) * 18, y = gl.y - 24;
+    g.fillStyle = gl.c; g.beginPath(); g.arc(x * K, y * K, 8 * d, 0, 7); g.fill(); g.lineWidth = 2 * d; g.strokeStyle = '#3b2f4a'; g.stroke(); g.fillStyle = '#3b2f4a'; g.font = `800 ${10 * d}px sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(gl.ch, x * K, y * K + d); });
   const me = parentOf(cur.id); if (me.scene === mapView) dot(me.x === undefined ? P.x : me.x, (me.y === undefined ? P.y : me.y) - 4, '#ff8fb1', 6);
 }
 $('#mapBtn').addEventListener('click', () => { if (started && !locked()) openMap(); });
@@ -1150,7 +1276,7 @@ function loop(now) {
     mutT -= dt; if (mutT <= 0) { mutT = rand(11, 19); if (!locked()) mutter(); }
     nearIt = locked() ? null : nearest();
     $('#act').classList.toggle('on', !!nearIt); $('#actLabel').textContent = nearIt ? nearIt.label : '互動';
-    hudT -= dt; if (hudT <= 0) { hudT = .25; checkDay(); hud(); }
+    hudT -= dt; if (hudT <= 0) { hudT = .25; checkDay(); hud(); if (!st.met.dailyIntro && st.q.main >= 2 && !locked()) introDaily(); }
     saveT -= dt; if (saveT <= 0) { saveT = 5; persist(); }
   }
   snapCam();
@@ -1161,10 +1287,10 @@ function hud() {
   if (!st || !started) return;
   $('#hName').textContent = st.name + ' · 大一'; $('#hMoney').textContent = fmt(st.money);
   $('#hRate').textContent = '每分鐘 +$' + rate() + (st.track ? ' · ' + TRACK_NAME[st.track] : '');
-  const m = st.q.main; $('#hQuest').textContent = m < MAIN.length ? '主線：' + MAIN[m] : '第一章完成 · 去做每日任務吧';
+  const m = st.q.main; $('#hQuest').textContent = m < MAIN.length ? '主線：' + MAIN[m] + ENG_PROG() : '第二章完成 · 第三章準備中';
   const act = Object.keys(SIDE).filter(id => sideSt(id) === 1).length, rd = Object.keys(SIDE).filter(id => sideSt(id) === 1 && SIDE[id].ready()).length;
   $('#hBadge').textContent = act ? '支線 ' + act + (rd ? '·可回報' : '') : '';
-  $('#hDaily').textContent = '每日 ' + st.daily.ids.filter(i => st.daily.done[i]).length + ' / 3';
+  $('#hDaily').textContent = st.daily.ids.filter(i => st.daily.done[i]).length + ' / 3';
   $('#hPlace').textContent = cur.name; $('#hOnline').textContent = '同屆在線 6 人 · 示範';
 }
 
@@ -1172,27 +1298,33 @@ function hud() {
 let tab = 'd';
 function bookHTML() {
   if (tab === 'd') {
-    const d = st.daily; let h = '<div class="sec"><h3>今天的每日任務 · 每天半夜換新</h3>';
-    d.ids.forEach(id => { const q = DAILY[id], p = Math.min(q.g, d.prog[id] || 0); h += '<div class="item ' + (d.done[id] ? 'done' : '') + '"><b>' + (d.done[id] ? '✓ ' : '') + q.n + '</b>' + (d.done[id] ? '已完成，拿到 $300、知識 +5' : '進度 ' + p + ' / ' + q.g + '　獎勵 $300、知識 +5') + '</div>'; });
+    const d = st.daily; let h = '<div class="sec"><p style="font-size:13px">每天三個小目標，做完一個拿 $300 和知識 +5，三個都做完再多 $500。要去的地方會出現綠色的「日」字，地圖上也找得到。半夜十二點換新。</p></div><div class="sec"><h3>今天的每日任務</h3>';
+    d.ids.forEach(id => { const q = DAILY[id], p = Math.min(q.g, d.prog[id] || 0); h += '<div class="item ' + (d.done[id] ? 'done' : '') + '"><b>' + (d.done[id] ? '✓ ' : '') + q.n + '</b>' + (d.done[id] ? '已完成，拿到 $300、知識 +5' : '地點：' + q.place + '<br>進度 ' + p + ' / ' + q.g) + '</div>'; });
     h += '<div class="item ' + (d.bonus ? 'done' : 'main') + '"><b>' + (d.bonus ? '✓ ' : '') + '三個都完成</b>' + (d.bonus ? '已拿到額外的 $500' : '額外再給 $500') + '</div></div>';
     h += '<div class="sec"><h3>個人紀錄</h3><div class="item">投籃最佳：' + st.best.hoop + ' / 5 球<br>跑步最佳：' + st.best.run + ' 公尺</div></div>';
     return h;
   }
   if (tab === 'q') {
-    const m = st.q.main; let h = '<div class="sec"><h3>主線 · 第一章 大一新生</h3>';
-    MAIN.forEach((t, i) => { h += '<div class="item ' + (i === m ? 'main' : i < m ? 'done' : '') + '"><b>' + (i < m ? '✓ ' : i === m ? '▶ ' : '・') + t + '</b></div>'; });
-    h += '</div><div class="sec"><h3>支線</h3>';
+    const m = st.q.main; let h = '';
+    CHAPTERS.forEach(ch => {
+      h += '<div class="sec"><h3>主線 · ' + ch.n + '</h3>';
+      if (m < ch.a) h += '<div class="item done">完成上一章後開放</div>';
+      else for (let i = ch.a; i < ch.b; i++) h += '<div class="item ' + (i === m ? 'main' : i < m ? 'done' : '') + '"><b>' + (i < m ? '✓ ' : i === m ? '▶ ' : '・') + MAIN[i] + (i === m ? ENG_PROG() : '') + '</b></div>';
+      h += '</div>';
+    });
+    h += '<div class="sec"><h3>主線 · 第三章 岔路</h3><div class="item done">還在準備</div></div><div class="sec"><h3>支線</h3>';
     Object.keys(SIDE).forEach(id => { const q = SIDE[id], s = sideSt(id); h += '<div class="item ' + (s === 3 ? 'done' : '') + '"><b>' + (s === 3 ? '✓ ' : '') + q.n + '</b>' + (s === 0 ? '還沒遇到委託人：' + q.who : s === 3 ? '已完成' : q.desc + '（' + q.prog() + '）<br>獎勵：' + q.reward) + '</div>'; });
     return h + '</div>';
   }
   const cl = st.clubs.map(i => CLUBS.find(c => c.id === i).n).join('、') || '無';
-  let h = '<div class="sec"><h3>基本</h3><div class="item"><b>' + st.name + ' · 大一</b>選課傾向：' + (TRACK_NAME[st.track] || '未選') + '<br>知識：' + st.exp + '<br>社團：' + cl + '<br>便利商店打工：' + st.q.c.workAll + ' 次<br>宿舍家具：' + st.dorm.placed.length + ' 件</div></div>';
+  let h = '<div class="sec"><h3>基本</h3><div class="item"><b>' + st.name + ' · 大一</b>選課傾向：' + (TRACK_NAME[st.track] || '未選') + '<br>知識：' + st.exp + '<br>社團：' + cl + '<br>便利商店打工：' + st.q.c.workAll + ' 次<br>宿舍家具：' + st.dorm.placed.length + ' 件' + (st.best.exam ? '<br>英檢最高：' + st.best.exam + ' 分' : '') + '</div></div>';
   h += '<div class="sec"><h3>人生紀錄</h3>' + (st.log.length ? st.log.slice().reverse().map(l => '<div class="item">' + l + '</div>').join('') : '<div class="item done">還沒有紀錄。去走走。</div>') + '</div>';
   return h;
 }
 function openBook() { $('#bookBody').innerHTML = bookHTML(); document.querySelectorAll('#book .tab').forEach(b => b.classList.toggle('on', b.dataset.t === tab)); $('#book').classList.add('on'); modalOpen = true; }
 function closeBook() { $('#book').classList.remove('on'); modalOpen = false; }
 $('#bookBtn').addEventListener('click', () => { if (started && !locked()) openBook(); });
+$('#dailyBtn').addEventListener('click', () => { if (started && !locked()) { tab = 'd'; openBook(); } });
 document.querySelectorAll('#book .tab').forEach(b => b.onclick = () => { tab = b.dataset.t; openBook(); });
 $('#bookClose').addEventListener('click', closeBook);
 $('#fastBtn').addEventListener('click', () => { closeBook(); setTimeout(() => settle(60, true), 50); });
@@ -1220,7 +1352,7 @@ resize(); snapCam();
 document.addEventListener('visibilitychange', () => { if (document.hidden && started) persist(); });
 addEventListener('pagehide', () => { if (started) persist(); });
 requestAnimationFrame(loop);
-window.__town = { get st() { return st; }, P, scenes, get cur() { return cur; }, interact, nearest, QN, SIDE, goScene, setMain, cam, get S() { return S; }, get mg() { return mg; }, mgPress, findPath, BLD };
+window.__town = { get st() { return st; }, P, scenes, get cur() { return cur; }, interact, nearest, QN, SIDE, goScene, setMain, cam, get S() { return S; }, get mg() { return mg; }, mgPress, findPath, BLD, quizAnswer, quizElim, examSeat, engPractice, goals };
 })();
 </script>
 </body>
