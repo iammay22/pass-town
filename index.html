@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>及格鎮</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="及格鎮">
+<meta name="theme-color" content="#2b2338">
 <style>
 :root{--ink:#3b2f4a;--paper:#fff8ef;--gold:#f2c14e;--pink:#ff8fb1;--blue:#7ec8f0}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
@@ -116,7 +123,7 @@ button.tab.on{background:var(--gold)}
   <div class="chip q" id="hQuest"></div>
 </div>
 <div class="hud" id="hudR">
-  <div class="btnrow"><div class="chip btn" id="mapBtn">地圖</div><div class="chip btn" id="bookBtn">手冊 <small id="hBadge"></small></div></div>
+  <div class="btnrow"><div class="chip btn" id="fsBtn">全螢幕</div><div class="chip btn" id="mapBtn">地圖</div><div class="chip btn" id="bookBtn">手冊 <small id="hBadge"></small></div></div>
   <div class="chip btn" id="dailyBtn">每日任務 <small id="hDaily"></small></div>
   <div class="chip"><small id="hPlace"></small></div>
   <div class="chip"><small id="hOnline"></small></div>
@@ -1254,7 +1261,7 @@ function snapCam() {
 function resize() {
   DPR = Math.min(window.devicePixelRatio || 1, 3);
   cv.width = Math.floor(innerWidth * DPR); cv.height = Math.floor(innerHeight * DPR);
-  S = Math.max(1, Math.round(cv.height / 180)); VH = Math.ceil(cv.height / S); VW = Math.ceil(cv.width / S);
+  S = Math.max(1, Math.round(cv.height / (innerHeight < 500 ? 150 : 180))); VH = Math.ceil(cv.height / S); VW = Math.ceil(cv.width / S);
   off.width = VW; off.height = VH; OX = Math.floor((cv.width - VW * S) / 2); OY = Math.floor((cv.height - VH * S) / 2);
 }
 addEventListener('resize', () => { resize(); snapCam(); });
@@ -1570,22 +1577,34 @@ async function claimCoffee() {
   try { const d = await api({ a: 'inbox' }); if (d && d.n > 0) { earn(35 * d.n, '同學請的咖啡'); toast((d.from || []).slice(0, 3).join('、') + ' 請你喝了 ' + d.n + ' 杯咖啡，收到 ' + fmt(35 * d.n)); persist(); } } catch (e) {}
 }
 function renderWall() {
-  $('#wallMode').textContent = WALL_URL ? '每天可以貼一張。請不要寫別人的真名或個資。按「拍拍」安慰一下，或花 $35 請他喝杯咖啡。' : '示範版：其他人的便利貼是假的，你貼的只存在這台裝置。等填好 Supabase 的金鑰就會變成真的多人留言牆。';
+  $('#wallMode').textContent = wallLive() ? '每天可以貼一張。請不要寫別人的真名或個資。按「拍拍」安慰一下，或花 $35 請他喝杯咖啡。' : '示範版：其他人的便利貼是假的，你貼的只存在這台裝置。等填好 Supabase 的金鑰就會變成真的多人留言牆。';
   $('#wallList').innerHTML = wallNotes.map(n => '<div class="pnote">' + esc(clean(n.text)) + '<small>' + esc(n.name) + (n.title ? '・' + esc(n.title) : '') + '</small><div class="row"><button type="button" data-p="' + esc(n.id) + '">拍拍 ' + (n.pats + (st.wall.pats.includes(n.id) && !WALL_URL ? 1 : 0)) + '</button>' + (n.uid !== st.uid ? '<button type="button" data-c="' + esc(n.id) + '">請喝咖啡 $35</button>' : '<button type="button" disabled>咖啡 ' + (n.coffees || 0) + ' 杯</button>') + '</div></div>').join('') || '<p>還沒有人貼。</p>';
   $('#wallList').querySelectorAll('[data-p]').forEach(b => b.onclick = () => wallPat(b.dataset.p));
   $('#wallList').querySelectorAll('[data-c]').forEach(b => b.onclick = () => wallCoffee(b.dataset.c));
-  $('#wallPost').disabled = st.wall.lastPost === today();
+  $('#wallPost').textContent = st.wall[postKey()] === today() ? '今天貼過了' : '貼上';
 }
 async function openWall() { $('#wallOv').classList.add('on'); modalOpen = true; await loadWall(); renderWall(); claimCoffee(); }
 $('#wallClose').onclick = () => { $('#wallOv').classList.remove('on'); modalOpen = false; };
+const wallLive = () => !!(WALL_URL && sb);
+const postKey = () => wallLive() ? 'lastPostLive' : 'lastPost';
 $('#wallPost').onclick = async () => {
+  const btn = $('#wallPost'); if (btn.dataset.busy) return;
   const t = clean($('#wallIn').value.trim()); if (!t) return toast('先寫點什麼');
-  if (st.wall.lastPost === today()) return toast('今天已經貼過了，明天再來');
-  st.wall.lastPost = today(); $('#wallIn').value = ''; ach('wallpost');
-  if (WALL_URL) { try { await api({ a: 'post', uid: st.uid, name: st.name, title: titleOf(), text: t }); } catch (e) { toast('貼不上去，等一下再試'); } }
-  else st.wall.mine.push({ id: 'm' + Date.now(), uid: st.uid, name: st.name, title: titleOf(), text: t, pats: 0, coffees: 0 });
-  persist(); await loadWall(); renderWall(); toast('貼好了');
+  if (WALL_URL) await sbInit();
+  const key = postKey();
+  if (st.wall[key] === today()) return toast('今天已經貼過了，明天再來');
+  btn.dataset.busy = 1; btn.textContent = '貼上中⋯';
+  try {
+    if (wallLive()) await api({ a: 'post', name: st.name, title: titleOf(), text: t });
+    else st.wall.mine.push({ id: 'm' + Date.now(), uid: st.uid, name: st.name, title: titleOf(), text: t, pats: 0, coffees: 0 });
+    st.wall[key] = today(); $('#wallIn').value = ''; ach('wallpost'); persist(); await loadWall(); toast('貼好了');
+  } catch (e) {
+    const m = String((e && (e.message || e.error_description)) || e);
+    if (m.includes('one note per day')) { st.wall[key] = today(); toast('今天已經貼過了，明天再來'); }
+    else toast('貼不上去：' + m.slice(0, 80));
+  } finally { delete btn.dataset.busy; renderWall(); }
 };
+$('#wallIn').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) $('#wallPost').click(); });
 async function wallPat(id) {
   if (st.wall.pats.includes(id)) return toast('你已經拍過了'); st.wall.pats.push(id); beep(880, .05);
   if (WALL_URL) { try { await api({ a: 'pat', id, uid: st.uid }); } catch (e) {} await loadWall(); }
@@ -1597,6 +1616,22 @@ async function wallCoffee(id) {
   else toast('示範版：$35 有扣掉，但不會真的送到別人那裡');
   persist(); renderWall(); hud();
 }
+
+/* ---------- 全螢幕 ---------- */
+const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
+const fsOk = () => !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+const standalone = () => matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone;
+async function goFull(quiet) {
+  const el = document.documentElement;
+  if (fsEl()) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+  if (!fsOk()) { if (!quiet) ok('全螢幕', 'iPhone 的 Safari 不讓網頁自己變全螢幕。\n\n可以這樣做：按下方的分享按鈕，選「加入主畫面」，之後從主畫面的及格鎮圖示打開，就會是全螢幕，也不會有網址列。'); return; }
+  try { await (el.requestFullscreen ? el.requestFullscreen({ navigationUI: 'hide' }) : el.webkitRequestFullscreen()); } catch (e) { return; }
+  try { await screen.orientation.lock('landscape'); } catch (e) {}
+}
+const fsSync = () => { $('#fsBtn').textContent = fsEl() ? '離開全螢幕' : '全螢幕'; $('#fsBtn').style.display = standalone() ? 'none' : ''; setTimeout(() => { resize(); snapCam(); }, 120); };
+document.addEventListener('fullscreenchange', fsSync); document.addEventListener('webkitfullscreenchange', fsSync);
+$('#fsBtn').addEventListener('click', () => goFull(false));
+fsSync();
 
 /* ---------- 電腦按鍵說明 ---------- */
 function keysHelp() {
@@ -1787,8 +1822,9 @@ function begin() {
   persist();
 }
 const saved = loadSave();
-if (saved) { $('#titleNew').style.display = 'none'; $('#titleBack').style.display = 'block'; $('#backText').textContent = '歡迎回來，' + saved.name + '。'; $('#contBtn').onclick = () => { st = saved; begin(); }; $('#resetBtn').onclick = () => { try { localStorage.removeItem(KEY); localStorage.removeItem(OLDKEY); } catch (e) {} $('#titleBack').style.display = 'none'; $('#titleNew').style.display = 'block'; }; }
+if (saved) { $('#titleNew').style.display = 'none'; $('#titleBack').style.display = 'block'; $('#backText').textContent = '歡迎回來，' + saved.name + '。'; $('#contBtn').onclick = () => { if (matchMedia('(pointer:coarse)').matches && fsOk() && !standalone()) goFull(true); st = saved; begin(); }; $('#resetBtn').onclick = () => { try { localStorage.removeItem(KEY); localStorage.removeItem(OLDKEY); } catch (e) {} $('#titleBack').style.display = 'none'; $('#titleNew').style.display = 'block'; }; }
 $('#startBtn').addEventListener('click', () => {
+  if (matchMedia('(pointer:coarse)').matches && fsOk() && !standalone()) goFull(true);
   const n = $('#nameIn').value.trim().slice(0, 6); if (!n) { $('#nameIn').focus(); toast('先取個名字吧'); return; }
   st = newState(n); st.fresh = true; begin();
 });
