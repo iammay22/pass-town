@@ -875,12 +875,12 @@ rADorm.IT.push({ id: 'a_desk', label: '書桌', x: 5 * T, y: 3 * T + 12, r: 22, 
 const rDorm = mkScene('dorm', '宿舍', RW, RH, true);
 const WALLS = [{ n: '奶油白', c: '#fff1e0', p: 0 }, { n: '薄荷綠', c: '#cdeedd', p: 300 }, { n: '櫻花粉', c: '#ffd1de', p: 300 }, { n: '夜空藍', c: '#b9c8f2', p: 400 }];
 const FLOORS = [{ n: '原木', a: '#d9b48a', b: '#cfa87d', p: 0 }, { n: '灰地毯', a: '#bdb7c9', b: '#b2abc0', p: 300 }, { n: '淺藍磁磚', a: '#cfe7f5', b: '#c3dff0', p: 300 }];
-const ITEMS = [{ id: 'poster', n: '海報', p: 200 }, { id: 'lamp', n: '檯燈', p: 250 }, { id: 'plant', n: '小盆栽', p: 150 }, { id: 'rug', n: '地毯', p: 400 }, { id: 'beanbag', n: '豆袋椅', p: 600 }, { id: 'guitar', n: '吉他架', p: 500 }, { id: 'tank', n: '小魚缸', p: 900 }, { id: 'doll', n: '大熊娃娃', p: 0, prize: true }];
+const ITEMS = [{ id: 'poster', n: '海報', p: 200 }, { id: 'lamp', n: '檯燈', p: 250 }, { id: 'plant', n: '小盆栽', p: 150 }, { id: 'rug', n: '地毯', p: 400 }, { id: 'beanbag', n: '豆袋椅', p: 600 }, { id: 'guitar', n: '吉他架', p: 500 }, { id: 'tank', n: '小魚缸', p: 900 }, { id: 'fridge', n: '小冰箱', p: 4000 }, { id: 'doll', n: '大熊娃娃', p: 0, prize: true }];
 const DEF_POS = { closet: [9, 2], box: [4, 2], fridge: [8, 2], plant: [3, 2], guitar: [3, 4], beanbag: [4, 5], tank: [9, 8], doll: [3, 7], rug: [5, 5] };
 const FSZ = { closet: [2, 1], box: [1, 1], fridge: [1, 1], plant: [1, 1], guitar: [1, 2], beanbag: [1, 1], tank: [1, 1], doll: [1, 1], rug: [4, 2] };
 const FNAME = { closet: '衣櫃', box: '裝潢箱', fridge: '小冰箱', plant: '小盆栽', guitar: '吉他架', beanbag: '豆袋椅', tank: '小魚缸', doll: '大熊娃娃', rug: '地毯' };
 const fpos = k => (st && st.dorm.pos && st.dorm.pos[k]) || DEF_POS[k];
-const movables = () => Object.keys(DEF_POS).filter(k => k === 'closet' || k === 'box' || k === 'fridge' || (st && st.dorm.placed.includes(k)));
+const movables = () => Object.keys(DEF_POS).filter(k => k === 'closet' || k === 'box' || (st && st.dorm.placed.includes(k)));
 const RESERVED = ['1,2', '2,2', '1,3', '2,3', '11,2', '12,2', '11,3', '12,3', '1,6', '2,6', '1,7', '2,7', '11,6', '12,6', '11,7', '12,7', '6,8', '7,8', '6,2', '7,2', '1,4', '2,4'];
 function canPlace(k, x, y) {
   const [w, h] = FSZ[k]; if (x < 1 || y < 2 || x + w > 13 || y + h > 9) return false; if (k === 'rug') return true;
@@ -921,7 +921,7 @@ function buildDorm() {
   if (d.placed.includes('lamp')) FURN.lamp(s.g, 1 * T + 20, 3 * T + 4);
   movables().filter(k => k !== 'rug').sort((a, b) => fpos(a)[1] - fpos(b)[1]).forEach(k => { const [x, y] = fpos(k), [w, h] = FSZ[k]; put(s, k, x, y, w, h, true, k === 'box' ? 1 : undefined); });
   { const [cx0, cy0] = fpos('closet'), [bx0, by0] = fpos('box'), w0 = s.IT.find(i => i.id === 'ward'), d0 = s.IT.find(i => i.id === 'decor');
-    { const fz = s.IT.find(i => i.id === 'fridge'), [fx0, fy0] = fpos('fridge'); if (fz) Object.assign(fz, { x: (fx0 + .5) * T, y: (fy0 + 1) * T + 12, ix: (fx0 + .5) * T, iy: (fy0 - 1) * T + 4 }); }
+    { const fz = s.IT.find(i => i.id === 'fridge'), [fx0, fy0] = fpos('fridge'); if (fz && !(st && st.dorm.placed.includes('fridge'))) Object.assign(fz, { x: -999, y: -999, ix: -999, iy: -999 }); else if (fz) Object.assign(fz, { x: (fx0 + .5) * T, y: (fy0 + 1) * T + 12, ix: (fx0 + .5) * T, iy: (fy0 - 1) * T + 4 }); }
     if (w0) Object.assign(w0, { x: (cx0 + 1) * T, y: (cy0 + 1) * T + 12, ix: (cx0 + 1) * T, iy: (cy0 - 1) * T + 6 }); if (d0) Object.assign(d0, { x: (bx0 + .5) * T, y: (by0 + 1) * T + 12, ix: (bx0 + .5) * T, iy: (by0 - 1) * T + 4 }); }
   s.labels = [{ t: '你', x: 2 * T, y: 1 * T + 10, size: 9 }, { t: '阿芸', x: 12 * T, y: 1 * T + 10, size: 9 }, { t: '小晴', x: 2 * T, y: 5 * T + 10, size: 9 }, { t: '佳佳', x: 12 * T, y: 5 * T + 10, size: 9 }];
 }
@@ -1027,6 +1027,7 @@ const ICON = {
   f_beanbag: ['............', '....uuuu....', '...uuuuuu...', '..uuwuuuuu..', '.uuuuuuuuuu.', '.kuuuuuuuuk.', '.kkuuuuuukk.', '..kkkkkkkk..', '............', '............', '............', '............'],
   f_guitar: ['.....kk.....', '.....dd.....', '.....dd.....', '.....dd.....', '....kkkk....', '...krrrrk...', '..krrkkrrk..', '..krrkkrrk..', '..krrrrrrk..', '...kkkkkk...', '............', '............'],
   f_tank: ['............', '.kkkkkkkkkk.', '.kuuuuuuuuk.', '.kuwuuuuuuk.', '.kuuouuuguk.', '.kuuuuyuguk.', '.kuuuuuuuuk.', '.kkkkkkkkkk.', '.kddddddddk.', '............', '............', '............'],
+  f_fridge: ['...kkkkkk...', '...kwwwwk...', '...kwwwsk...', '...kwwwsk...', '...kkkkkk...', '...kwwwwk...', '...kwwwsk...', '...kwwwsk...', '...kwwwwk...', '...kkkkkk...', '...k....k...', '............'],
   f_doll: ['..kk....kk..', '..kwk..kwk..', '..kwwwwwwk..', '.kwwkwwkwwk.', '.kwwwwwwwwk.', '.kwwwrrwwwk.', '..kwwwwwwk..', '.kwwwwwwwwk.', '.kwwwwwwwwk.', '..kkkkkkkk..', '............', '............'],
   groc: ['....kkk.....', '...k...k....', '..kkkkkkkk..', '..kbbbbbbk..', '..kbgrgybk..', '..kbggrybk..', '..kbbbbbbk..', '..kbbbbbbk..', '..kbbbbbbk..', '..kkkkkkkk..', '............', '............'],
   milk: ['....kkkk....', '....kuuk....', '...kwwwwk...', '..kwwwwwwk..', '..kwuuuuwk..', '..kwuwwuwk..', '..kwuuuuwk..', '..kwwwwwwk..', '..kwwwwwwk..', '..kkkkkkkk..', '............', '............'],
@@ -1089,7 +1090,7 @@ function feed(n) {
 }
 const expMul = () => (hungerNow() < 15 ? .5 : 1) * (st.sick ? .5 : 1);
 const expNote = () => hungerNow() < 15 ? '\n（太餓了，讀進去的只有一半。）' : st.sick ? '\n（感冒中，讀進去的只有一半。）' : '';
-function breakfastItems() { return inTime(6, 10.5) ? [{ icon: 'rice', n: '早餐 鮪魚飯糰', p: 35, d: '早上才有', buy: () => takeout({ n: '鮪魚飯糰', icon: 'rice', f: 35, t: '飯糰的海苔要自己拆，你又拆歪了。' }) }, { icon: 'bento', n: '早餐 火腿蛋三明治', p: 45, d: '早上才有', buy: () => takeout({ n: '火腿蛋三明治', icon: 'bento', f: 40, t: '三明治配一杯大冰奶，標準的早八組合。' }) }] : []; }
+function breakfastItems() { return inTime(6, 10.5) ? [{ icon: 'rice', n: '早餐 鮪魚飯糰', p: 35, d: '早上才有', buy: () => takeout({ n: '鮪魚飯糰', icon: 'rice', f: 35, t: '飯糰的海苔要自己拆，你又拆歪了。' }) }, { icon: 'bento', n: '早餐 火腿蛋三明治', p: 45, d: '早上才有', buy: () => takeout({ n: '火腿蛋三明治', icon: 'bento', f: 40, t: '三明治配一杯大冰奶，標準的早八組合。' }) }, { icon: 'potato', n: '早餐 茶葉蛋', p: 18, d: '在電鍋裡滷了一整晚', buy: () => takeout({ n: '茶葉蛋', icon: 'potato', f: 15, t: '茶葉蛋的殼剝得很漂亮，蛋白上有一圈一圈的花紋。' }) }] : []; }
 function weighIn() {
   const w = st.weight || 0, t = st.meals.d === today() ? st.meals : { b: 0, l: 0, n: 0, x: 0 };
   ok('量體重', '體重計嗶了一聲。\n跟開學比：' + (w > 0 ? '+' : '') + w.toFixed(1) + ' 公斤\n今天：早餐' + (t.b ? '✓' : '✗') + '　午餐' + (t.l ? '✓' : '✗') + '　晚餐' + (t.n ? '✓' : '✗') + '　宵夜' + (t.x ? '吃了' : '沒吃') + '\n\n校護：' + (w >= 2 ? '「宵夜吃太多囉，晚上餓的話喝杯溫牛奶。去操場跑跑步也會消掉一點。」' : w <= -2 ? '「瘦了不少，三餐要記得吃，不要只喝咖啡。」' : !t.b ? '「早餐不要省，早八的課才聽得進去。」' : '「維持得不錯，繼續保持三餐正常。」'));
@@ -2306,7 +2307,7 @@ function takeout(it) {
   st.bag = st.bag || [];
   if (st.bag.length >= BAG_MAX) { feed(it.f); hud(); persist(); return it.t + '\n\n（手上的袋子滿了，這份你站在攤位旁邊直接吃掉。）'; }
   st.bag.push({ n: it.n, f: it.f, t: it.t, drink: it.drink ? 1 : 0 }); persist();
-  return '老闆把' + it.n + '裝進塑膠袋，你手上多了一個袋子。\n找張椅子坐下來' + (it.drink ? '喝' : '吃') + '，或帶回宿舍放冰箱。';
+  return '老闆把' + it.n + '裝進塑膠袋，你手上多了一個袋子。\n找張椅子坐下來' + (it.drink ? '喝' : '吃') + (st.dorm.placed.includes('fridge') ? '，或帶回宿舍放冰箱。' : '，或帶回宿舍的書桌吃。');
 }
 function eatMenu(place) {
   const b = st.bag || []; if (!b.length) return false;
@@ -2314,6 +2315,7 @@ function eatMenu(place) {
   return true;
 }
 function fridgeMenu() {
+  if (!st.dorm.placed.includes('fridge')) return ok('宿舍', '房間裡還沒有冰箱。點箱子打開家具型錄，小冰箱 $4,000。');
   st.bag = st.bag || []; st.fridge = st.fridge || [];
   const f = st.fridge, b = st.bag, ch = [];
   if (b.length) ch.push({ label: '把袋子裡的都放進去', fn: () => { const n = Math.min(FRIDGE_MAX - f.length, b.length); if (n <= 0) return ok('小冰箱', '冰箱塞滿了，門關不起來。', fridgeMenu); st.fridge = f.concat(b.splice(0, n)); persist(); ok('小冰箱', '放進去了' + (b.length ? '，還有 ' + b.length + ' 樣塞不下，只好拿在手上。' : '。冰箱門上貼著一張紙條：「寫名字！不然會被吃掉。—佳佳」'), fridgeMenu); } });
