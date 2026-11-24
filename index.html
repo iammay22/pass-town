@@ -2340,7 +2340,7 @@ function takeout(it) {
   st.bag = st.bag || [];
   if (st.bag.length >= BAG_MAX) { feed(it.f); hud(); persist(); return it.t + '\n\n（手上的袋子滿了，這份你站在攤位旁邊直接吃掉。）'; }
   st.bag.push({ n: it.n, f: it.f, t: it.t, icon: it.icon || 'bag', drink: it.drink ? 1 : 0 }); persist();
-  return '老闆把' + it.n + '裝進塑膠袋，你手上多了一個袋子。\n找張椅子坐下來' + (it.drink ? '喝' : '吃') + (st.dorm.placed.includes('fridge') ? '，或帶回宿舍放冰箱。' : '，或帶回宿舍的書桌吃。');
+  return '老闆把' + it.n + '裝進塑膠袋，你手上多了一個袋子。\n找張椅子坐下來' + (it.drink ? '喝' : '吃') + (st.dorm.placed.includes('fridge') ? '，或帶回宿舍放冰箱。' : '，或帶回宿舍坐在書桌前' + (it.drink ? '喝' : '吃') + '。') + (st.trash >= TRASH_MAX ? '\n（你手上還抓著垃圾，要先丟掉才能吃。）' : '');
 }
 const carryOf = () => (st && (st.bag || []).length) ? 'bag' : (st && st.trash > 0) ? 'trash' : false;
 const TRASH_MAX = 4;
