@@ -1031,6 +1031,7 @@ const ICON = {
 const iconCache = {};
 function iconUrl(id) {
   if (iconCache[id]) return iconCache[id];
+  if (id.startsWith('sw:')) { const [, a, b] = id.split(':'), c = document.createElement('canvas'); c.width = 12; c.height = 12; const g = c.getContext('2d'); for (let y = 0; y < 12; y++) for (let x = 0; x < 12; x++) { g.fillStyle = (x === 0 || y === 0 || x === 11 || y === 11) ? '#3b2f4a' : ((x >> 2) + (y >> 2)) % 2 ? a : b; g.fillRect(x, y, 1, 1); } return iconCache[id] = c.toDataURL(); }
   const rows = ICON[id] || ICON.bag, c = document.createElement('canvas'); c.width = 12; c.height = 12; const g = c.getContext('2d');
   rows.forEach((r, y) => [...r].forEach((ch, x) => { if (IPAL[ch]) { g.fillStyle = IPAL[ch]; g.fillRect(x, y, 1, 1); } }));
   return iconCache[id] = c.toDataURL();
@@ -1043,7 +1044,7 @@ function sbFill(el, list, side) {
   el.innerHTML = '';
   list.forEach(it => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'sbItem' + (st.money < it.p ? ' poor' : '');
-    b.innerHTML = '<img alt="" src="' + iconUrl(it.icon) + '"><span><b></b><small></small></span><span class="pr">$' + it.p + '</span>';
+    b.innerHTML = '<img alt="" src="' + iconUrl(it.icon) + '"><span><b></b><small></small></span><span class="pr">' + (it.p ? '$' + it.p : (it.tag || '')) + '</span>';
     b.querySelector('b').textContent = it.n; b.querySelector('small').textContent = it.d || '';
     b.onclick = () => sbBuy(it); el.appendChild(b);
   });
@@ -1064,7 +1065,7 @@ function sbFlip(d) {
 function sbBuy(it) {
   if (!SB) return;
   if (st.money < it.p) { beep(220, .12, 'sawtooth'); return sbMsg(SB.poor || '錢不夠。'); }
-  if (it.p) spend(it.p, it.led || SB.led || it.n); const t = it.buy ? it.buy() : '';
+  if (it.p) spend(it.p, it.led || SB.led || it.n); const t = it.buy ? it.buy() : ''; if (!SB) return;
   if (SB.hit) dHit(SB.hit); beep(988, .06); setTimeout(() => beep(1319, .08), 80); sbMsg(t || ('買了：' + it.n)); toast('買了：' + it.n); hud(); persist(); sbRender();
 }
 function closeShop() { $('#shopOv').classList.remove('on'); modalOpen = $('#modal').classList.contains('on'); const f = SB && SB.onClose; SB = null; if (f) f(); }
@@ -2373,9 +2374,12 @@ function runGame() {
 }
 function decor() {
   if (st.q.main < 2) return ok('裝潢箱', '你還沒有自己的床位。先去學務處報到，再找室友阿芸拿鑰匙。');
+  openShop({ title: '布置你的角落 · 型錄', led: '宿舍布置', poor: '錢還不夠。', intro: '四人房，你的角落在左上。第一頁是搬家具，後面是家具、壁紙和地板。每擺一件家具，每次定期入帳多 $10。', side: '型錄最後一頁寫著：床是學校的，不能搬。', items: decorItems() });
+}
+function decorItems() {
   const d = st.dorm;
-  showModal({ title: '布置你的角落', text: '四人房，你的角落在左上。壁紙和地板四個人投票通過了，可以換。每擺一件家具，每次定期入帳多 $10。\n你現在有 ' + fmt(st.money) + '，已擺 ' + d.placed.length + ' 件。', choices: [
-    { label: '壁紙', fn: () => listPick('壁紙', WALLS, 'wall', 'wallOwn') }, { label: '地板', fn: () => listPick('地板', FLOORS, 'floor', 'floorOwn') }, { label: '家具', fn: furnMenu }, { label: '移動家具', fn: moveMenu }, { label: '完成' }] });
+  const sw = (arr, key, ownKey, kind) => arr.map((a, i) => { const own = d[ownKey].includes(i), use = d[key] === i; return { icon: 'sw:' + (a.c || a.a) + ':' + (a.b || a.c), n: kind + '：' + a.n, p: own ? 0 : a.p, tag: use ? '使用中' : '換上', d: use ? '正在使用' : own ? '買過了，點一下換上' : '買了會直接換上', buy: () => { if (!own) d[ownKey].push(i); d[key] = i; buildDorm(); SB.items = decorItems(); return '換上了' + kind + '「' + a.n + '」。'; } }; });
+  return [{ icon: 'f_rug', n: '移動家具', p: 0, tag: '去搬 →', d: '點家具，再點想放的位置', buy: () => { closeShop(); setTimeout(moveMenu, 150); return ''; } }].concat(furnItems(), sw(WALLS, 'wall', 'wallOwn', '壁紙'), sw(FLOORS, 'floor', 'floorOwn', '地板'));
 }
 function listPick(title, arr, key, ownKey) {
   const d = st.dorm;
@@ -2387,10 +2391,11 @@ function listPick(title, arr, key, ownKey) {
 }
 function furnItems() {
   const d = st.dorm; return ITEMS.filter(it => !it.prize || d.own.includes(it.id)).map(it => { const own = d.own.includes(it.id), pl = d.placed.includes(it.id);
-    return { icon: 'f_' + it.id, n: it.n, p: own ? 0 : it.p, d: pl ? '已經擺出來了，點一下收起來' : own ? '收在箱子裡，點一下擺出來' : '買了會直接擺上', buy: () => { if (pl) d.placed = d.placed.filter(x => x !== it.id); else { if (!own) { d.own.push(it.id); if (!d.placed.length) logLine('第一件宿舍家具：' + it.n); } d.placed.push(it.id); } buildDorm(); SB.items = furnItems(); return pl ? '收起來了：' + it.n : '擺出來了：' + it.n + '。可以用「移動家具」換位置。'; } }; });
+    return { icon: 'f_' + it.id, n: it.n, p: own ? 0 : it.p, tag: pl ? '收起來' : '擺出來', d: pl ? '已經擺出來了，點一下收起來' : own ? '收在箱子裡，點一下擺出來' : '買了會直接擺上', buy: () => { if (pl) d.placed = d.placed.filter(x => x !== it.id); else { if (!own) { d.own.push(it.id); if (!d.placed.length) logLine('第一件宿舍家具：' + it.n); } d.placed.push(it.id); } buildDorm(); SB.items = decorItems(); return pl ? '收起來了：' + it.n : '擺出來了：' + it.n + '。可以用「移動家具」換位置。'; } }; });
 }
 function furnMenu() {
-  return openShop({ title: '宿舍家具 · 型錄', led: '宿舍家具', poor: '錢還不夠。', intro: '每擺一件家具，每次定期入帳多 $10。買過的東西可以隨時收起來或擺出來。', side: '型錄最後一頁寫著：床是學校的，不能搬。', items: furnItems() });
+  return decor();
+  openShop({ title: '宿舍家具 · 型錄', led: '宿舍家具', poor: '錢還不夠。', intro: '每擺一件家具，每次定期入帳多 $10。買過的東西可以隨時收起來或擺出來。', side: '型錄最後一頁寫著：床是學校的，不能搬。', items: furnItems() });
   const d = st.dorm;
   const list = ITEMS.filter(it => !it.prize || d.own.includes(it.id));
   showModal({ title: '家具', text: '你有 ' + fmt(st.money) + '。買了會直接擺上，之後也可以收起來。', choices: list.map(it => { const own = d.own.includes(it.id), pl = d.placed.includes(it.id); return { label: pl ? '收起 ' + it.n : own ? '擺出 ' + it.n : it.n + ' $' + it.p, fn: () => {
