@@ -299,6 +299,7 @@ const $ = s => document.querySelector(s);
 const cv = $('#game'), cx = cv.getContext('2d');
 const off = document.createElement('canvas'), oc = off.getContext('2d');
 const SUB = 2;
+const rq = v => Math.round(v * SUB) / SUB;
 let S = 1, VW = 320, DPR = 1, OX = 0, OY = 0, U = 1;
 
 /* ---------- 工具 ---------- */
@@ -385,7 +386,7 @@ function path(mc, x, y, isP) {
 
 /* 角色 */
 function drawChar(g, x, y, dir, step, hair, shirt, pants, o) {
-  x = Math.round(x); y = Math.round(y); const sk = o && o.skin || '#ffd9bb', sty = o && o.style || 'short';
+  x = rq(x); y = rq(y); const sk = o && o.skin || '#ffd9bb', sty = o && o.style || 'short';
   const K = '#3b2f4a', wide = sty === 'long' || sty === 'bob';
   R(g, 'rgba(60,40,80,.22)', x - 5, y - 1, 10, 2.5);
   R(g, K, x - 3.5, y - 5.5, 7, 6); R(g, K, x - 5.5, y - 10.5, 11, 7); R(g, K, wide ? x - 5.5 : x - 4.5, y - 17.5, wide ? 11 : 9, sty === 'long' ? 11 : 7.5);
@@ -839,7 +840,7 @@ function newState(name) {
     q: { main: 0, side: {}, notified: {}, c: { work: 0, workAt: 0, workAll: 0, waves: [], study: 0, hoop4: 0, eng: 0, examTry: 0, examScore: 0 } },
     daily: { date: '', ids: [], prog: {}, done: {}, bonus: false }, best: { hoop: 0, run: 0, exam: 0, bar: 0, pk: 0 }, met: {}, pos: null,
     scooter: false, visited: { campus: 1 }, look: { style: 'short', hair: '#5a3a2a', skin: '#ffd9bb', shirt: '#ff8fb1', pants: '#4a5d8a', acc: 'none', cap: '#3ba3d8' }, ch3: { booths: [], hol: '', path: '', prog: 0, tries: 0 }, ach: [], title: '', psy: [], certs: { upper: 0, toeic: 0, ielts: 0, toefl: 0 }, cnt: { wave: 0, sleep: 0, studyFail: 0, coffeeAll: 0, cook: 0, trip: 0, shiftAll: 0 }, day: { d: '', coffee: 0, food: 0 },
-    ledger: { m: '', inc: 0, exp: 0, idle: 0, lines: [] }, rentDay: 0, challenge: false, bank: 0, salaryM: '', uid: '', wall: { lastPost: '', pats: [], coffees: [], mine: [] }, fam: '', famRe: 0, famM: '', aid: { grant: -1, schol: -1 }, cakes: [], ch4: { mate: '', job: '', photo: 0 }, loanPaid: 0, set: { arrow: 1 } };
+    ledger: { m: '', inc: 0, exp: 0, idle: 0, lines: [] }, rentDay: 0, challenge: false, bank: 0, salaryM: '', uid: '', wall: { lastPost: '', pats: [], coffees: [], mine: [] }, fam: '', famRe: 0, famM: '', aid: { grant: -1, schol: -1 }, cakes: [], ch4: { mate: '', job: '', photo: 0 }, loanPaid: 0, set: { arrow: 1 }, grow: {} };
 }
 function fill(def, s) { for (const k in def) { if (s[k] === undefined) s[k] = def[k]; else if (def[k] && typeof def[k] === 'object' && !Array.isArray(def[k]) && typeof s[k] === 'object') fill(def[k], s[k]); } return s; }
 function loadSave() {
@@ -967,6 +968,65 @@ function sbBuy(it) {
   beep(988, .06); setTimeout(() => beep(1319, .08), 80); sbMsg(t || ('買了：' + it.n)); toast('買了：' + it.n); hud(); persist(); sbRender();
 }
 function closeShop() { $('#shopOv').classList.remove('on'); modalOpen = $('#modal').classList.contains('on'); const f = SB && SB.onClose; SB = null; if (f) f(); }
+
+/* ---------- 宿舍窗台 ---------- */
+const H = 3600000;
+const GROW = {
+  pudding: { n: '冰箱布丁', start: '做布丁', cost: 80, ready: 2 * H, spoil: 6 * H, pay: 300, ex: 3, done: '布丁凝固得剛好，搖一下會抖。你分了一半給阿芸。', bad: '冰箱上貼了一張紙條：「布丁很好吃，謝謝 —阿芸」\n旁邊畫了一個愛心。你決定原諒她。' },
+  tomato: { n: '小番茄盆栽', start: '種小番茄', cost: 150, ready: 6 * H, spoil: 18 * H, pay: 900, ex: 6, done: '結了一串紅紅的小番茄。學餐阿姨說要跟你收購，拿去做今天的番茄炒蛋。', bad: '你太久沒回來，番茄乾掉了，只剩一根垂頭喪氣的莖。小晴幫你澆過一次水，但還是來不及。' },
+  kimchi: { n: '泡菜罐', start: '醃泡菜', cost: 300, ready: 12 * H, spoil: 48 * H, pay: 1800, ex: 8, done: '泡菜醃好了，酸度剛剛好。你分給室友和隔壁房，佳佳的爸媽開餐廳，說要跟你買兩罐。', bad: '泡菜醃太久，酸到整層樓都聞得到。還是可以吃，只是要配很多白飯。' }
+};
+const GROW_IDS = ['pudding', 'tomato', 'kimchi'];
+function growState(id) { const g = st.grow && st.grow[id]; if (!g) return 'empty'; const t = Date.now() - g.at, d = GROW[id]; return t < d.ready ? 'grow' : t < d.ready + d.spoil ? 'ready' : 'spoiled'; }
+const growLeft = id => { const t = Math.max(1, Math.ceil((st.grow[id].at + GROW[id].ready - Date.now()) / 60000)), h = Math.floor(t / 60), m = t % 60; return (h ? h + ' 小時' + (m ? ' ' : '') : '') + (m ? m + ' 分鐘' : ''); };
+const anyReady = () => st && st.grow && GROW_IDS.some(id => growState(id) === 'ready');
+function growHarvest(id) {
+  const d = GROW[id], stt = growState(id); delete st.grow[id];
+  if (stt === 'ready') { earn(d.pay, d.n); st.exp += d.ex; st.cnt.harvest = (st.cnt.harvest || 0) + 1; if (st.cnt.harvest >= 5) ach('green'); ok(d.n, d.done + '\n\n入帳 ' + fmt(d.pay) + '，知識 +' + d.ex + '。'); }
+  else if (id === 'kimchi') { earn(d.pay / 2, d.n + '（太酸）'); ok(d.n, d.bad + '\n\n只賣到一半的錢：' + fmt(d.pay / 2) + '。'); }
+  else { if (id === 'pudding') ach('pudding'); ok(d.n, d.bad); }
+  hud(); persist();
+}
+function sillMenu() {
+  st.grow = st.grow || {};
+  const lines = GROW_IDS.map(id => { const s0 = growState(id), d = GROW[id]; return '・' + d.n + '：' + ({ empty: '空著', grow: '還要 ' + (st.grow[id] ? growLeft(id) : ''), ready: '好了！', spoiled: id === 'pudding' ? '不見了' : id === 'tomato' ? '枯掉了' : '醃過頭了' }[s0]); });
+  const ch = [];
+  GROW_IDS.forEach(id => { const s0 = growState(id), d = GROW[id];
+    if (s0 === 'empty') ch.push({ label: d.start + ' $' + d.cost, fn: () => { if (st.money < d.cost) return ok('窗台', '錢不夠。'); spend(d.cost, d.start); st.grow[id] = { at: Date.now() }; logLine('開始' + d.start); ok('窗台', { pudding: '你把布丁液倒進杯子，放進冰箱。兩個小時後會凝固。\n放太久的話，室友可能會忍不住。', tomato: '你把種子埋進小盆子，澆了水。六個小時後會結果。\n一直不回來收的話，它會乾掉。', kimchi: '白菜抹上辣椒粉，裝進罐子放在窗台。十二個小時後就能吃。\n放太久會酸過頭。' }[id]); hud(); persist(); } });
+    else if (s0 !== 'grow') ch.push({ label: (s0 === 'ready' ? '收：' : '處理：') + d.n, fn: () => growHarvest(id) }); });
+  ch.push({ label: '先這樣' });
+  showModal({ title: '宿舍窗台', text: '窗台上可以放三樣東西。它們會在你不在的時候慢慢變好，太久沒回來也會變壞。\n\n' + lines.join('\n'), choices: ch });
+}
+function drawSill(g) {
+  if (!st) return; st.grow = st.grow || {}; const y = 2 * T - 3;
+  R(g, '#3b2f4a', 5 * T - .5, y - .5, 2 * T + 1, 3.5); R(g, '#c99a6b', 5 * T, y, 2 * T, 2.5);
+  const tw = (Date.now() / 400 | 0) % 2;
+  GROW_IDS.forEach((id, i) => { const x = 5 * T + 2 + i * 10, s0 = growState(id); if (s0 === 'empty') return;
+    if (id === 'tomato') { R(g, '#3b2f4a', x - .5, y - 5.5, 7, 6); R(g, '#c97a5a', x, y - 5, 6, 5); if (s0 === 'spoiled') { R(g, '#8a6b4a', x + 2.5, y - 10, 1, 5); R(g, '#8a6b4a', x + 3, y - 10, 2, .5); } else { R(g, '#5fbf7a', x + 2.5, y - (s0 === 'ready' ? 12 : 8), 1, s0 === 'ready' ? 7 : 3); R(g, '#86d79a', x + .5, y - 9, 2, 1); R(g, '#86d79a', x + 3.5, y - (s0 === 'ready' ? 11 : 8), 2.5, 1); if (s0 === 'ready') { R(g, '#e5607f', x + .5, y - 8, 2, 2); R(g, '#e5607f', x + 4, y - 10, 2, 2); R(g, '#fff', x + 1, y - 7.5, .5, .5); } } }
+    if (id === 'kimchi') { R(g, '#3b2f4a', x - .5, y - 9.5, 7, 10); R(g, '#e8f4f8', x, y - 9, 6, 9); R(g, s0 === 'spoiled' ? '#b53c3a' : s0 === 'ready' ? '#e5607f' : '#f3c7a0', x + .5, y - 6, 5, 6); R(g, '#9bd8a0', x + 1, y - 5, 2, 1); R(g, '#c9c3d6', x - .5, y - 10.5, 7, 1.5); }
+    if (id === 'pudding') { if (s0 === 'spoiled') { R(g, '#fff', x, y - 6, 6, 5); R(g, '#3b2f4a', x + 1, y - 5, 4, .5); R(g, '#3b2f4a', x + 1, y - 3.5, 3, .5); R(g, '#e5607f', x + 4, y - 3, 1, 1); } else { R(g, '#3b2f4a', x - .5, y - 7.5, 7, 8); R(g, '#fff', x, y - 7, 6, 7); R(g, s0 === 'ready' ? '#ffd45c' : '#fff3c4', x + .5, y - 5, 5, 4.5); if (s0 === 'ready') R(g, '#8a5a44', x + .5, y - 5, 5, 1.5); } }
+    if (s0 === 'ready' && tw) R(g, '#fff', x + 5.5, y - 12, 1, 1);
+  });
+}
+rDorm.IT.push({ id: 'sill', label: '窗台', x: 6 * T, y: 3 * T + 4, r: 22, ix: 6 * T, iy: 0 * T + 4 });
+rDorm.dyn.push({ y: 2 * T - 1, f: g => drawSill(g) });
+
+/* ---------- 你不在的時候 ---------- */
+const AWAY = [
+  ['阿芸', '把你的洗髮精用掉一半，留了一張「下次幫你買」的紙條。'], ['阿芸', '在你桌上放了一包夜市的雞排，已經冷了，但很香。'], ['阿芸', '練了三小時的報告，你的床被她當成觀眾席。'],
+  ['小晴', '早上六點去跑步，回來的時候幫大家買了豆漿。你的那杯在桌上。'], ['小晴', '把房間掃了一遍，在你床底下找到三支筆和一隻襪子。'], ['小晴', '借走你的檯燈，說她的燈泡壞了。'],
+  ['佳佳', '在群組傳了十二張貓的照片，問大家要不要一起養。大家都已讀。'], ['佳佳', '把你的角落拍下來，說要投稿到宿舍布置比賽。'], ['佳佳', '半夜看恐怖片，現在不敢一個人去廁所，在等你回來。'],
+  ['隔壁房', '的人來借吹風機，阿芸幫你借出去了。'], ['宿舍阿姨', '貼了公告：本週六停水，請提早洗澡。'], ['阿芸', '說你不在的時候，有人來找你，但她忘了是誰。']
+];
+function awayNote(min, fake) {
+  if (!st || min < 20) return;
+  if (locked()) return setTimeout(() => awayNote(min, fake), 900);
+  const pool = shuffle(AWAY).slice(0, 3), lines = pool.map(([w, t]) => '・' + w + t);
+  const g = []; if (st.grow) GROW_IDS.forEach(id => { const s0 = growState(id); if (s0 === 'ready') g.push('・窗台上的' + GROW[id].n + '好了，要回來收。'); if (s0 === 'spoiled') g.push(id === 'pudding' ? '・冰箱裡的布丁不見了。' : '・窗台上的' + GROW[id].n + '放太久了。'); });
+  const room = scenes.dorm.ents.filter(e => /室友/.test(e.name)); if (room.length > 1) { const ps = shuffle(room.map(e => [e.x, e.y, e.dir])); room.forEach((e, i) => { e.x = ps[i][0]; e.y = ps[i][1]; e.dir = ps[i][2]; }); }
+  st.met.lastNote = lines.concat(g).join('\n');
+  showModal({ title: '桌上的便條：你不在的時候', text: st.met.lastNote, choices: [{ label: '知道了' }].concat(g.length ? [{ label: '回宿舍看看', fn: () => { if (zoneOf(cur.id) === 'home') goScene('dorm', 6 * T, 4 * T + 8, 'up'); else toast('你人在外地，回到學校再去宿舍收。'); } }] : []) });
+}
 
 /* ---------- 第四章：畢業 ---------- */
 const MATES = [['神隊友', '他第一次開會就把分工表做好了，還附上甘特圖。你差點感動到哭。'], ['潛水員', '他只在報告前一天浮出水面，說：「我可以負責上台講。」'], ['點子王', '他每天都有新點子，每個點子都要重做。'], ['默默做事的人', '他很少說話，但每次打開雲端，他負責的部分都已經寫好了。']];
@@ -1869,6 +1929,7 @@ function interact() {
     a_cook: () => { if (!(st.inv.groc > 0)) return ok('共用廚房', '冰箱裡只有一罐不知道是誰的酸黃瓜，上面寫著「DO NOT EAT - Mike」。\n去超市買點食材吧。'); st.inv.groc--; st.cnt.cook = (st.cnt.cook || 0) + 1; st.fedUntil = Date.now() + 180000; st.exp += 2; if (st.cnt.cook >= 3) ach('chef'); ok('共用廚房', pick(['你煮了一鍋番茄炒蛋。走廊上的人一個一個探頭進來，最後變成五個國家的人分一盤。', '你用電鍋的方式煮飯，結果這裡沒有電鍋。你學會了用平底鍋煮飯，鍋底有一層焦的。', '煙霧警報器響了。整層樓的人穿著睡衣站在外面，你假裝不知道是誰煮的。', 'Sofia 聞到味道跑來，問你這是什麼。你說是滷肉飯，她說要學。你也不太會。']) + '\n\n自己煮比外食省很多。剩下的食材夠煮 ' + st.inv.groc + ' 次。'); persist(); },
     a_laundry: () => showModal({ title: '投幣洗衣機', text: '洗一次加烘乾要 $75，只收 25 分硬幣。\n你翻了翻口袋。', choices: [{ label: '洗衣服 $75', fn: () => { if (st.money < 75) return ok('洗衣間', '硬幣不夠。你把衣服又塞回袋子裡。'); spend(75, '投幣洗衣'); ok('洗衣間', pick(['一隻紅襪子混進去了，你的白 T 恤現在是淡粉紅色。很適合春天。', '你回來的時候，有人把你的衣服拿出來、折好、放在桌上。上面貼了一張便利貼：「You\'re welcome :)」', '烘衣機吃掉了一隻襪子。整棟宿舍的人都說，這台烘衣機就是會吃襪子。', '你坐在洗衣間寫作業，等衣服的時候認識了樓上的 Priya，她也是交換生。']) + '\n\n花了 $75。'); persist(); } }, { label: '先不用' }] }),
     a_groc: martShop,
+    sill: sillMenu,
     gradphoto: gradPhoto,
     a_skate: () => meterGame({ title: '戶外溜冰', desc: '指針跑到綠色區域時按「滑」，保持平衡。', btn: '滑', rounds: 4, speed: 1, zone: .3, shrink: .85,
       hitT: ['你滑出去了，像一條很穩的線。', '沒跌倒！旁邊的小孩對你比讚。', '你轉了一個小彎，差點覺得自己是選手。'], missT: ['你抱住了欄杆，欄杆沒有抱你。', '屁股著地，冰很冷。', '你滑得很優雅，往錯的方向。'],
@@ -1962,9 +2023,10 @@ function settle(minutes, fake) {
 /* ---------- 畫面 ---------- */
 const cam = { x: 0, y: 0 };
 function snapCam() {
-  const s = cur, sw = s.w * T, sh = s.h * T, px = Math.round(P.x), py = Math.round(P.y);
+  const s = cur, sw = s.w * T, sh = s.h * T, px = rq(P.x), py = rq(P.y);
   cam.x = sw <= VW ? -Math.floor((VW - sw) / 2) : Math.max(0, Math.min(sw - VW, px - (VW >> 1)));
   cam.y = sh <= VH ? -Math.floor((VH - sh) / 2) : Math.max(0, Math.min(sh - VH, py - (VH >> 1) - 8));
+  cam.x = rq(cam.x); cam.y = rq(cam.y);
 }
 let cssW = 0, cssH = 0;
 function resize() {
@@ -1991,7 +2053,7 @@ function label(text, x, y, o = {}) {
 }
 function bubble(e) {
   if (!e.bubble || performance.now() > e.bubble.until) { e.bubble = null; return; }
-  const [sx, sy] = toScr(Math.round(e.x), Math.round(e.y) - 20), fs = 12 * U; cx.font = `700 ${fs}px ${FONT}`;
+  const [sx, sy] = toScr(rq(e.x), rq(e.y) - 20), fs = 12 * U; cx.font = `700 ${fs}px ${FONT}`;
   const w = cx.measureText(e.bubble.text).width + 12 * U, h = fs + 9 * U, bx = sx - w / 2, by = sy - h - 6 * U;
   cx.fillStyle = '#fff'; rr(cx, bx, by, w, h, 6 * U); cx.fill(); cx.lineWidth = 2 * U; cx.strokeStyle = '#3b2f4a'; cx.stroke();
   cx.beginPath(); cx.moveTo(sx - 4 * DPR, by + h - 1); cx.lineTo(sx, by + h + 5 * DPR); cx.lineTo(sx + 4 * DPR, by + h - 1); cx.fillStyle = '#fff'; cx.fill();
@@ -2019,12 +2081,12 @@ function render(t) {
   s.labels.forEach(l => { const [sx, sy] = toScr(l.x, l.y); if (sx > -200 && sx < cv.width + 200 && sy > -50 && sy < cv.height + 50) label(l.t, sx, sy, { size: l.size || 11, bg: 'rgba(255,248,239,.92)' }); });
   s.ents.forEach(e => {
     if (e.kind === 'passer' || e.kind === 'deco' || e.hidden) return;
-    const [sx, sy] = toScr(Math.round(e.x), Math.round(e.y) + 9); label(e.name, sx, sy, { size: 10, bg: e.kind === 'quest' ? '#ffe9a8' : '#cdeaff' });
-    if (e.title) { const [tx, ty] = toScr(Math.round(e.x), Math.round(e.y) - 24); label('「' + e.title + '」', tx, ty, { size: 9, bg: '#2b2338', fg: '#cdeaff' }); }
+    const [sx, sy] = toScr(rq(e.x), rq(e.y) + 9); label(e.name, sx, sy, { size: 10, bg: e.kind === 'quest' ? '#ffe9a8' : '#cdeaff' });
+    if (e.title) { const [tx, ty] = toScr(rq(e.x), rq(e.y) - 24); label('「' + e.title + '」', tx, ty, { size: 9, bg: '#2b2338', fg: '#cdeaff' }); }
     const m = markOf(e); if (m) { const [mx, my] = toScr(e.x, e.y - 30 + Math.sin(t / 200) * 2); badge(mx, my, m === 'turn' ? '?' : '!', m === 'side' ? '#7ec8f0' : '#ffd45c'); }
   });
-  Object.values(remotes).forEach(r => { if (r.s !== cur.id) return; const [sx, sy] = toScr(Math.round(r.x), Math.round(r.y) + 9); label(r.name || '同學', sx, sy, { size: 10, bg: '#b7f0b1' }); if (r.title) { const [tx, ty] = toScr(Math.round(r.x), Math.round(r.y) - 24); label('「' + r.title + '」', tx, ty, { size: 9, bg: '#2b2338', fg: '#b7f0b1' }); } bubble(r); });
-  if (started) { const [sx, sy] = toScr(Math.round(P.x), Math.round(P.y) + 9); label(st.name, sx, sy, { size: 10, bg: '#ffd45c' }); const tt = titleOf(); if (tt) { const [tx, ty] = toScr(Math.round(P.x), Math.round(P.y) - 24); label('「' + tt + '」', tx, ty, { size: 10, bg: '#2b2338', fg: '#f2c14e' }); } }
+  Object.values(remotes).forEach(r => { if (r.s !== cur.id) return; const [sx, sy] = toScr(rq(r.x), rq(r.y) + 9); label(r.name || '同學', sx, sy, { size: 10, bg: '#b7f0b1' }); if (r.title) { const [tx, ty] = toScr(rq(r.x), rq(r.y) - 24); label('「' + r.title + '」', tx, ty, { size: 9, bg: '#2b2338', fg: '#b7f0b1' }); } bubble(r); });
+  if (started) { const [sx, sy] = toScr(rq(P.x), rq(P.y) + 9); label(st.name, sx, sy, { size: 10, bg: '#ffd45c' }); const tt = titleOf(); if (tt) { const [tx, ty] = toScr(rq(P.x), rq(P.y) - 24); label('「' + tt + '」', tx, ty, { size: 10, bg: '#2b2338', fg: '#f2c14e' }); } }
   bubble(P); s.ents.forEach(bubble);
   if (started && !cur.indoor) goalBadges(t);
   drawNav(t);
@@ -2065,6 +2127,8 @@ const ACH = [
   { id: 'ielts', n: '雅思 6.0', d: '雅思考到 6.0 以上', t: '留學準備中' },
   { id: 'allexam', n: '考試收集家', d: '四種進階考試都考過一次', t: '考試收集家', h: 1 },
   { id: 'ch3', n: '走到岔路口', d: '完成第三章', t: '岔路口旅人' },
+  { id: 'green', n: '窗台農夫', d: '在宿舍窗台收成五次', t: '窗台農夫' },
+  { id: 'pudding', n: '布丁被吃了', d: '冰箱的布丁放太久，被室友吃掉', t: '寬宏大量的室友', h: 1 },
   { id: 'graduate', n: '及格畢業', d: '完成第四章，拿到畢業證書', t: '及格鎮校友' },
   { id: 'offer', n: '拿到 offer', d: '通過畢業前的面試', t: '準社會人' },
   { id: 'debtfree', n: '學貸還清', d: '把四年的學貸全部還完', t: '無債一身輕' },
@@ -2725,6 +2789,7 @@ function goals() {
   if (m === 11) out.push({ at: { scene: 'street', x: 15.5 * T, y: 22 * T }, c: '#ffd45c', ch: '!' });
   if ((m >= 12 && m <= 14) || m === 18) out.push({ at: 'expo', c: '#ffd45c', ch: '!' });
   if (m === 21) out.push({ at: { scene: 'campus', x: 24 * T, y: 15.5 * T }, c: '#ffd45c', ch: '!' });
+  if (anyReady()) out.push({ at: cur.id === 'dorm' ? { scene: 'dorm', x: 6 * T, y: 2 * T } : 'dorm', c: '#ff8fb1', ch: '收' });
   if (m === 15) out.push({ at: st.ch3.path === 'exchange' ? [ 'expo', { scene: 'airport', x: 19.5 * T, y: 5 * T }, { scene: 'abroad', x: 14 * T, y: 9 * T } ][Math.min(2, st.ch3.prog)] : ({ transfer: 'classroom', double: 'classroom', intern: 'corp' }[st.ch3.path] || 'expo'), c: '#ffd45c', ch: '!' });
   st.daily.ids.forEach(id => { if (!st.daily.done[id] && DAILY[id].at) out.push({ at: DAILY[id].at, c: '#9bd8a0', ch: '日' }); });
   return out.map(g => typeof g.at === 'string' ? Object.assign(g, parentOf(g.at)) : Object.assign(g, g.at));
@@ -2913,7 +2978,7 @@ $('#shopX').addEventListener('click', closeShop); $('#sbPrev').addEventListener(
 { let sx = null; $('#sbPages').addEventListener('pointerdown', e => { sx = e.clientX; }); $('#sbPages').addEventListener('pointerup', e => { if (sx !== null && Math.abs(e.clientX - sx) > 50) sbFlip(e.clientX < sx ? 1 : -1); sx = null; }); }
 addEventListener('keydown', e => { if (!SB || $('#modal').classList.contains('on')) return; if (e.code === 'Escape') closeShop(); else if (e.code === 'ArrowRight' || e.code === 'KeyD') sbFlip(1); else if (e.code === 'ArrowLeft' || e.code === 'KeyA') sbFlip(-1); });
 addEventListener('resize', () => { if (SB) sbRender(); });
-$('#fastBtn').addEventListener('click', () => { closeBook(); setTimeout(() => offlinePay(true), 50); });
+$('#fastBtn').addEventListener('click', () => { closeBook(); if (st.grow) for (const k in st.grow) st.grow[k].at -= H; setTimeout(() => offlinePay(true), 50); setTimeout(() => awayNote(60, true), 900); });
 
 /* ---------- 開始 ---------- */
 function begin() {
@@ -2925,6 +2990,7 @@ function begin() {
   checkDay(true); dayTick(true); snapCam(); hud(); claimCoffee(); rtStart(); if (st.q.main >= 1) st.met.howto = st.met.howto || 1; setTimeout(() => bgmPlay(songFor(), true), 300);
   if (!st.payAt && st.lastSeen) st.payAt = st.lastSeen + PAY_MS;
   const away = (Date.now() - (st.lastSeen || Date.now())) / 60000;
+  if (!st.fresh && st.q.main >= 2) setTimeout(() => awayNote(away), 1500);
   const desk = matchMedia('(hover:hover) and (pointer:fine)').matches;
   if (st.fresh) { delete st.fresh; setTimeout(openWard, 200); if (desk) setTimeout(keysHelp, 300); toast('先去學務處找陳老師報到。右上角的地圖可以看路。'); }
   else if (!st.fam) setTimeout(famStart, 400);
@@ -2946,7 +3012,7 @@ resize(); snapCam();
 document.addEventListener('visibilitychange', () => { if (document.hidden && started) persist(); try { if (actx) { if (document.hidden) actx.suspend(); else actx.resume(); } } catch (e) {} });
 addEventListener('pagehide', () => { if (started) persist(); });
 requestAnimationFrame(loop);
-window.__town = { get st() { return st; }, P, scenes, get cur() { return cur; }, interact, nearest, QN, SIDE, goScene, setMain, cam, get S() { return S; }, get mg() { return mg; }, mgPress, findPath, BLD, quizAnswer, quizElim, examSeat, engPractice, goals, remotes, openWard, payTick, offlinePay, shiftNight, startShift, get shift() { return shift; }, gate, fly, busMenu, holTest, choosePath, busRide, internInterview, exchangeInterview, get rt() { return rt; }, ach, BLD2: BLD, get mapView() { return mapView; }, pickPsy, PSY, randomEvent, dayTick, openCard, openWall, startChallenge, makeCard, EXAMS, takeExam, famStart, famShow, aidBoard, openShop, closeShop, sbFlip, get SB() { return SB; }, shop, meal, stall, tellerTick, tellerTalk, FAM, mainTarget, navPoint, howTo, bgmPlay, get bgm() { return bgm; }, AU, auToggle, projTalk, ch4Interview, leaveSchool, farewell, gradPhoto, gradCeremony, martShop, tripMenu, triviaNight, callHome, makeCard, repay, loanLeft };
+window.__town = { get st() { return st; }, P, scenes, get cur() { return cur; }, interact, nearest, QN, SIDE, goScene, setMain, cam, get S() { return S; }, get mg() { return mg; }, mgPress, findPath, BLD, quizAnswer, quizElim, examSeat, engPractice, goals, remotes, openWard, payTick, offlinePay, shiftNight, startShift, get shift() { return shift; }, gate, fly, busMenu, holTest, choosePath, busRide, internInterview, exchangeInterview, get rt() { return rt; }, ach, BLD2: BLD, get mapView() { return mapView; }, pickPsy, PSY, randomEvent, dayTick, openCard, openWall, startChallenge, makeCard, EXAMS, takeExam, famStart, famShow, aidBoard, openShop, closeShop, sbFlip, get SB() { return SB; }, shop, meal, stall, tellerTick, tellerTalk, FAM, mainTarget, sillMenu, growState, awayNote, GROW, navPoint, howTo, bgmPlay, get bgm() { return bgm; }, AU, auToggle, projTalk, ch4Interview, leaveSchool, farewell, gradPhoto, gradCeremony, martShop, tripMenu, triviaNight, callHome, makeCard, repay, loanLeft };
 })();
 </script>
 </body>
