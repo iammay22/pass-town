@@ -53,6 +53,9 @@ button,input{font-family:inherit}
 #toast.on{opacity:1}
 #flyOv{position:fixed;inset:0;z-index:16;display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff8ef;font-size:18px;text-align:center;pointer-events:none}
 .fplane{font-size:46px;animation:fpl 3s linear forwards}@keyframes fpl{from{transform:translateX(-40vw) translateY(10px)}to{transform:translateX(40vw) translateY(-10px)}}
+#mpic{display:none;height:min(30vh,176px);width:auto;max-width:100%;margin:0 auto 8px;image-rendering:pixelated;border:3px solid var(--ink);background:#2b2338}
+#moveBar{position:fixed;z-index:25;left:50%;bottom:calc(env(safe-area-inset-bottom) + 12px);transform:translateX(-50%);display:none;gap:6px;align-items:center;background:var(--paper);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);padding:6px 10px}
+#moveBar button{min-width:44px;font-size:18px;padding:6px 10px}#moveBar b{margin-right:6px;font-size:14px}
 #fade{position:fixed;inset:0;z-index:15;background:#2b2338;opacity:0;pointer-events:none;transition:opacity .18s}
 .ov{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:rgba(43,35,56,.55);padding:10px}
 .ov.on{display:flex}
@@ -198,6 +201,7 @@ button.tab.on{background:var(--gold)}
 <div id="ach"><div class="ic" id="achI">★</div><div><div class="t1">成就解鎖！</div><div class="t2" id="achN"></div><div class="t3" id="achD"></div></div></div>
 <div id="fade"></div>
 <div id="flyOv"></div>
+<div id="moveBar"><b id="mvName"></b><button type="button" data-mv="0,-1">↑</button><button type="button" data-mv="-1,0">←</button><button type="button" data-mv="0,1">↓</button><button type="button" data-mv="1,0">→</button><button type="button" class="pri" id="mvDone">放好了</button></div>
 
 <div class="ov on" id="title">
   <div class="card">
@@ -218,7 +222,7 @@ button.tab.on{background:var(--gold)}
 </div>
 
 <div class="ov" id="shopOv"><div class="sbook"><button class="xbtn" id="shopX" type="button" aria-label="關閉">✕</button><div class="sbHead"><b id="sbT"></b><span id="sbM"></span></div><div class="sbPages" id="sbPages"><div class="sbPage" id="sbL"></div><div class="sbPage" id="sbR"></div><div class="sbFlip" id="sbFlip"></div></div><div class="sbFoot"><button id="sbPrev" type="button">‹ 上一頁</button><span id="sbN"></span><button id="sbNext" type="button">下一頁 ›</button></div><div class="sbMsg" id="sbMsg"></div></div></div>
-<div class="ov" id="modal"><div class="card"><h2 id="mt"></h2><p id="mx"></p><div id="mc"></div></div></div>
+<div class="ov" id="modal"><div class="card"><canvas id="mpic" width="320" height="128"></canvas><h2 id="mt"></h2><p id="mx"></p><div id="mc"></div></div></div>
 
 <div class="ov" id="book">
   <div class="card nb">
@@ -322,7 +326,7 @@ function beep(f = 520, d = .06, type = 'square') {
   } catch (e) {}
 }
 let toastT = 0;
-function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 3000); }
+function toast(t) { const el = $('#toast'); el.textContent = tx(t); el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 3000); }
 
 /* ---------- 場景 ---------- */
 const scenes = {}; let cur = null;
@@ -580,7 +584,7 @@ function drawStall(g, st0) {
   R(mc, '#b07c5a', 14 * T + 6, 21 * T + 2, 3 * T - 12, 6); R(mc, '#ffd45c', 13 * T + 6, 19 * T - 4, 10, 14); R(mc, '#3b2f4a', 13 * T + 10, 19 * T + 10, 2, 18);
   solid(s, 14, 21, 3, 1); solid(s, 13, 20);
   s.IT.push({ id: 'bus', label: '等公車', x: 15.5 * T, y: 22 * T + 8, r: 26, ix: 15.5 * T, iy: 19 * T });
-  STALLS.forEach(t => { solid(s, t.x, t.y, 4, 3); s.dyn.push({ y: (t.y + 2) * T + 15, f: g => drawStall(g, t) }); s.IT.push({ id: 'stall', stall: t.id, label: { ring: '玩', moto: '修車', rent: '看看' }[t.id] || '買', x: (t.x + 2) * T, y: (t.y + 3) * T + 10, r: 24, ix: (t.x + 2) * T, iy: (t.y - 1) * T - 6 }); s.labels.push({ t: t.n, x: (t.x + 2) * T, y: t.y * T - 14, size: 10 }); });
+  STALLS.forEach(t => { solid(s, t.x, t.y, 4, 3); s.dyn.push({ y: (t.y + 2) * T + 15, f: g => drawStall(g, stallView(t)) }); s.IT.push({ id: 'stall', stall: t.id, label: { ring: '玩', moto: '修車', rent: '看看' }[t.id] || '買', x: (t.x + 2) * T, y: (t.y + 3) * T + 10, r: 24, ix: (t.x + 2) * T, iy: (t.y - 1) * T - 6 }); s.labels.push({ get t() { return stallView(t).n; }, x: (t.x + 2) * T, y: t.y * T - 14, size: 10 }); });
   s.labels.push({ t: '考試中心', x: 27 * T, y: 3 * T + 6, size: 12 }, { t: '轉角咖啡廳', x: 27 * T, y: 12 * T + 6, size: 12 }, { t: '← 校園', x: 1.5 * T, y: 5 * T + 4 }, { t: '公車站', x: 15.5 * T, y: 19 * T - 14 }, { t: '道路施工中', x: 20.5 * T, y: 23 * T + 4 });
   s.exits.push({ t: p => p.x < 6, to: 'campus', sx: 46 * T, sy: 14 * T + 4, dir: 'left' });
   s.spots.push({ x: 8, y: 21, dir: 'up', stay: [6, 12] }, { x: 3, y: 5, dir: 'up', stay: [4, 8] }, { x: 12, y: 5, dir: 'up', stay: [4, 8] }, { x: 15, y: 23, dir: 'up', stay: [6, 12] });
@@ -636,7 +640,8 @@ const FURN = {
   rug(g, x, y, w, h) { R(g, '#b53c5a', x, y, w * T, h * T); R(g, '#ff8fb1', x + 2, y + 2, w * T - 4, h * T - 4); R(g, '#fff3c4', x + 6, y + 6, w * T - 12, h * T - 12); },
   beanbag(g, x, y) { R(g, 'rgba(60,40,80,.2)', x + 1, y + 12, 14, 3); R(g, '#3ba3d8', x + 1, y + 2, 14, 11); R(g, '#7ec8f0', x + 3, y, 10, 5); R(g, 'rgba(255,255,255,.3)', x + 3, y + 3, 5, 2); },
   guitar(g, x, y) { R(g, 'rgba(60,40,80,.22)', x + 1, y + 28, 15, 3); R(g, '#3b2f4a', x + 6, y - 2, 4, 15); R(g, '#3b2f4a', x + 5, y - 3, 6, 3); R(g, '#8a5a44', x + 7, y - 1, 2, 13); R(g, '#e8e3f2', x + 7, y + 3, 2, 1); R(g, '#e8e3f2', x + 7, y + 7, 2, 1); R(g, '#3b2f4a', x + 2, y + 11, 12, 15); R(g, '#3b2f4a', x + 1, y + 17, 14, 8); R(g, '#e5607f', x + 3, y + 12, 10, 13); R(g, '#e5607f', x + 2, y + 18, 12, 6); R(g, '#ff8fb1', x + 4, y + 13, 3, 3); R(g, '#b53c5a', x + 3, y + 23, 10, 1); R(g, '#3b2f4a', x + 6, y + 16, 4, 4); R(g, '#ffd45c', x + 5, y + 21, 6, 1); R(g, '#3b2f4a', x + 1, y + 25, 14, 4); R(g, '#c9c3d6', x + 2, y + 26, 12, 2); },
-  tank(g, x, y, w) { R(g, '#3b2f4a', x - 1, y - 5, w * T + 2, 20); R(g, '#7ec8f0', x, y - 4, w * T, 16); R(g, '#a9defa', x + 2, y - 2, w * T - 4, 4); R(g, '#ff8b3d', x + 6, y + 3, 5, 3); R(g, '#ffd45c', x + 18, y + 5, 4, 3); R(g, '#e5607f', x + 4, y + 10, 24, 2); R(g, '#6f4a3a', x, y + 12, w * T, 4); },
+  tank(g, x, y) { R(g, 'rgba(60,40,80,.2)', x + 1, y + 13, 14, 3); R(g, '#6f4a3a', x + 1, y + 8, 14, 6); R(g, '#3b2f4a', x + .5, y - 4.5, 15, 13); R(g, '#7ec8f0', x + 1, y - 4, 14, 12); R(g, '#bfe6ff', x + 2, y - 3, 12, 2); R(g, '#ff8b3d', x + 4, y + 1, 3, 2); R(g, '#ffd45c', x + 9, y + 4, 3, 1.5); R(g, '#5fbf7a', x + 12, y, 1, 7); R(g, '#fff', x + 7, y - 1, 1, 1); },
+  tankOld(g, x, y, w) { R(g, '#3b2f4a', x - 1, y - 5, w * T + 2, 20); R(g, '#7ec8f0', x, y - 4, w * T, 16); R(g, '#a9defa', x + 2, y - 2, w * T - 4, 4); R(g, '#ff8b3d', x + 6, y + 3, 5, 3); R(g, '#ffd45c', x + 18, y + 5, 4, 3); R(g, '#e5607f', x + 4, y + 10, 24, 2); R(g, '#6f4a3a', x, y + 12, w * T, 4); },
   box(g, x, y, w) { R(g, 'rgba(60,40,80,.2)', x + 1, y + 14, w * T, 3); R(g, '#3b2f4a', x - 1, y - 3, w * T + 2, 19); R(g, '#c99a6b', x, y - 2, w * T, 17); R(g, '#8a5a44', x, y + 2, w * T, 2); R(g, '#ffd45c', x + w * T / 2 - 2, y + 5, 4, 4); },
   loft(g, x, y, c, mine) { R(g, 'rgba(60,40,80,.2)', x + 2, y + 2 * T - 1, 2 * T, 3); R(g, '#3b2f4a', x - 1, y - 6, 2 * T + 2, 2 * T + 7); R(g, '#a8745a', x, y - 5, 2 * T, 2 * T + 5);
     R(g, '#fff', x + 3, y - 3, 10, 6); R(g, c, x + 2, y + 3, 2 * T - 4, 9); R(g, 'rgba(255,255,255,.3)', x + 2, y + 3, 2 * T - 4, 2);
@@ -833,32 +838,46 @@ put(rADorm, 'fridge', 8, 2, 1, 1);
 { const g = rADorm.g, x = 12 * T, y = 6 * T; R(g, 'rgba(60,40,80,.2)', x + 1, y + 15, 15, 3); R(g, '#3b2f4a', x - .5, y - 4.5, 15, 20); R(g, '#f3f3f6', x, y - 4, 14, 19); R(g, '#c9c3d6', x, y - 4, 14, 3); R(g, '#3b2f4a', x + 2.5, y + 2.5, 9, 9); R(g, '#7ec8f0', x + 3, y + 3, 8, 8); R(g, '#bfe6ff', x + 4, y + 4, 3, 1); R(g, '#e5607f', x + 10, y - 3, 2, 1); solid(rADorm, 12, 6); }
 rADorm.IT.push({ id: 'ward', label: '衣櫃換裝', x: 11 * T, y: 3 * T + 12, r: 24, ix: 11 * T, iy: 0 * T + 6 });
 rADorm.IT.push({ id: 'a_cook', label: '煮飯', x: 8.5 * T, y: 3 * T + 12, r: 22, ix: 8.5 * T, iy: 1 * T + 4 }, { id: 'a_laundry', label: '洗衣服', x: 11 * T + 4, y: 6.5 * T, r: 22, ix: 12.5 * T, iy: 4.5 * T });
-rADorm.IT.push({ id: 'a_desk', label: '書桌', x: 5 * T, y: 3 * T + 12, r: 22, ix: 5 * T, iy: 1 * T }, { id: 'bed', label: '睡一下', x: 2 * T, y: 4 * T + 8, r: 24, ix: 2 * T, iy: 1.5 * T });
+rADorm.IT.push({ id: 'a_desk', label: '書桌', x: 5 * T, y: 3 * T + 12, r: 22, ix: 5 * T, iy: 1 * T }, { id: 'bed', label: '上床', x: 1.3 * T, y: 4 * T + 8, r: 16, ix: 1.5 * T, iy: 1.5 * T });
 /* 宿舍：可換裝潢，之後重畫 */
 const rDorm = mkScene('dorm', '宿舍', RW, RH, true);
 const WALLS = [{ n: '奶油白', c: '#fff1e0', p: 0 }, { n: '薄荷綠', c: '#cdeedd', p: 300 }, { n: '櫻花粉', c: '#ffd1de', p: 300 }, { n: '夜空藍', c: '#b9c8f2', p: 400 }];
 const FLOORS = [{ n: '原木', a: '#d9b48a', b: '#cfa87d', p: 0 }, { n: '灰地毯', a: '#bdb7c9', b: '#b2abc0', p: 300 }, { n: '淺藍磁磚', a: '#cfe7f5', b: '#c3dff0', p: 300 }];
-const ITEMS = [{ id: 'poster', n: '海報', p: 200 }, { id: 'lamp', n: '檯燈', p: 250 }, { id: 'plant', n: '小盆栽', p: 150 }, { id: 'rug', n: '地毯', p: 400 }, { id: 'beanbag', n: '豆袋椅', p: 600 }, { id: 'guitar', n: '吉他架', p: 500 }, { id: 'tank', n: '魚缸', p: 900 }, { id: 'doll', n: '大熊娃娃', p: 0, prize: true }];
+const ITEMS = [{ id: 'poster', n: '海報', p: 200 }, { id: 'lamp', n: '檯燈', p: 250 }, { id: 'plant', n: '小盆栽', p: 150 }, { id: 'rug', n: '地毯', p: 400 }, { id: 'beanbag', n: '豆袋椅', p: 600 }, { id: 'guitar', n: '吉他架', p: 500 }, { id: 'tank', n: '小魚缸', p: 900 }, { id: 'doll', n: '大熊娃娃', p: 0, prize: true }];
+const DEF_POS = { closet: [9, 2], box: [4, 2], plant: [3, 2], guitar: [3, 4], beanbag: [4, 5], tank: [9, 8], doll: [3, 7], rug: [5, 5] };
+const FSZ = { closet: [2, 1], box: [1, 1], plant: [1, 1], guitar: [1, 2], beanbag: [1, 1], tank: [1, 1], doll: [1, 1], rug: [4, 2] };
+const FNAME = { closet: '衣櫃', box: '裝潢箱', plant: '小盆栽', guitar: '吉他架', beanbag: '豆袋椅', tank: '小魚缸', doll: '大熊娃娃', rug: '地毯' };
+const fpos = k => (st && st.dorm.pos && st.dorm.pos[k]) || DEF_POS[k];
+const movables = () => Object.keys(DEF_POS).filter(k => k === 'closet' || k === 'box' || (st && st.dorm.placed.includes(k)));
+const RESERVED = ['1,2', '2,2', '1,3', '2,3', '11,2', '12,2', '11,3', '12,3', '1,6', '2,6', '1,7', '2,7', '11,6', '12,6', '11,7', '12,7', '6,8', '7,8', '6,2', '7,2', '1,4', '2,4'];
+function canPlace(k, x, y) {
+  const [w, h] = FSZ[k]; if (x < 1 || y < 2 || x + w > 13 || y + h > 9) return false; if (k === 'rug') return true;
+  const mine = new Set(); for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) mine.add((x + i) + ',' + (y + j));
+  if ([...mine].some(t => RESERVED.includes(t))) return false;
+  return !movables().filter(o => o !== k && o !== 'rug').some(o => { const [ox, oy] = fpos(o), [ow, oh] = FSZ[o]; for (let i = 0; i < ow; i++) for (let j = 0; j < oh; j++) if (mine.has((ox + i) + ',' + (oy + j))) return true; return false; });
+}
+let moving = null;
+function moveMenu() { showModal({ title: '移動家具', text: '床是固定的，其他東西都可以搬。選一樣，用方向鍵慢慢移，畫面上會直接看到位置。', choices: movables().map(k => ({ label: FNAME[k], fn: () => startMove(k) })).concat([{ label: '返回', fn: decor }]) }); }
+function startMove(k) { moving = k; modalOpen = true; $('#mvName').textContent = '移動：' + FNAME[k]; $('#moveBar').style.display = 'flex'; const [x, y] = fpos(k); goScene('dorm', Math.min(12, x + 1) * T, Math.min(8, y + FSZ[k][1]) * T + 10, 'up'); }
+function moveStep(dx, dy) { if (!moving) return; const [x, y] = fpos(moving), nx = x + dx, ny = y + dy; if (!canPlace(moving, nx, ny)) { beep(220, .06, 'sawtooth'); return toast('那裡放不下，換個位置'); } st.dorm.pos = st.dorm.pos || {}; st.dorm.pos[moving] = [nx, ny]; beep(600, .03); buildDorm(); }
+function endMove() { moving = null; $('#moveBar').style.display = 'none'; modalOpen = false; persist(); toast('家具擺好了'); }
 function buildDorm() {
   const d = st && st.dorm ? st.dorm : { wall: 0, floor: 0, placed: [] }, w = WALLS[d.wall], f = FLOORS[d.floor];
   const s = rDorm; s.g.clearRect(0, 0, RW * T, RH * T); roomShell(s, w.c, f.a, f.b);
   put(s, 'window', 6, 0, 2, 0, false);
   if (d.placed.includes('poster')) FURN.poster(s.g, 1 * T + 3, 2);
-  if (d.placed.includes('rug')) FURN.rug(s.g, 5 * T, 5 * T, 4, 2);
+  if (d.placed.includes('rug')) { const [rx, ry] = fpos('rug'); FURN.rug(s.g, rx * T, ry * T, 4, 2); }
   FURN.loft(s.g, 1 * T, 2 * T, (st && st.look && st.look.shirt) || '#7ec8f0', true); solid(s, 1, 2, 2, 2);
   FURN.loft(s.g, 11 * T, 2 * T, '#ffb86b'); solid(s, 11, 2, 2, 2);
   FURN.loft(s.g, 1 * T, 6 * T, '#9bd8a0'); solid(s, 1, 6, 2, 2);
   FURN.loft(s.g, 11 * T, 6 * T, '#c9b6f5'); solid(s, 11, 6, 2, 2);
-  put(s, 'closet', 9, 2, 2, 1); put(s, 'box', 4, 2, 1, 1, true, 1);
   if (d.placed.includes('lamp')) FURN.lamp(s.g, 1 * T + 20, 3 * T + 4);
-  if (d.placed.includes('plant')) put(s, 'plant', 3, 2, 1, 1);
-  if (d.placed.includes('guitar')) put(s, 'guitar', 3, 4, 1, 2);
-  if (d.placed.includes('beanbag')) put(s, 'beanbag', 4, 5, 1, 1);
-  if (d.placed.includes('tank')) put(s, 'tank', 9, 8, 2, 1);
-  if (d.placed.includes('doll')) put(s, 'doll', 3, 7, 1, 1);
+  movables().filter(k => k !== 'rug').sort((a, b) => fpos(a)[1] - fpos(b)[1]).forEach(k => { const [x, y] = fpos(k), [w, h] = FSZ[k]; put(s, k, x, y, w, h, true, k === 'box' ? 1 : undefined); });
+  { const [cx0, cy0] = fpos('closet'), [bx0, by0] = fpos('box'), w0 = s.IT.find(i => i.id === 'ward'), d0 = s.IT.find(i => i.id === 'decor');
+    if (w0) Object.assign(w0, { x: (cx0 + 1) * T, y: (cy0 + 1) * T + 12, ix: (cx0 + 1) * T, iy: (cy0 - 1) * T + 6 }); if (d0) Object.assign(d0, { x: (bx0 + .5) * T, y: (by0 + 1) * T + 12, ix: (bx0 + .5) * T, iy: (by0 - 1) * T + 4 }); }
   s.labels = [{ t: '你', x: 2 * T, y: 1 * T + 10, size: 9 }, { t: '阿芸', x: 12 * T, y: 1 * T + 10, size: 9 }, { t: '小晴', x: 2 * T, y: 5 * T + 10, size: 9 }, { t: '佳佳', x: 12 * T, y: 5 * T + 10, size: 9 }];
 }
-rDorm.IT.push({ id: 'ward', label: '衣櫃換裝', x: 10 * T, y: 3 * T + 12, r: 24, ix: 10 * T, iy: 0 * T + 6 }, { id: 'decor', label: '布置角落', x: 4.5 * T, y: 3 * T + 12, r: 22, ix: 4.5 * T, iy: 1 * T }, { id: 'bed', label: '睡一下', x: 2 * T, y: 4 * T + 8, r: 24, ix: 2 * T, iy: 1.5 * T });
+rDorm.IT.push({ id: 'ward', label: '衣櫃換裝', x: 10 * T, y: 3 * T + 12, r: 24, ix: 10 * T, iy: 0 * T + 6 }, { id: 'decor', label: '布置角落', x: 4.5 * T, y: 3 * T + 12, r: 22, ix: 4.5 * T, iy: 1 * T }, { id: 'bed', label: '上床', x: 1.3 * T, y: 4 * T + 8, r: 16, ix: 1.5 * T, iy: 1.5 * T });
 
 /* ---------- 狀態 ---------- */
 const KEY = 'jige-town-v1', OLDKEY = 'lifefork-town-demo-v2';
@@ -949,6 +968,10 @@ const ICON = {
   wrap: ['............', '...kkkkkk...', '..kgrgyrgk..', '.kcccccccck.', '.kcllccclck.', '.kcccccccck.', '.kcclcccclk.', '.kcccccccck.', '..kcccccck..', '...kkkkkk...', '............', '............'],
   hotdog: ['............', '............', '.kkkkkkkkkk.', 'kllllllllllk', 'krrrrrrrrrrk', 'kryyryyryyrk', 'krrrrrrrrrrk', 'kllllllllllk', '.kkkkkkkkkk.', '............', '............', '............'],
   gift: ['...kk.kk....', '..krrkrrk...', '...kkrkk....', '.kkkkrkkkk..', '.kyyyryyyk..', '.kkkkrkkkk..', '.kyyyryyyk..', '.kyyyryyyk..', '.kyyyryyyk..', '.kkkkkkkkk..', '............', '............'],
+  book: ['............', '.kkkkkkkkk..', '.kruuuuuuk..', '.kruwwwwuk..', '.kruuuuuuk..', '.kruwwwuuk..', '.kruuuuuuk..', '.kruuuuuuk..', '.krsssssssk.', '.kkkkkkkkkk.', '............', '............'],
+  card: ['............', 'kkkkkkkkkkk.', 'kwwwwwwkyyk.', 'kwuuuuwkyyk.', 'kwuggrwkkkk.', 'kwggggwwwwk.', 'kwwwwwwkkwk.', 'kwkkkkwwwwk.', 'kwwwwwwkkwk.', 'kkkkkkkkkkk.', '............', '............'],
+  oden: ['...k..k..k..', '...k..k..k..', '..wwk.ok.yk.', '..wwk.ok.yk.', 'kkkkkkkkkkkk', 'kllllllllllk', 'kllwllollllk', '.kllllllllk.', '..kkkkkkkk..', '............', '............', '............'],
+  potato: ['............', '............', '...kkkkkk...', '..krrdrrrk..', '.krdrrrrdrk.', '.kryyyyyyrk.', '.kryyoyyyrk.', '..krrrrrrk..', '...kkkkkk...', '............', '............', '............'],
   groc: ['....kkk.....', '...k...k....', '..kkkkkkkk..', '..kbbbbbbk..', '..kbgrgybk..', '..kbggrybk..', '..kbbbbbbk..', '..kbbbbbbk..', '..kbbbbbbk..', '..kkkkkkkk..', '............', '............'],
   milk: ['....kkkk....', '....kuuk....', '...kwwwwk...', '..kwwwwwwk..', '..kwuuuuwk..', '..kwuwwuwk..', '..kwuuuuwk..', '..kwwwwwwk..', '..kwwwwwwk..', '..kkkkkkkk..', '............', '............'],
   maple: ['.....kk.....', '.....kk.....', '....kddk....', '...kddddk...', '..kdddddok..', '..kdrrrdok..', '..kdrrrdok..', '..kddrddok..', '..kdddddok..', '...kkkkkk...', '............', '............'],
@@ -965,7 +988,7 @@ function iconUrl(id) {
   return iconCache[id] = c.toDataURL();
 }
 let SB = null;
-function openShop(o) { SB = Object.assign({ pg: 0 }, o); modalOpen = true; $('#shopOv').classList.add('on'); $('#sbT').textContent = o.title; sbMsg(o.intro || ''); sbRender(); beep(520, .04); }
+function openShop(o) { if (o.teaHalf && active('tea')) { o.items.forEach(it => { if (['basque', 'tart', 'tiramisu', 'berry', 'scone'].includes(it.icon)) { it.p = Math.round(it.p / 2); it.d = '下午茶半價'; } }); o.intro = '下午三點到五點是下午茶時間，蛋糕半價。'; } SB = Object.assign({ pg: 0 }, o); modalOpen = true; $('#shopOv').classList.add('on'); $('#sbT').textContent = o.title; sbMsg(o.intro || ''); sbRender(); beep(520, .04); }
 function sbMsg(t) { $('#sbMsg').textContent = t; }
 function sbPer() { return innerWidth < 560 ? 3 : 6; }
 function sbFill(el, list, side) {
@@ -998,8 +1021,61 @@ function sbBuy(it) {
 }
 function closeShop() { $('#shopOv').classList.remove('on'); modalOpen = $('#modal').classList.contains('on'); const f = SB && SB.onClose; SB = null; if (f) f(); }
 
+/* ---------- 限時活動（台灣時間） ---------- */
+const TIMED = [
+  { id: 'morningrun', n: '晨跑團', where: '操場跑道', from: 6, to: 8, d: '早上跑步獎勵加倍' },
+  { id: 'craft', n: '文創市集', where: '校外夜市的位置', from: 10, to: 17, d: '手作、二手書、明信片和冷萃咖啡' },
+  { id: 'lunch', n: '學餐午餐限定', where: '學生餐廳', from: 11, to: 13.5, d: '限定排骨飯' },
+  { id: 'tea', n: '咖啡廳下午茶', where: '轉角咖啡廳', from: 15, to: 17, d: '蛋糕半價' },
+  { id: 'night', n: '夜市', where: '校外', from: 17, to: 25, d: '雞排、珍奶、套圈圈、烤玉米' },
+  { id: 'dinner', n: '學餐晚餐限定', where: '學生餐廳', from: 17.5, to: 19.5, d: '限定咖哩飯' },
+  { id: 'midnight', n: '便利商店宵夜', where: '便利商店', from: 22, to: 26, d: '關東煮和烤地瓜' },
+  { id: 'chat', n: '宿舍夜聊', where: '宿舍，上床以後', from: 22.5, to: 26, d: '跟室友聊到睡著' }
+];
+function inTime(from, to, h) { h = h === undefined ? hourIn(TZ.home) : h; return (h >= from && h < to) || (to > 24 && h + 24 >= from && h + 24 < to); }
+const active = id => { const t = TIMED.find(x => x.id === id); return t && inTime(t.from, t.to); };
+const hhmm = v => { v = v % 24; return Math.floor(v) + ':' + String(Math.round((v % 1) * 60)).padStart(2, '0'); };
+function timedHTML() { return '<div class="sec"><h3>限時活動（台灣時間 ' + clockStr(hourIn(TZ.home)) + '）</h3>' + TIMED.map(t => { const on = inTime(t.from, t.to); return '<div class="item ' + (on ? 'main' : 'done') + '"><b>' + (on ? '● 進行中：' : '') + t.n + '　' + hhmm(t.from) + '～' + hhmm(t.to) + '</b>' + t.where + '。' + t.d + '</div>'; }).join('') + '</div>'; }
+const marketPhase = () => inTime(17, 25) ? 'night' : inTime(10, 17) ? 'day' : 'closed';
+const DAY_STALL = { chicken: { n: '手作飾品', c: '#c9b6f5' }, tea: { n: '冷萃咖啡車', c: '#6f4a3a' }, ring: { n: '二手書攤', c: '#9bd8a0' }, corn: { n: '插畫明信片', c: '#ffd45c' } };
+function stallView(t) { if (!DAY_STALL[t.id]) return t; const p = marketPhase(); return p === 'night' ? t : p === 'day' ? Object.assign({}, t, DAY_STALL[t.id]) : Object.assign({}, t, { n: t.n + '（收攤）', c: '#8a8a99' }); }
+function craftStall(id) {
+  const it = { chicken: [{ icon: 'gift', n: '手作耳環', p: 250, d: '攤主自己用黏土捏的', buy: () => { st.inv.gift = (st.inv.gift || 0) + 1; return '攤主說每一對都長得不一樣。你挑了一對小雞排形狀的。'; } }, { icon: 'tart', n: '刺繡徽章', p: 180, d: '可以縫在書包上', buy: () => '徽章上繡著「及格就好」。攤主說這是今天賣最好的款。' }],
+    tea: [{ icon: 'coffee', n: '冷萃咖啡', p: 90, d: '泡了十二小時', buy: () => { drinkCoffee(); return '老闆說這杯泡了十二個小時，你覺得喝起來有比較努力的味道。'; } }, { icon: 'tea', n: '冷泡烏龍', p: 70, d: '台灣茶葉', buy: () => '茶很香，杯子上的貼紙是老闆女兒畫的。' }],
+    ring: [{ icon: 'book', n: '二手小說', p: 80, d: '書裡夾著上一個主人的書籤', buy: () => { st.exp += 3; return '書裡夾著一張電影票根，日期是 2009 年。你讀了三章。知識 +3。'; } }, { icon: 'book', n: '二手原文書', p: 150, d: '比書店便宜一半', buy: () => { st.exp += 5; return '上面有學長姐畫的螢光筆，重點都幫你畫好了。知識 +5。'; } }],
+    corn: [{ icon: 'card', n: '插畫明信片', p: 60, d: '畫的是及格鎮的街景', buy: () => { ach('postcard'); return '明信片上畫的是夜市的街口，攤主說白天和晚上她都在這裡畫。'; } }, { icon: 'card', n: '貼紙組', p: 45, d: '可以貼在筆電上', buy: () => '你的筆電又多了一張貼紙，快要看不到原本的顏色了。' }] }[id];
+  openShop({ title: DAY_STALL[id].n + ' · 文創市集', led: '文創市集', hit: 'market', poor: '錢包比你的心情還輕。', intro: '白天的夜市變成文創市集。攤主們說，晚上五點以後這裡會換成夜市。', items: it });
+}
+function mealLimited(eat) { const out = []; if (active('lunch')) out.push({ icon: 'rice', n: '午餐限定 排骨飯', p: 95, d: '只有中午有', buy: eat('排骨炸得很酥，阿姨多給了一匙滷汁。') }); if (active('dinner')) out.push({ icon: 'rice', n: '晚餐限定 咖哩飯', p: 90, d: '只有傍晚有', buy: eat('咖哩是阿姨自己煮的，有一點點辣，紅蘿蔔切得很大塊。') }); return out; }
+function nightSnack() { return active('midnight') ? [{ icon: 'oden', n: '宵夜 關東煮', p: 60, d: '半夜才有的溫暖', buy: () => { st.fedUntil = Date.now() + 180000; return '你挑了白蘿蔔、米血和魚板。湯可以一直加，店員假裝沒看到。'; } }, { icon: 'potato', n: '宵夜 烤地瓜', p: 45, d: '剛烤好的', buy: () => { st.fedUntil = Date.now() + 180000; return '地瓜燙到你在手上拋來拋去。'; } }] : []; }
+
 /* ---------- 時間與日夜 ---------- */
-const TZ = { home: 'Asia/Taipei', abroad: 'America/Toronto' };
+const DEST = {
+  toronto: { country: '加拿大', en: 'Canada', city: '多倫多', tz: 'America/Toronto', zone: '東部時間', school: '楓葉大學', lang: 'en', flight: 13, pub: 'The Moose', clerk: '收銀員 Jamie' },
+  vancouver: { country: '加拿大', en: 'Canada', city: '溫哥華', tz: 'America/Vancouver', zone: '太平洋時間', school: '太平洋大學', lang: 'en', flight: 11, pub: 'The Orca', clerk: '收銀員 Jamie' },
+  newyork: { country: '美國', en: 'the US', city: '紐約', tz: 'America/New_York', zone: '東部時間', school: '哈德遜大學', lang: 'en', flight: 16, pub: 'The Bagel Bar', clerk: '收銀員 Tyler' },
+  la: { country: '美國', en: 'the US', city: '洛杉磯', tz: 'America/Los_Angeles', zone: '太平洋時間', school: '陽光海岸大學', lang: 'en', flight: 12, pub: 'Sunset Bar', clerk: '收銀員 Tyler' },
+  tokyo: { country: '日本', en: 'Japan', city: '東京', tz: 'Asia/Tokyo', zone: '日本時間', school: '櫻丘大學', lang: 'ja', flight: 3, pub: '居酒屋 灯', clerk: '店員 佐藤' },
+  madrid: { country: '西班牙', en: 'Spain', city: '馬德里', tz: 'Europe/Madrid', zone: '中歐時間', school: '太陽門大學', lang: 'es', flight: 16, pub: 'Bar El Sol', clerk: '店員 Lucía' }
+};
+const LANG_N = { en: '英文', ja: '日文', es: '西班牙文' };
+const LANG_SHOP = {
+  en: ['Do you want a bag? It\'s 25 cents.\n（要袋子嗎？一個 25 分。）', 'Have a good one!\n（祝你有美好的一天！）', 'Oh, you\'re from Taiwan? I love bubble tea!\n（你從台灣來的？我超愛珍奶！）', 'We close at eight. Yeah, I know.\n（我們八點關門。對，我知道。）'],
+  ja: ['いらっしゃいませ！\n（歡迎光臨！）', '袋はご利用ですか？\n（需要袋子嗎？）', 'ポイントカードはお持ちですか？\n（有集點卡嗎？）', '台湾から？タピオカ大好きです！\n（台灣來的？我超愛珍奶！）'],
+  es: ['¡Hola! ¿Necesitas bolsa?\n（嗨！需要袋子嗎？）', '¡Que tengas un buen día!\n（祝你有美好的一天！）', '¿De Taiwán? ¡Me encanta el té de burbujas!\n（台灣來的？我超愛珍奶！）', 'Cerramos a las diez, ¿vale?\n（我們十點關門喔。）']
+};
+const D = () => DEST[(st && st.dest) || 'toronto'];
+const TZ = { home: 'Asia/Taipei', get abroad() { return D().tz; } };
+function tx(s) {
+  if (typeof s !== 'string' || !st || !st.dest || st.dest === 'toronto') return s; const d = D();
+  return s.replace(/楓葉國際機場/g, d.city + '國際機場').replace(/楓葉大學/g, d.school).replace(/楓葉市/g, d.city).replace(/歡迎來到加拿大/g, '歡迎來到' + d.country).replace(/Welcome to Canada/g, 'Welcome to ' + d.en).replace(/The Moose/g, d.pub).replace(/多倫多/g, d.city);
+}
+function tzDiff() { let x = Math.round(hourIn(D().tz) - hourIn(TZ.home)); x = ((x + 17) % 24 + 24) % 24 - 17; return x; }
+const diffText = () => { const x = tzDiff(); return x === 0 ? '跟台灣同一個時間' : x < 0 ? '比台灣慢 ' + (-x) + ' 小時' : '比台灣快 ' + x + ' 小時'; };
+function applyDest() { const d = D(); abroad.name = '交換學校 · ' + d.school; scenes.a_airport.name = d.city + '國際機場'; scenes.a_pub.name = '學生酒吧 · ' + d.pub; if (QN.cashier) QN.cashier.name = d.clerk; }
+function destPick(cb) {
+  showModal({ title: '選擇交換學校', text: '交換計畫有六間姊妹校。差別是時區、語言和城市，每個州或省的時區也不一樣。\n選好以後，之後的班機都會飛去那裡，下次買票可以換。', choices: Object.entries(DEST).map(([k, d]) => ({ label: d.country + ' · ' + d.city + '（' + d.zone + '，' + LANG_N[d.lang] + '）', fn: () => { st.dest = k; applyDest(); persist(); toast('交換學校：' + d.school + '（' + d.city + '，' + diffText() + '）'); cb && cb(); } })).concat([{ label: '再想想' }]) });
+}
 function hourIn(tz) {
   try { const p = new Intl.DateTimeFormat('en-US', { timeZone: tz, hour: 'numeric', minute: 'numeric', hour12: false }).formatToParts(new Date()); return (+p.find(x => x.type === 'hour').value % 24) + (+p.find(x => x.type === 'minute').value) / 60; }
   catch (e) { const d = new Date(); return ((d.getUTCHours() + (tz === TZ.abroad ? 19 : 8)) % 24) + d.getUTCMinutes() / 60; }
@@ -1149,6 +1225,57 @@ function catTalk() {
     { label: '幫牠找個紙箱', fn: () => { ach('cat'); ok('Dewey', '你在回收區找到一個紙箱。Dewey 立刻跳進去，從此那個角落多了一張紙條：「Dewey\'s Office」。'); } }] });
 }
 
+/* ---------- 床和書桌的特寫 ---------- */
+function picBed(g) {
+  const night = sleepTime() || inTime(21, 24); R(g, night ? '#1d1830' : '#e8dccb', 0, 0, 160, 64); for (let i = 0; i < 160; i += 8) R(g, night ? '#241e3a' : '#e0d2bf', i, 0, 4, 64);
+  R(g, '#a8745a', 14, 8, 132, 52); R(g, '#fff', 20, 12, 34, 18); R(g, '#f3ecf7', 22, 14, 30, 14); const c = (st.look && st.look.shirt) || '#ff8fb1'; R(g, c, 20, 30, 120, 26); for (let i = 0; i < 120; i += 12) R(g, 'rgba(255,255,255,.25)', 20 + i, 30, 6, 26); R(g, 'rgba(0,0,0,.12)', 20, 30, 120, 2);
+  R(g, '#2b2338', 96, 18, 14, 22); R(g, night ? '#9fd4f5' : '#5a6b8a', 97.5, 19.5, 11, 19); if (night) { R(g, 'rgba(159,212,245,.18)', 84, 10, 38, 38); R(g, '#fff', 99, 22, 7, 1); R(g, '#fff', 99, 25, 5, 1); R(g, '#ff8fb1', 99, 28, 6, 4); }
+  R(g, '#3b2f4a', 130, 4, 2, 10); if (night) { R(g, '#fff3c4', 6, 6, 2, 2); R(g, '#fff3c4', 150, 50, 1, 1); }
+}
+function picDesk(g) {
+  const night = !inTime(7, 18); R(g, '#3b2f4a', 0, 0, 160, 64); R(g, night ? '#2b2850' : '#bfe6ff', 8, 4, 50, 22); R(g, '#fff', 32, 4, 1, 22); R(g, '#fff', 8, 14, 50, 1);
+  R(g, '#c99370', 0, 30, 160, 34); R(g, '#a8745a', 0, 30, 160, 3);
+  R(g, '#2b2338', 60, 12, 48, 30); R(g, '#7ec8f0', 62, 14, 44, 24); R(g, '#fff', 66, 18, 24, 2); R(g, '#fff', 66, 22, 30, 2); R(g, '#ffd45c', 66, 26, 16, 2); R(g, '#8b8198', 56, 42, 56, 4);
+  [['#e5607f', 8], ['#7ec8f0', 12], ['#ffd45c', 9]].forEach(([c, h], i) => R(g, c, 120, 44 - i * 6 - h + 6, 30, 5));
+  R(g, '#fff', 20, 40, 10, 12); R(g, '#8a5a44', 21, 41, 8, 3); R(g, '#3b2f4a', 140, 12, 2, 26); R(g, '#ffd45c', 132, 8, 18, 6); if (night) R(g, 'rgba(255,214,120,.25)', 112, 14, 46, 40);
+}
+const FEED = [
+  ['IG', '高中同學在國外交換，限動是一片很藍的海。', '你按了愛心，然後看了一下自己的窗外。'],
+  ['Dcard', '熱門文章：「大學四年最後悔的事是什麼？」底下有三千則留言。', '你滑了二十分鐘，看到一則說「沒有早點開始存錢」，默默打開了帳本。'],
+  ['家人群組', '媽媽傳了一張長輩圖：「早安，喝水了嗎？」', '你回了一個貼圖。媽媽秒讀。'],
+  ['簡訊', '「您的包裹地址有誤，請點連結更新資料。」', '你想起心理學小卡講過詐騙會製造急迫感，直接刪掉了。'],
+  ['YouTube', '推薦影片：「十分鐘學會微積分」。', '你看了三分鐘，學會了怎麼跳過廣告。'],
+  ['班群', '有人問：「明天要交的作業是哪一題？」二十個人已讀。', '你回了答案，收到一排感謝的貼圖。'],
+  ['Threads', '有人在問：「大家宿舍都幾點熄燈？」', '你留言：「我們房間熄燈是看最後一個人什麼時候放下手機。」被按了五十個讚。'],
+  ['新聞', '今天的頭條是颱風可能明天放假。', '整個班群瞬間活過來。']
+];
+function phoneScroll(n = 0) {
+  const [app, post, after] = pick(FEED); st.cnt.scroll = (st.cnt.scroll || 0) + 1; if (sleepTime() && st.cnt.scroll >= 5) ach('scroll');
+  showModal({ title: '滑手機 · ' + app, pic: picBed, text: post, choices: [{ label: '按讚', fn: () => ok(app, after, () => n < 3 ? phoneScroll(n + 1) : ok('滑手機', '你抬頭看時間，已經過了四十分鐘。手機好燙。')) }, { label: '滑下一則', fn: () => n < 3 ? phoneScroll(n + 1) : ok('滑手機', '你抬頭看時間，已經過了四十分鐘。') }, { label: '放下手機', fn: bedView }] });
+}
+const TALKS = [['阿芸', '「你覺得畢業以後我們還會常常見面嗎？」', [['會啊，至少一年一次夜市', '「那說好了，雞排你請。」'], ['不知道耶，大家會很忙吧', '房間安靜了一下。阿芸說：「那我們現在多聊一點。」']]],
+  ['小晴', '「我跟你說一個宿舍的鬼故事⋯⋯」', [['好啊，說吧', '她講到一半，走廊的燈突然閃了一下，四個人一起尖叫。'], ['不要！我會睡不著', '她說：「好啦不講。」然後小聲講給佳佳聽，你還是全部聽到了。']]],
+  ['佳佳', '「欸，你有喜歡的人嗎？」', [['沒有啦', '「騙人，你剛剛停了兩秒。」三個人笑到床在晃。'], ['反問她', '她把棉被拉到頭上，說要睡了。過了五秒又探出頭說：「其實有。」']]],
+  ['阿芸', '「期末考如果全過，我們去吃火鍋好不好？」', [['好，吃到飽那間', '小晴說要先存錢，佳佳說要先讀書。最後大家都說好。'], ['先過了再說', '「你好冷靜喔。」阿芸說，然後打了一個很大的哈欠。']]]];
+function nightChat() {
+  const [who, line, opts] = pick(TALKS);
+  showModal({ title: '宿舍夜聊 · ' + who, pic: picBed, text: '燈關了，只剩下四支手機的光。\n' + who + '：' + line, choices: opts.map(([l, r]) => ({ label: l, fn: () => { st.cnt.chat = (st.cnt.chat || 0) + 1; if (st.cnt.chat >= 3) ach('nighttalk'); ok('宿舍夜聊', r + '\n\n不知道是誰先睡著的。'); persist(); } })) });
+}
+function bedView() {
+  if (cur.id === 'a_dorm') return showModal({ title: '交換宿舍的床', pic: picBed, text: '床比台灣的大一點，棉被很厚。窗外很安靜。', choices: [{ label: '滑手機', fn: () => phoneScroll() }, { label: '睡一下', fn: sleep }, { label: '起來' }] });
+  const night = sleepTime(), chat = active('chat');
+  showModal({ title: '爬上床', pic: picBed, text: night ? '燈已經關了，室友們都睡了，只剩你手機的光。' : chat ? '大家都上床了，但沒有人真的想睡。' : '你爬上梯子，床墊有你的味道。從這裡可以看到整個房間。', choices: [{ label: '滑手機', fn: () => phoneScroll() }, { label: '睡覺', fn: sleep }].concat(chat ? [{ label: '跟室友夜聊', fn: nightChat }] : []).concat([{ label: '聽音樂發呆', fn: () => ok('聽音樂', pick(['你戴上耳機，播了一首高中常聽的歌。突然有點想家。', '隨機播放跳到一首很吵的歌，你嚇得把手機摔到臉上。', '你什麼都沒想，看著天花板上的一條裂縫，覺得它長得很像台灣。'])) }, { label: '下床' }]) });
+}
+function deskView() {
+  showModal({ title: '你的書桌', pic: picDesk, text: '桌上有筆電、一疊原文書，和一個很久沒洗的馬克杯。' + (sleepTime() ? '\n室友們都睡了，你把檯燈調到最暗。' : ''), choices: [
+    { label: '讀書', fn: deskStudy }, { label: '寫報告', fn: () => { st.exp += 3; ok('寫報告', pick(['你寫了五百字，刪掉四百字。剩下的一百字很好。', '你打開文件，先換了三次字型。', '寫到一半發現引用格式要用 APA，你把整份參考文獻重排了一次。']) + '\n知識 +3。'); persist(); } },
+    { label: '看選課系統', fn: () => ok('選課系統', credText()) }, { label: '記帳', fn: () => { tab = 'm'; openBook(); } }, { label: '整理桌面', fn: () => ok('整理桌面', pick(['你在抽屜裡找到上學期的期末考卷，60 分，旁邊寫著「及格！」。', '你把馬克杯拿去洗，發現杯底長了一個新的生態系。', '整理完桌面，你決定獎勵自己滑一下手機。'])) }, { label: '離開' }] });
+}
+function deskStudy() {
+  const cs = Object.keys(LECT), c = pick(reqList().filter(x => LECT[x]).concat(cs)), it = pick(LECT[c]), o = shuffle(it.a.slice());
+  showModal({ title: '在書桌讀書 · ' + c, pic: picDesk, text: '你翻開' + c + '的筆記。\n' + it.t, choices: [{ label: '做一題練習', fn: () => quizGame({ title: c + ' · 練習題', desc: '自己讀的，答對算你的', time: 25, elim: 0, qs: [{ q: it.q, opts: o, ans: o.indexOf(it.a[0]) }], end: k => { st.exp += 2 + k * 3; ok('書桌', (k ? '答對了。在自己的書桌讀書，比在圖書館還專心一點。' : '答錯了，你在筆記上畫了一個大大的問號。') + '\n知識 +' + (2 + k * 3) + '。'); persist(); } }) }, { label: '算了' }] });
+}
+
 /* ---------- 宿舍窗台 ---------- */
 const H = 3600000;
 const GROW = {
@@ -1188,6 +1315,7 @@ function drawSill(g) {
     if (s0 === 'ready' && tw) R(g, '#fff', x + 5.5, y - 12, 1, 1);
   });
 }
+rDorm.IT.push({ id: 'mydesk', label: '書桌', x: 2.7 * T, y: 4 * T + 8, r: 14, ix: 2.6 * T, iy: 2.4 * T });
 rDorm.IT.push({ id: 'sill', label: '窗台', x: 7 * T, y: 3 * T + 4, r: 22, ix: 7 * T, iy: 0 * T + 4 });
 rDorm.dyn.push({ y: 2 * T - 1, f: g => drawSill(g) });
 
@@ -1550,7 +1678,7 @@ stat('cafe', 3, 5.6, PLOOK[3], 'down'); stat('cafe', 10, 5.6, PLOOK[1], 'down');
 /* 跑步的人 */
 mkEnt('playground', { kind: 'passer', name: '路人', x: 3.5 * T, y: 4.6 * T, look: ['#2b2338', '#ffffff', '#e5607f'], loop: [[3.5 * T, 4.6 * T], [19.5 * T, 4.6 * T], [19.5 * T, 19.7 * T], [3.5 * T, 19.7 * T]], li: 1, speed: 42, lines: ['呼。', '還有兩圈。', '不要跟我說話，我會停下來。'], talk: () => ok('跑步的人', '我還要跑兩圈，你要一起嗎？不要也沒關係，我也不想。') });
 /* 攤販 */
-STALLS.forEach((t, i) => mkEnt('street', { kind: 'deco', name: '', x: (t.x + 2) * T, y: (t.y + 1) * T + 12, look: [['#6b6b6b', '#ff8b3d', '#3a3a4a'], ['#2b2338', '#ff8fb1', '#4a4a5e'], ['#3b2f4a', '#fff', '#4a4a5e'], ['#8a8a99', '#ffd45c', '#3a3a4a'], ['#6b3a2a', '#7ec8f0', '#3a3a4a'], ['#2b2338', '#9bd8a0', '#4a4a5e']][(i + 2) % 6] }));
+STALLS.forEach((t, i) => mkEnt('street', { kind: 'deco', stallId: t.id, name: '', x: (t.x + 2) * T, y: (t.y + 1) * T + 12, look: [['#6b6b6b', '#ff8b3d', '#3a3a4a'], ['#2b2338', '#ff8fb1', '#4a4a5e'], ['#3b2f4a', '#fff', '#4a4a5e'], ['#8a8a99', '#ffd45c', '#3a3a4a'], ['#6b3a2a', '#7ec8f0', '#3a3a4a'], ['#2b2338', '#9bd8a0', '#4a4a5e']][(i + 2) % 6] }));
 /* 任務 NPC */
 const QN = {};
 const qnpc = (id, scene, name, tx, ty, look, dir = 'down') => { const [x, y] = at(tx, ty); QN[id] = mkEnt(scene, { kind: 'quest', id, name, x, y, look, dir }); return QN[id]; };
@@ -1600,11 +1728,11 @@ let shift = null, ep = null;
 const locked = () => modalOpen || busy || !!mg || !!shift || !!ep;
 function closeModal() { modalOpen = !!SB || $('#wardOv').classList.contains('on'); $('#modal').classList.remove('on'); clearInterval(typeT); }
 function showModal(o) {
-  modalOpen = true; clearInterval(typeT); $('#modal').classList.add('on'); $('#mt').textContent = o.title || '';
-  const mx = $('#mx'), mcc = $('#mc'), full = o.text || ''; let i = 0;
+  modalOpen = true; clearInterval(typeT); $('#modal').classList.add('on'); $('#mt').textContent = tx(o.title || ''); { const pc = $('#mpic'); if (o.pic) { pc.style.display = 'block'; const g = pc.getContext('2d'); g.setTransform(2, 0, 0, 2, 0, 0); g.imageSmoothingEnabled = false; g.clearRect(0, 0, 160, 64); o.pic(g); } else pc.style.display = 'none'; }
+  const mx = $('#mx'), mcc = $('#mc'), full = tx(o.text || ''); let i = 0;
   mx.textContent = ''; mcc.innerHTML = ''; mcc.style.visibility = 'hidden';
   (o.choices && o.choices.length ? o.choices : [{ label: '好' }]).forEach(c => {
-    const b = document.createElement('button'); b.type = 'button'; b.textContent = c.label;
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = tx(c.label);
     b.onclick = () => { closeModal(); beep(660, .05); if (c.fn) c.fn(); }; mcc.appendChild(b);
   });
   const done = () => { clearInterval(typeT); mx.textContent = full; mcc.style.visibility = 'visible'; };
@@ -1824,6 +1952,17 @@ QN.zhe.talk = () => {
 QN.prof.talk = () => st.q.main === 17 ? projTalk() : classFlow();
 QN.qing.talk = () => ok('室友小晴', pick(['我每天六點起床跑步，你不用跟。', '冰箱裡貼了名字的不要吃，沒貼名字的也不要吃。', '熄燈是十二點，但我們房間的熄燈是佳佳決定的。']));
 QN.jia.talk = () => ok('室友佳佳', pick(['我的鬧鐘會響五次，先跟你說對不起。', '熄燈以後我會戴耳機，你們聊天吵不到我。', '你的角落布置得不錯耶，可以借我拍照嗎？']));
+const ROOMIE = { yun: [11.5 * T, 4 * T + 12, '阿芸'], qing: [3.5 * T, 8 * T + 4, '小晴'], jia: [10.5 * T, 8 * T + 4, '佳佳'] };
+Object.keys(ROOMIE).forEach(id => { const e = QN[id], orig = e.talk; e.wander = true; e.speed = 14; e.wait = rand(1, 5); e.talk = () => e.sleeping ? ok('室友' + ROOMIE[id][2], pick(['（她睡著了，翻了個身。）', '（她說夢話：「⋯⋯期末考⋯⋯再五分鐘⋯⋯」）', '（她把棉被拉到頭上，看起來不想被吵醒。）'])) : orig(); });
+rDorm.spots.push({ x: 5, y: 5, dir: 'up', stay: [5, 10] }, { x: 8, y: 6, dir: 'left', stay: [5, 10] }, { x: 10, y: 4, dir: 'up', stay: [4, 9] }, { x: 4, y: 8, dir: 'right', stay: [4, 8] });
+const sleepTime = () => inTime(0.5, 7);
+function roomTick() {
+  const night = sleepTime();
+  Object.keys(ROOMIE).forEach(id => { const e = QN[id], [bx, by] = ROOMIE[id];
+    if (night && !e.sleeping) { e.sleeping = 1; e.wander = false; e.path = null; e.route = [[bx, by]]; e.onArrive = () => { e.dir = 'up'; }; e.lines = ['zzz⋯', '（翻身）', 'zzz'] ; e.sayT = rand(2, 6); }
+    if (!night && e.sleeping) { e.sleeping = 0; e.wander = true; e.lines = null; e.wait = rand(0, 3); }
+    if (!e.sleeping && isSolid(rDorm, Math.floor(e.x / T), Math.floor(e.y / T))) { const f = randFree(rDorm); if (f) { e.x = f[0] * T + 8; e.y = f[1] * T + 10; e.path = null; } } });
+}
 ['transfer', 'double', 'exchange', 'intern'].forEach(id => QN['b_' + id].talk = () => boothTalk(id));
 QN.emma.talk = () => {
   if (!st.met.party && !(st.q.main === 15 && st.ch3.path === 'exchange' && st.ch3.prog === 2)) return showModal({ title: 'Buddy Emma', text: 'Tonight is the Welcome Party at the International Student Centre! Free pizza!\n（今晚國際學生中心有迎新派對！有免費披薩！）', choices: [{ label: '一起去', fn: welcomeParty }, { label: '下次再說' }] });
@@ -1847,7 +1986,7 @@ QN.prof2.talk = talkPool('Prof. Brown', ['In my class, asking questions is part 
 QN.barista.talk = () => {
   const cup = t => () => { drinkCoffee(); return t; };
   const cake = (id, t) => () => { st.fedUntil = Date.now() + 180000; if (!st.cakes.includes(id)) st.cakes.push(id); if (st.cakes.length >= 5) ach('cakeall'); return t + '\n吃了甜的，接下來三分鐘讀書比較讀得進去。'; };
-  openShop({ title: '轉角咖啡廳 · 菜單', led: '轉角咖啡廳', poor: '咖啡師看了看你的錢包，推薦你去喝飲水機。', intro: '咖啡師：「今天的手沖是衣索比亞，聞起來像莓果。蛋糕是早上剛烤的。」', items: [
+  openShop({ teaHalf: 1, title: '轉角咖啡廳 · 菜單', led: '轉角咖啡廳', poor: '咖啡師看了看你的錢包，推薦你去喝飲水機。', intro: '咖啡師：「今天的手沖是衣索比亞，聞起來像莓果。蛋糕是早上剛烤的。」', items: [
     { icon: 'hot', n: '手沖咖啡', p: 150, d: '衣索比亞，莓果味', buy: cup('你喝了一口，真的有莓果味。你決定以後跟別人說你喝得出產區。') },
     { icon: 'latte', n: '冰拿鐵', p: 120, d: '拉花看運氣', buy: cup('拉花是一隻歪掉的天鵝。咖啡師說那是貓。') },
     { icon: 'basque', n: '巴斯克乳酪蛋糕', p: 140, d: '表面烤焦是故意的', buy: cake('basque', '外面焦焦的，裡面軟到快流下來。你想跟咖啡師要食譜，又覺得不太好意思。') },
@@ -1857,7 +1996,8 @@ QN.barista.talk = () => {
     { icon: 'scone', n: '原味司康', p: 85, d: '附一小罐果醬', buy: cake('scone', '司康配果醬，很乾，但很香。你喝了半杯水。') }] });
 };
 QN.aunt.talk = () => meal();
-QN.cashier.talk = talkPool('收銀員 Jamie', ['Do you want a bag? It\'s 25 cents.\n（要袋子嗎？一個 25 分。）', 'Have a good one!\n（祝你有美好的一天！）', 'Oh, you\'re from Taiwan? I love bubble tea!\n（你從台灣來的？我超愛珍奶！）', 'We close at eight. Yeah, I know. Welcome to Canada.\n（我們八點關門。對，我知道，歡迎來到加拿大。）']);
+QN.cashier.talk = () => ok(D().clerk, pick(LANG_SHOP[D().lang]));
+const cashierOld = talkPool('收銀員 Jamie', ['Do you want a bag? It\'s 25 cents.\n（要袋子嗎？一個 25 分。）', 'Have a good one!\n（祝你有美好的一天！）', 'Oh, you\'re from Taiwan? I love bubble tea!\n（你從台灣來的？我超愛珍奶！）', 'We close at eight. Yeah, I know. Welcome to Canada.\n（我們八點關門。對，我知道，歡迎來到加拿大。）']);
 QN.bartender.talk = () => openShop({ title: '學生酒吧 · Menu', led: '學生酒吧', hit: 'eat', poor: 'Liam：「Sorry, buddy.」（抱歉啦。）', intro: pubTarget() <= 1 ? 'Liam：「Quiet afternoon, huh?」（下午很安靜吧？）\n現在是當地 ' + clockStr(hourIn(TZ.abroad)) + '。晚上六點以後這裡才會熱鬧。' : 'Liam：「Busy night! What can I get you?」（今晚好忙！要點什麼？）', side: '菜單背面：週二問答之夜，週五現場音樂。\n未成年請勿飲酒。', items: [
   { icon: 'fries', n: '肉汁起司薯條', p: 260, d: '加拿大國民美食', buy: () => { st.fedUntil = Date.now() + 180000; return '薯條上面淋了肉汁和一塊一塊的起司。看起來很亂，吃起來很好吃，熱量你不想知道。'; } },
   { icon: 'soda', n: '沙士', p: 120, d: '這裡叫 root beer', buy: () => '這裡叫 root beer，喝起來就是台灣的沙士。你跟 Clark 解釋什麼是沙士，他聽不懂。' },
@@ -1976,9 +2116,29 @@ function classFlow() {
   const C = st.cred, t = today(), left = C.d === t ? CRED_DAY - C.today : CRED_DAY;
   showModal({ title: '教學大樓 · 選一堂課', text: '每堂課 2 學分，今天還能拿 ' + Math.max(0, left) + ' 學分。\n' + credText(), choices: list.map(c => ({ label: c + (req.includes(c) ? '（必修 ' + Math.min(CRED_REQ, C.c[c] || 0) + '/' + CRED_REQ + '）' : ''), fn: () => { gainCred(c); classIn(c); } })).concat([{ label: '先不上' }]) });
 }
+const LECT = {
+  '微積分': [{ t: '今天講導數：函數在某一點的瞬間變化率。x² 的導數是 2x，所以在 x = 3 的地方斜率是 6。', q: 'f(x) = x² 在 x = 3 的導數是多少？', a: ['6', '9', '3', '2'] }, { t: '極限：當 x 越來越接近 0，sin x ／ x 會越來越接近 1。', q: '當 x 趨近 0，sin x ／ x 的極限是？', a: ['1', '0', '無限大', '不存在'] }, { t: '積分可以想成面積。從 0 到 2，f(x) = x 底下是一個三角形，面積是 2 × 2 ÷ 2 = 2。', q: '∫₀² x dx 等於多少？', a: ['2', '4', '1', '0'] }],
+  '程式設計': [{ t: '變數像一個貼了名字的盒子。x = 3，接著 x = x + 2，盒子裡就變成 5。', q: 'x = 3，再執行 x = x + 2，x 是多少？', a: ['5', '3', '2', '32'] }, { t: '迴圈讓同一段程式重複執行。Python 的 for i in range(3) 會跑 i = 0、1、2，一共三次。', q: 'range(3) 會產生哪些數字？', a: ['0、1、2', '1、2、3', '0、1、2、3', '3'] }, { t: '判斷兩個值是否相等要用兩個等號 ==，一個等號 = 是把值放進變數。', q: '在 Python 裡判斷 a 是否等於 b 要寫？', a: ['a == b', 'a = b', 'a =! b', 'a := b'] }],
+  '大學國文': [{ t: '〈出師表〉是諸葛亮寫給劉禪的奏章。「親賢臣，遠小人，此先漢所以興隆也」是全文的重點之一。', q: '〈出師表〉的作者是誰？', a: ['諸葛亮', '曹操', '司馬遷', '杜甫'] }, { t: '「學而時習之，不亦說乎」的「說」讀作「悅」，是快樂的意思。', q: '「不亦說乎」的「說」是什麼意思？', a: ['快樂', '說話', '解釋', '勸說'] }, { t: '唐詩講究格律。五言絕句有四句，每句五個字。', q: '一首五言絕句一共有幾個字？', a: ['20', '28', '40', '56'] }],
+  '普通心理學': [{ t: '古典制約：巴夫洛夫每次餵狗前都搖鈴，後來狗光聽到鈴聲就流口水。原本中性的鈴聲變成了制約刺激。', q: '實驗後期，讓狗流口水的鈴聲叫什麼？', a: ['制約刺激', '非制約刺激', '中性反應', '增強物'] }, { t: '心理學家 Miller 發現，短期記憶大約只能記 7±2 個項目，所以電話號碼常常分段記。', q: 'Miller 認為短期記憶的容量大約多少？', a: ['7±2 個項目', '3 個項目', '20 個項目', '沒有上限'] }, { t: '馬斯洛需求層次：最底層是生理需求，往上是安全、愛與歸屬、尊重，最上面是自我實現。', q: '馬斯洛需求層次的最頂端是？', a: ['自我實現', '安全需求', '尊重需求', '生理需求'] }],
+  '經濟學原理': [{ t: '需求法則：其他條件不變，價格上升，需求量就會下降。', q: '其他條件不變，珍奶漲價時，需求量通常會？', a: ['下降', '上升', '不變', '先升後降'] }, { t: '機會成本是你做了一個選擇，因此放棄的最好那個替代方案。', q: '你選擇去打工而不讀書，機會成本是？', a: ['讀書能帶來的收穫', '打工的時薪', '交通費', '什麼都沒有'] }, { t: '通貨膨脹是一般物價持續上漲，同樣的錢能買的東西變少。', q: '通貨膨脹時，同樣 100 元能買到的東西會？', a: ['變少', '變多', '一樣多', '看心情'] }],
+  '會計學': [{ t: '會計恆等式：資產 = 負債 + 權益。不管記了什麼帳，這條式子都要平衡。', q: '會計恆等式是哪一條？', a: ['資產 = 負債 + 權益', '資產 = 收入 − 費用', '負債 = 資產 + 權益', '權益 = 收入'] }, { t: '借貸法則：資產增加記借方，資產減少記貸方；負債增加記貸方。', q: '公司付現金買電腦，現金減少要記在哪一方？', a: ['貸方', '借方', '兩邊都記', '不用記'] }, { t: '收入減掉費用，就是這一期的淨利。', q: '收入 10 萬、費用 7 萬，淨利是多少？', a: ['3 萬', '17 萬', '7 萬', '10 萬'] }],
+  '通識：生活中的統計': [{ t: '平均數會被極端值拉走，中位數比較不會，所以談薪水常看中位數。', q: '五個人月薪 3、3、4、4、50 萬，哪個比較能代表一般人？', a: ['中位數 4 萬', '平均數 12.8 萬', '最大值 50 萬', '最小值 3 萬'] }, { t: '相關不等於因果。冰淇淋銷量和溺水人數一起上升，是因為天氣變熱，不是冰淇淋害人溺水。', q: '冰淇淋銷量和溺水人數一起上升，最可能的原因是？', a: ['兩者都受天氣變熱影響', '冰淇淋讓人溺水', '溺水的人愛吃冰淇淋', '巧合，不用解釋'] }, { t: '公正硬幣每一次擲出正面的機率都是 1/2，跟前面擲出什麼沒有關係。', q: '公正硬幣已經連續 5 次反面，下一次正面的機率是？', a: ['1/2', '大於 1/2', '小於 1/2', '1'] }],
+  '通識：電影與社會': [{ t: '貝克德爾測驗：電影裡有沒有兩個有名字的女性角色，彼此聊男人以外的事。', q: '貝克德爾測驗在檢視電影的什麼？', a: ['女性角色的呈現', '票房高低', '特效技術', '片長'] }, { t: '蒙太奇是把不同的鏡頭剪在一起，產生新的意義，例如表現時間快速流逝。', q: '把不同鏡頭剪接、產生新意義的手法叫？', a: ['蒙太奇', '長鏡頭', '特寫', '空鏡'] }, { t: '台灣新電影在 1980 年代出現，代表導演有侯孝賢和楊德昌，用寫實的方式拍日常生活。', q: '下面哪一位是台灣新電影的代表導演？', a: ['楊德昌', '李安', '魏德聖', '周星馳'] }],
+  '新系專業必修': [{ t: '做研究要先有研究問題，再找文獻，最後才決定用什麼方法。', q: '做研究的第一步通常是？', a: ['提出研究問題', '先選統計軟體', '先寫結論', '先做簡報'] }, { t: '用了別人的文字或想法卻沒有標示來源，就是抄襲。', q: '引用別人的句子時要？', a: ['標示出處', '改幾個字就好', '不用管', '放在附錄就好'] }],
+  '雙主修專業必修': [{ t: '跨領域的好處是能把兩個系的方法放在一起看問題，但要先把兩邊的基本功打好。', q: '雙主修最重要的是？', a: ['兩邊的基本功都要紮實', '只修好過的課', '選同一個時段的課', '只讀主系的書'] }, { t: '時間管理的四象限：重要又緊急的先做，重要不緊急的要排進行事曆。', q: '「重要但不緊急」的事應該？', a: ['排進行事曆，固定時間做', '永遠不做', '等它變緊急再做', '交給別人'] }],
+  '實習課程': [{ t: '職場溝通：回信要先講結論，再補充細節。', q: '回主管的信，最好的寫法是？', a: ['先講結論再補細節', '先寫三段寒暄', '只回「收到」', '用很多表情符號'] }, { t: '簽約前要看清楚工時和薪資。勞基法規定，每天的正常工時不能超過 8 小時。', q: '勞基法規定每日正常工時最多幾小時？', a: ['8 小時', '10 小時', '6 小時', '12 小時'] }]
+};
+const PROF = { '微積分': '數學系的林教授', '程式設計': '資工系的陳助教', '大學國文': '中文系的張老師', '普通心理學': '心理系的黃教授', '經濟學原理': '經濟系的吳教授', '會計學': '會計系的許老師', '通識：生活中的統計': '統計所的李教授', '通識：電影與社會': '電影研究所的周老師', '新系專業必修': '新系的系主任', '雙主修專業必修': '雙主修的導師', '實習課程': '業界來的講師' };
+function lecture(c) {
+  const L = shuffle((LECT[c] || LECT['通識：生活中的統計']).slice()).slice(0, 2);
+  dialog('教室 · ' + c, [(PROF[c] || '王教授') + '走上講台，打開投影片。', L[0].t, L[1] ? L[1].t : '下課前，老師說要隨堂小考。'], [{ label: '隨堂小考', fn: () => quizGame({ title: c + ' · 隨堂小考', desc: '剛剛上課講的內容', time: 25, elim: 0, qs: L.map(x => { const o = shuffle(x.a.slice()); return { q: x.q, opts: o, ans: o.indexOf(x.a[0]) }; }),
+    end: k => { st.exp += 3 + k * 4; dHit('class'); ch3Prog('class'); if (!st.met.class) { st.met.class = 1; logLine('第一次上課：' + c); } ok('下課', ['兩題都錯。你決定下次坐前面一點。', '對了一題，另一題你很確定老師沒講過。', '兩題全對，老師在點名單上你的名字旁邊畫了一顆星。'][k] + '\n知識 +' + (3 + k * 4) + '。'); persist(); } }) }]);
+}
 function classIn(c) {
-  showModal({ title: '教室 · ' + c, text: '王教授站在講台上，投影片停在第 3 頁，已經停了十分鐘。\n抄筆記的時候，要在重點出現的那一刻按下去。', choices: [
-    { label: '認真抄筆記', fn: () => meterGame({ title: c + ' · 抄筆記', desc: '指針跑到綠色區域時按「抄」。綠色區域就是教授說「這個會考」的時候。', btn: '抄', rounds: 3, speed: .9, zone: .32, shrink: .82,
+  showModal({ title: '教室 · ' + c, text: (PROF[c] || '王教授') + '的課。今天要講的內容寫在黑板上了。\n認真聽，下課前有隨堂小考。', choices: [
+    { label: '認真聽課', fn: () => lecture(c) },
+    { label: '只抄投影片', fn: () => meterGame({ title: c + ' · 抄筆記', desc: '指針跑到綠色區域時按「抄」。綠色區域就是教授說「這個會考」的時候。', btn: '抄', rounds: 3, speed: .9, zone: .32, shrink: .82,
       hitT: ['抄到了，字還算看得懂。', '教授剛好轉頭，你剛好在抄。', '這一頁你抄得比投影片還清楚。'], missT: ['你抄到的是上一頁。', '筆沒水了。', '你寫了一行字，後來發現是在寫購物清單。'],
       end: h => { st.exp += 4 * h + 2; dHit('class'); ch3Prog('class'); if (!st.met.class) { st.met.class = 1; logLine('第一次上課：' + c); } ok('下課', ['你的筆記只有標題。知識 +2。', '筆記有一點內容，但有一半是塗鴉。知識 +6。', '筆記寫得不錯，可以借同學了。知識 +10。', '這份筆記之後會被全班拍照傳來傳去。知識 +14。'][h]); persist(); } }) },
     { label: '分組報告', fn: () => openGroupGame('教授說要分組報告。要直接去《分組求生記》體驗完整的分組地獄嗎？', quickGroup) },
@@ -1991,9 +2151,10 @@ function meal() {
   openShop({ title: '學生餐廳 · 今日菜單', led: '學餐', poor: '打菜阿姨：「同學，錢不夠喔。要不要先去打工？」', intro: '打菜阿姨：「今天要吃什麼？後面還有人在排喔。」', side: '菜單背面貼著一張紙：「餐具請自行回收，謝謝。」字寫得很用力。', items: [
     { icon: 'rice', n: '自助餐', p: 85, d: '夾四樣菜，價格看阿姨心情', buy: eat('你夾了四樣菜，阿姨算了 $85。你到現在還不知道她是怎麼算的。') },
     { icon: 'noodle', n: '牛肉麵', p: 110, d: '牛肉要用找的', buy: eat('湯頭很香，牛肉要用找的，找到的時候很感動。') },
-    { icon: 'bento', n: '素食便當', p: 70, d: '豆皮比肉還像肉', buy: eat('便當裡的豆皮做得比肉還像肉，你有點佩服。') }] });
+    { icon: 'bento', n: '素食便當', p: 70, d: '豆皮比肉還像肉', buy: eat('便當裡的豆皮做得比肉還像肉，你有點佩服。') }].concat(mealLimited(eat)) });
 }
 function stall(id) {
+  if (DAY_STALL[id]) { const ph = marketPhase(); if (ph === 'closed') return ok('收攤了', '這個時間攤位都收了。\n文創市集是早上 10 點到下午 5 點，夜市是下午 5 點到凌晨 1 點。'); if (ph === 'day') return craftStall(id); }
   const buy = (p, t) => { if (st.money < p) return ok('攤販', '錢包比你的心情還輕。'); spend(p, '夜市'); dHit('market'); ok('夜市', t); persist(); };
   if (id === 'moto') {
     if (!st.scooter) return showModal({ title: '機車行', text: '老闆躺在一台機車底下，只露出兩隻腳。\n「要買車嗎？二手的有一台，騎起來還可以。」\n\n有機車的話，在學校、市區、機場之間快速移動不用付公車錢。但油錢和修車錢要自己付。', choices: [
@@ -2040,7 +2201,7 @@ function shop() {
     { icon: 'coffee', n: '大杯冰美式', p: 45, d: '早八續命用', buy: () => { add('coffee')(); return '冰美式到手，杯子外面已經在冒水珠了。'; } },
     { icon: 'big', n: '特大杯冰美式', p: 65, d: '期中考週限定的份量', buy: () => { add('coffee')(); return '特大杯拿起來有點重。今晚大概睡不著了。'; } },
     { icon: 'bag', n: '垃圾袋', p: 40, d: '宿舍要用的，室友一直忘記買', buy: () => { add('bag')(); return '你買了一捲垃圾袋。阿芸會感謝你的。'; } },
-    { icon: 'snack', n: '洋芋片', p: 30, d: '半夜讀書的時候吃', buy: () => '餅乾渣掉在口袋裡了。' }] });
+    { icon: 'snack', n: '洋芋片', p: 30, d: '半夜讀書的時候吃', buy: () => '餅乾渣掉在口袋裡了。' }].concat(nightSnack()) });
 }
 function board() {
   const all = PLAYERS.map(b => ({ n: b.name, m: b.money })).concat([{ n: st.name + '（你）', m: st.money }]).sort((a, b) => b.m - a.m);
@@ -2074,7 +2235,7 @@ function barGame() {
 function runGame() {
   showModal({ title: '起跑線', text: '跑 10 秒，輪流按「左腳」「右腳」。電腦可以按左右方向鍵。\n同一隻腳連按不算數。你的最佳紀錄是 ' + st.best.run + ' 公尺。', choices: [{ label: '開始', fn: () => mashGame({ title: '跑操場', desc: '輪流按左腳、右腳。', time: 10, perLap: 80,
     end: n => {
-      const m = Math.floor(n / 80 * 400), best = m > st.best.run; if (m >= 400) ach('run400'); if (best) st.best.run = m; if (m > 0) dHit('run');
+      const m = Math.floor(n / 80 * 400), best = m > st.best.run; if (active('morningrun') && m > 0) { earn(200, '晨跑團'); st.exp += 4; ach('earlybird'); toast('晨跑團加碼：$200、知識 +4'); } if (m >= 400) ach('run400'); if (best) st.best.run = m; if (m > 0) dHit('run');
       st.exp += Math.min(8, Math.floor(m / 60));
       ok('跑完了', '你跑了 ' + m + ' 公尺。' + (m < 100 ? '這比較像散步，但散步也是運動。' : m < 250 ? '跑到一半你開始思考為什麼要跑步。' : m < 400 ? '風在耳邊，腿在抗議。' : '你跑完一整圈，旁邊跑步的人對你點了點頭。') + (best ? '\n新紀錄！' : '')); persist();
     } }) }, { label: '先不要' }] });
@@ -2083,7 +2244,7 @@ function decor() {
   if (st.q.main < 2) return ok('裝潢箱', '你還沒有自己的床位。先去學務處報到，再找室友阿芸拿鑰匙。');
   const d = st.dorm;
   showModal({ title: '布置你的角落', text: '四人房，你的角落在左上。壁紙和地板四個人投票通過了，可以換。每擺一件家具，每次定期入帳多 $10。\n你現在有 ' + fmt(st.money) + '，已擺 ' + d.placed.length + ' 件。', choices: [
-    { label: '壁紙', fn: () => listPick('壁紙', WALLS, 'wall', 'wallOwn') }, { label: '地板', fn: () => listPick('地板', FLOORS, 'floor', 'floorOwn') }, { label: '家具', fn: furnMenu }, { label: '完成' }] });
+    { label: '壁紙', fn: () => listPick('壁紙', WALLS, 'wall', 'wallOwn') }, { label: '地板', fn: () => listPick('地板', FLOORS, 'floor', 'floorOwn') }, { label: '家具', fn: furnMenu }, { label: '移動家具', fn: moveMenu }, { label: '完成' }] });
 }
 function listPick(title, arr, key, ownKey) {
   const d = st.dorm;
@@ -2125,7 +2286,7 @@ function interact() {
   if (it.id === 'real') return realWave(it.r);
   if (it.id === 'enter') return goScene(it.to, 7 * T, 8 * T + 12, 'up');
   if (it.id === 'stall') return stall(it.stall);
-  const f = { board, bench, study, clubboard: clubBoard, shop, decor, bed: sleep, class: classFlow, examseat: examSeat, wall: openWall, psy: () => pickPsy(it.k), pk: pkGame, bar: barGame,
+  const f = { board, bench, study, clubboard: clubBoard, shop, decor, bed: bedView, mydesk: deskView, class: classFlow, examseat: examSeat, wall: openWall, psy: () => pickPsy(it.k), pk: pkGame, bar: barGame,
     water: () => ok('飲水機', pick(['你喝了一大口水。免費的東西最好喝，這是大學教你的第一件事。', '飲水機的水有點溫。你決定不要想太多。', '旁邊貼著「請勿直接對嘴」，你看了一下四周，乖乖拿出水壺。'])),
     gs: () => openGroupGame('分組報告總是遇到雷隊友？在《分組求生記》裡，看你能不能撐到上台那天。'),
     bus: () => busMenu('street'), busback: () => busMenu('city'), busair: () => busMenu('airport'), gate, flyback: () => showModal({ title: '機場巴士', text: '往楓葉國際機場的巴士，車資 $45。要回台灣得先到機場。', choices: [{ label: '上車 $45', fn: () => { if (st.money < 45) return ok('機場巴士', '錢不夠。'); spend(45, '機場巴士'); goScene('a_airport', 17 * T, 7 * T, 'left'); } }, { label: '不搭了' }] }),
@@ -2264,7 +2425,7 @@ const FONT = '"Cubic11","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-s
 try { document.fonts.load('16px Cubic11'); } catch (e) {}
 const toScr = (wx, wy) => [OX + (wx - cam.x) * S, OY + (wy - cam.y) * S];
 function label(text, x, y, o = {}) {
-  const fs = (o.size || 11) * U; cx.font = `700 ${fs}px ${FONT}`;
+  text = tx(text); const fs = (o.size || 11) * U; cx.font = `700 ${fs}px ${FONT}`;
   const w = cx.measureText(text).width + 8 * U, h = fs + 5 * U;
   cx.fillStyle = o.bg || 'rgba(255,248,239,.88)'; rr(cx, x - w / 2, y - h / 2, w, h, 4 * U); cx.fill();
   cx.lineWidth = 1.5 * U; cx.strokeStyle = '#3b2f4a'; cx.stroke();
@@ -2293,6 +2454,7 @@ function render(t) {
   list.push({ y: P.y, f: g => { const L = st.look || {}; drawChar(g, P.x, P.y, P.dir, P.step, L.hair || '#5a3a2a', L.shirt || '#ff8fb1', L.pants || '#4a5d8a', L); } });
   Object.values(remotes).forEach(r => { if (r.s === cur.id && r.look) list.push({ y: r.y, f: g => drawChar(g, r.x, r.y, r.dir || 'down', r.step || 0, r.look.hair, r.look.shirt, r.look.pants, r.look) }); });
   list.sort((a, b) => a.y - b.y).forEach(o => o.f(oc)); oc.restore();
+  if (s.id === 'dorm' && sleepTime()) { oc.fillStyle = 'rgba(12,14,46,.5)'; oc.fillRect(0, 0, VW, VH); }
   if (!s.indoor) { const tn = skyTint(curH); if (tn) { oc.fillStyle = tn; oc.fillRect(0, 0, VW, VH); } if (isNight(curH)) { oc.save(); oc.translate(-cam.x, -cam.y); nightLights(oc, s); oc.restore(); } }
   if (shift && s.id === 'store') { oc.fillStyle = SHIFTS[shift.kind].tint; oc.fillRect(0, 0, VW, VH); }
   cx.setTransform(1, 0, 0, 1, 0, 0); cx.fillStyle = '#2b2338'; cx.fillRect(0, 0, cv.width, cv.height);
@@ -2346,6 +2508,10 @@ const ACH = [
   { id: 'ielts', n: '雅思 6.0', d: '雅思考到 6.0 以上', t: '留學準備中' },
   { id: 'allexam', n: '考試收集家', d: '四種進階考試都考過一次', t: '考試收集家', h: 1 },
   { id: 'ch3', n: '走到岔路口', d: '完成第三章', t: '岔路口旅人' },
+  { id: 'earlybird', n: '早起的鳥', d: '早上 6 到 8 點參加晨跑團', t: '早起的鳥' },
+  { id: 'postcard', n: '一張明信片', d: '在文創市集買插畫明信片', t: '收藏家', h: 1 },
+  { id: 'scroll', n: '滑到天亮', d: '半夜躺在床上一直滑手機', t: '夜貓子', h: 1 },
+  { id: 'nighttalk', n: '宿舍夜聊', d: '熄燈後跟室友聊了三次天', t: '夜聊主持人' },
   { id: 'perfecttrip', n: '完美的旅行', d: '週末旅行每件事都處理得很好', t: '旅行達人', h: 1 },
   { id: 'party', n: '迎新派對', d: '參加交換學校的迎新派對', t: '派對新人' },
   { id: 'polyglot', n: '語言交換常客', d: '去了三次語言交換桌', t: '多語人' },
@@ -2991,8 +3157,8 @@ function busMenu(from) {
 }
 function gate() {
   const m = st.q.main, ex = st.ch3.path === 'exchange';
-  if (m === 15 && ex && st.ch3.prog === 1) return dialog('登機門 A3', ['地勤看了你的護照和登機證：「交換學生嗎？祝你一切順利。」', '學校的交換獎學金幫你付了這趟機票。你在窗邊坐下，看著跑道慢慢往後退。'], [{ label: '起飛', fn: () => fly('abroad') }]);
-  if (m >= 17 || (ex && m === 16)) return showModal({ title: '登機門 A3', text: '飛往交換學校的班機。機票 $20,000（遊戲裡的價格）。', choices: [{ label: '買票飛過去', fn: () => { if (st.money < 20000) return ok('登機門', '錢不夠。機票比你想像的貴，大家都這樣說。'); spend(20000, '機票'); fly('abroad'); } }, { label: '先不要' }] });
+  if (m === 15 && ex && st.ch3.prog === 1) return dialog('登機門 A3', ['地勤看了你的護照和登機證：「交換學生嗎？祝你一切順利。」', '學校的交換獎學金幫你付了這趟機票。你在窗邊坐下，看著跑道慢慢往後退。'], [{ label: '選交換學校，起飛', fn: () => destPick(() => fly('abroad')) }]);
+  if (m >= 17 || (ex && m === 16)) return showModal({ title: '登機門 A3', text: '飛往交換學校的班機。機票 $20,000（遊戲裡的價格）。', choices: [{ label: '買票飛過去', fn: () => { if (st.money < 20000) return ok('登機門', '錢不夠。機票比你想像的貴，大家都這樣說。'); destPick(() => { spend(20000, '機票'); fly('abroad'); }); } }, { label: '先不要' }] });
   ok('登機門 A3', '地勤看了你一眼：「同學，你今天沒有要搭飛機喔。」\n\n（第三章選擇交換學生，就會從這裡出發。）');
 }
 function fly(to) {
@@ -3000,7 +3166,7 @@ function fly(to) {
   setTimeout(() => { busy = false; flyHide(); $('#fade').style.opacity = 0; $('#fade').style.transition = ''; const at = to === 'abroad' ? [9 * T, 5 * T, 'down'] : [19.5 * T, 5 * T, 'down'];
     goScene(to === 'abroad' ? 'a_airport' : to, at[0], at[1], at[2]); setTimeout(() => toast(to === 'abroad' ? '到了！搭機場巴士去楓葉大學' : '回到台灣了'), 600); if (to === 'abroad') { ach('flight'); if (st.q.main === 15 && st.ch3.prog === 1) { st.ch3.prog = 2; setTimeout(() => toast(ch3Task()), 800); } } }, 3200);
 }
-function flyShow(out) { const d = $('#flyOv'); d.innerHTML = '<div class="fplane">✈</div><div>' + (out ? '台北 → 楓葉市 · 飛行 13 小時' : '楓葉市 → 台北 · 飛行 15 小時') + '</div><div style="font-size:13px;opacity:.75;margin-top:6px">' + (out ? '時差 13 小時。到了以後，那裡的時間會跟台灣不一樣。' : '睡一覺，醒來就到家了。') + '</div>'; d.style.display = 'flex'; }
+function flyShow(out) { const d = $('#flyOv'); d.innerHTML = '<div class="fplane">✈</div><div>' + (out ? '台北 → ' + D().city + ' · 飛行 ' + D().flight + ' 小時' : D().city + ' → 台北 · 飛行 ' + (D().flight + 1) + ' 小時') + '</div><div style="font-size:13px;opacity:.75;margin-top:6px">' + (out ? D().city + D().zone + '，' + diffText() + '。' : '睡一覺，醒來就到家了。') + '</div>'; d.style.display = 'flex'; }
 function flyHide() { $('#flyOv').style.display = 'none'; }
 
 /* ---------- 電腦按鍵說明 ---------- */
@@ -3116,7 +3282,7 @@ function loop(now) {
     mutT -= dt; if (mutT <= 0) { mutT = rand(11, 19); if (!locked()) mutter(); }
     nearIt = locked() ? null : nearest();
     $('#act').classList.toggle('on', !!nearIt); $('#actLabel').textContent = nearIt ? nearIt.label : '互動';
-    hudT -= dt; if (hudT <= 0) { hudT = .25; curH = localH(); checkDay(); dayTick(); tellerTick(); catTick(); pubT -= .25; if (pubT <= 0) { pubT = 3; if (cur.id === 'a_pub') pubSync(false); } tutHud(); if (AU.music) bgmPlay(songFor()); { const r = payTick(); if (r) { toast('💰 定期入帳 +' + fmt(r.amt)); beep(988, .06); setTimeout(() => beep(1319, .1), 90); } } hud(); { const hr = new Date().getHours(); if (hr < 5) ach('night'); } if (!st.met.dailyIntro && st.q.main >= 2 && !locked()) introDaily(); }
+    hudT -= dt; if (hudT <= 0) { hudT = .25; curH = localH(); checkDay(); dayTick(); tellerTick(); catTick(); roomTick(); pubT -= .25; if (pubT <= 0) { pubT = 3; if (cur.id === 'a_pub') pubSync(false); } tutHud(); if (AU.music) bgmPlay(songFor()); { const r = payTick(); if (r) { toast('💰 定期入帳 +' + fmt(r.amt)); beep(988, .06); setTimeout(() => beep(1319, .1), 90); } } hud(); { const hr = new Date().getHours(); if (hr < 5) ach('night'); } if (!st.met.dailyIntro && st.q.main >= 2 && !locked()) introDaily(); }
     saveT -= dt; if (saveT <= 0) { saveT = 5; persist(); }
   }
   snapCam();
@@ -3136,7 +3302,7 @@ function hud() {
   const act = Object.keys(SIDE).filter(id => sideSt(id) === 1).length, rd = Object.keys(SIDE).filter(id => sideSt(id) === 1 && SIDE[id].ready()).length;
   $('#hBadge').textContent = act ? '支線 ' + act + (rd ? '·可回報' : '') : '';
   $('#hDaily').textContent = st.daily.ids.filter(i => st.daily.done[i]).length + ' / 3';
-  $('#hPlace').textContent = cur.name + ' · ' + (regionOf(cur.id) === 'abroad' ? '當地 ' : '') + clockStr(curH); $('#hOnline').textContent = rt ? '同屆真人 ' + onlineCount() + ' 人在線' + (rt.room > 1 ? '（第' + '一二三四五'[rt.room - 1] + '屆）' : '') : '同屆在線 6 人 · 示範';
+  $('#hPlace').textContent = tx(cur.name) + ' · ' + (regionOf(cur.id) === 'abroad' ? D().city + ' ' + clockStr(curH) + '（' + D().zone + '）' : clockStr(curH)); $('#hOnline').textContent = rt ? '同屆真人 ' + onlineCount() + ' 人在線' + (rt.room > 1 ? '（第' + '一二三四五'[rt.room - 1] + '屆）' : '') : '同屆在線 6 人 · 示範';
 }
 
 /* ---------- 手冊 ---------- */
@@ -3147,7 +3313,7 @@ function bookHTML() {
     return '<div class="sec"><h3>聲音</h3>' + sw('music', AU.music, '背景音樂', '每個地方有不同的 8-bit 音樂，大夜班會比較緊張。') + sw('sfx', AU.sfx, '音效', '按鈕、入帳、小遊戲的聲音。') + '</div><div class="sec"><h3>引導</h3>' + sw('arrow', st.set.arrow, '主線箭頭', '黃色箭頭帶你去主線的下一個地方。第一章一定會顯示。') + '</div><div class="sec"><h3>怎麼玩</h3><div class="item">' + (matchMedia('(hover:hover) and (pointer:fine)').matches ? '方向鍵或 WASD 走路，空白鍵或 E 互動，Tab 開手冊，M 開地圖。' : '左半邊螢幕拖曳是搖桿，右下角 A 是互動。') + '<br>戶頭每 10 分鐘入帳一次，離線最多累積 8 小時。</div></div>';
   }
   if (tab === 'd') {
-    const d = st.daily; let h = '<div class="sec"><p style="font-size:13px">每天三個小目標，做完一個拿 $300 和知識 +5，三個都做完再多 $500。要去的地方會出現綠色的「日」字，地圖上也找得到。半夜十二點換新。</p></div><div class="sec"><h3>今天的每日任務</h3>';
+    const d = st.daily; let h = timedHTML() + '<div class="sec"><p style="font-size:13px">每天三個小目標，做完一個拿 $300 和知識 +5，三個都做完再多 $500。要去的地方會出現綠色的「日」字，地圖上也找得到。半夜十二點換新。</p></div><div class="sec"><h3>今天的每日任務</h3>';
     d.ids.forEach(id => { const q = dq(id), p = Math.min(q.g, d.prog[id] || 0); h += '<div class="item ' + (d.done[id] ? 'done' : '') + '"><b>' + (d.done[id] ? '✓ ' : '') + q.n + '</b>' + (d.done[id] ? '已完成，拿到 $300、知識 +5' : '地點：' + q.place + '<br>進度 ' + p + ' / ' + q.g) + '</div>'; });
     h += '<div class="item ' + (d.bonus ? 'done' : 'main') + '"><b>' + (d.bonus ? '✓ ' : '') + '三個都完成</b>' + (d.bonus ? '已拿到額外的 $500' : '額外再給 $500') + '</div></div>';
     h += '<div class="sec"><h3>個人紀錄</h3><div class="item">投籃最佳：' + st.best.hoop + ' / 5 球<br>跑步最佳：' + st.best.run + ' 公尺</div></div>';
@@ -3204,6 +3370,8 @@ $('#hSide').addEventListener('click', () => { if (!st) return; st.met.sideOpen =
 $('#dailyBtn').addEventListener('click', () => { if (started && !locked()) { tab = 'd'; openBook(); } });
 document.querySelectorAll('#book .tab').forEach(b => b.onclick = () => { tab = b.dataset.t; openBook(); });
 $('#bookClose').addEventListener('click', closeBook);
+document.querySelectorAll('#moveBar [data-mv]').forEach(b => b.addEventListener('click', () => { const [dx, dy] = b.dataset.mv.split(',').map(Number); moveStep(dx, dy); })); $('#mvDone').addEventListener('click', endMove);
+addEventListener('keydown', e => { if (!moving) return; const m = { ArrowUp: [0, -1], KeyW: [0, -1], ArrowDown: [0, 1], KeyS: [0, 1], ArrowLeft: [-1, 0], KeyA: [-1, 0], ArrowRight: [1, 0], KeyD: [1, 0] }[e.code]; if (m) { e.preventDefault(); moveStep(m[0], m[1]); } if (e.code === 'Enter' || e.code === 'Escape') endMove(); });
 $('#muBtn').addEventListener('click', () => auToggle('music')); $('#muBtn').style.opacity = AU.music ? 1 : .45; $('#muBtn').style.textDecoration = AU.music ? '' : 'line-through';
 $('#shopX').addEventListener('click', closeShop); $('#sbPrev').addEventListener('click', () => sbFlip(-1)); $('#sbNext').addEventListener('click', () => sbFlip(1));
 { let sx = null; $('#sbPages').addEventListener('pointerdown', e => { sx = e.clientX; }); $('#sbPages').addEventListener('pointerup', e => { if (sx !== null && Math.abs(e.clientX - sx) > 50) sbFlip(e.clientX < sx ? 1 : -1); sx = null; }); }
@@ -3218,6 +3386,7 @@ function begin() {
   if (st.pos && scenes[st.pos.s] && !scenes[st.pos.s].indoor) { cur = scenes[st.pos.s]; P.x = st.pos.x; P.y = st.pos.y; if (blocked(P.x, P.y)) { cur = campus; P.x = 24 * T; P.y = 17 * T; } }
   if (!st.uid) st.uid = Math.random().toString(36).slice(2, 10);
   st.visited = st.visited || { campus: 1 }; st.visited[cur.id] = 1;
+  applyDest();
   if (!st.met.credMig) { st.met.credMig = 1; const m = st.q.main; st.cred.total = m >= 17 ? 48 : m >= 11 ? 32 : m >= 6 ? 16 : 0; if (m >= 11) (REQ_TRACK[st.track] || []).forEach(c => { st.cred.c[c] = CRED_REQ; }); }
   checkDay(true); dayTick(true); snapCam(); hud(); claimCoffee(); rtStart(); if (st.q.main >= 1) st.met.howto = st.met.howto || 1; setTimeout(() => bgmPlay(songFor(), true), 300);
   if (!st.payAt && st.lastSeen) st.payAt = st.lastSeen + PAY_MS;
@@ -3244,7 +3413,7 @@ resize(); snapCam();
 document.addEventListener('visibilitychange', () => { if (document.hidden && started) persist(); try { if (actx) { if (document.hidden) actx.suspend(); else actx.resume(); } } catch (e) {} });
 addEventListener('pagehide', () => { if (started) persist(); });
 requestAnimationFrame(loop);
-window.__town = { get st() { return st; }, P, scenes, get cur() { return cur; }, interact, nearest, QN, SIDE, goScene, setMain, cam, get S() { return S; }, get mg() { return mg; }, mgPress, findPath, BLD, quizAnswer, quizElim, examSeat, engPractice, goals, remotes, openWard, payTick, offlinePay, shiftNight, startShift, get shift() { return shift; }, gate, fly, busMenu, holTest, choosePath, busRide, internInterview, exchangeInterview, get rt() { return rt; }, ach, BLD2: BLD, get mapView() { return mapView; }, pickPsy, PSY, randomEvent, dayTick, openCard, openWall, startChallenge, makeCard, EXAMS, takeExam, famStart, famShow, aidBoard, gainCred, canGrad, reqLeft, classFlow, tripGo, rinkTrip, welcomeParty, lxTable, cityTour, iscBoard, campusNotice, cookBuddy, libCafe, catTalk, pubSync, pubTarget, hourIn, get ep() { return ep; }, epNext, regionOf, get curH() { return curH; }, openShop, closeShop, sbFlip, get SB() { return SB; }, shop, meal, stall, tellerTick, tellerTalk, FAM, mainTarget, sillMenu, growState, awayNote, GROW, navPoint, howTo, bgmPlay, get bgm() { return bgm; }, AU, auToggle, projTalk, ch4Interview, leaveSchool, farewell, gradPhoto, gradCeremony, martShop, tripMenu, triviaNight, callHome, makeCard, repay, loanLeft };
+window.__town = { get st() { return st; }, P, scenes, get cur() { return cur; }, interact, nearest, QN, SIDE, goScene, setMain, cam, get S() { return S; }, get mg() { return mg; }, mgPress, findPath, BLD, quizAnswer, quizElim, examSeat, engPractice, goals, remotes, openWard, payTick, offlinePay, shiftNight, startShift, get shift() { return shift; }, gate, fly, busMenu, holTest, choosePath, busRide, internInterview, exchangeInterview, get rt() { return rt; }, ach, BLD2: BLD, get mapView() { return mapView; }, pickPsy, PSY, randomEvent, dayTick, openCard, openWall, startChallenge, makeCard, EXAMS, takeExam, famStart, famShow, aidBoard, destPick, applyDest, DEST, active, marketPhase, stallView, craftStall, moveMenu, startMove, moveStep, endMove, canPlace, bedView, deskView, deskStudy, phoneScroll, nightChat, lecture, roomTick, tzDiff, gainCred, canGrad, reqLeft, classFlow, tripGo, rinkTrip, welcomeParty, lxTable, cityTour, iscBoard, campusNotice, cookBuddy, libCafe, catTalk, pubSync, pubTarget, hourIn, get ep() { return ep; }, epNext, regionOf, get curH() { return curH; }, openShop, closeShop, sbFlip, get SB() { return SB; }, shop, meal, stall, tellerTick, tellerTalk, FAM, mainTarget, sillMenu, growState, awayNote, GROW, navPoint, howTo, bgmPlay, get bgm() { return bgm; }, AU, auToggle, projTalk, ch4Interview, leaveSchool, farewell, gradPhoto, gradCeremony, martShop, tripMenu, triviaNight, callHome, makeCard, repay, loanLeft };
 })();
 </script>
 </body>
