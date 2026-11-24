@@ -148,6 +148,7 @@ button.tab.on{background:var(--gold)}
   <div class="chip" id="hMoney">$0</div>
   <div class="chip"><small id="hRate"></small></div>
   <div class="chip q" id="hQuest"></div>
+  <div class="chip q" id="hSide" style="background:#e2f3ff;display:none"></div>
 </div>
 <div class="hud" id="hudR">
   <div class="btnrow"><div class="chip btn" id="fsBtn">全螢幕</div><div class="chip btn" id="mapBtn">地圖</div><div class="chip btn" id="bookBtn">手冊 <small id="hBadge"></small></div></div>
@@ -200,6 +201,7 @@ button.tab.on{background:var(--gold)}
     <canvas id="wardPrev" width="48" height="60"></canvas>
     <div style="flex:1;min-width:240px">
       <h2>換裝</h2>
+      <p class="note" style="margin:0 0 4px">之後隨時可以在宿舍的衣櫃，或手冊「履歷」頁的換裝按鈕再改。</p>
       <div id="wardBody"></div>
       <div class="row"><button class="pri" id="wardDone" type="button">好了</button></div>
     </div>
@@ -207,13 +209,14 @@ button.tab.on{background:var(--gold)}
 </div>
 
 <div class="ov" id="mapOv">
-  <div class="card">
-    <div class="row" style="margin:0" id="mapTabs"></div>
+  <div class="card" style="position:relative">
+    <button class="xbtn" id="mapClose" type="button" aria-label="關閉">✕</button>
+    <div class="row" style="margin:0;padding-right:48px" id="mapTabs"></div>
     <canvas id="mapCv"></canvas>
     <p class="note">點一下地圖上去過的地方，可以直接移動過去。沒去過的地方要自己走一次。粉紅色是你，藍點是同屆玩家。黃色驚嘆號是主線，藍色驚嘆號是支線，問號代表可以回報，綠色「日」是今天的每日任務。</p>
-    <div class="row"><button class="pri" id="mapClose" type="button">關閉</button></div>
   </div>
 </div>
+<div id="clock" style="display:none;position:fixed;z-index:12;left:50%;top:calc(env(safe-area-inset-top) + 52px);transform:translateX(-50%);background:#1d1830;color:#ffd45c;border:3px solid #fff8ef;border-radius:6px;padding:4px 14px;font-size:28px;font-weight:800;letter-spacing:2px;box-shadow:3px 3px 0 #000;pointer-events:none">🌙 22:00</div>
 
 <div class="ov" id="cardOv">
   <div class="card">
@@ -562,6 +565,11 @@ const FURN = {
   guitar(g, x, y) { R(g, '#6f4a3a', x + 7, y, 2, 12); R(g, '#d4a574', x + 3, y + 12, 10, 12); R(g, '#3b2f4a', x + 6, y + 16, 4, 4); R(g, '#8a5a44', x + 2, y + 26, 12, 3); },
   tank(g, x, y, w) { R(g, '#3b2f4a', x - 1, y - 5, w * T + 2, 20); R(g, '#7ec8f0', x, y - 4, w * T, 16); R(g, '#a9defa', x + 2, y - 2, w * T - 4, 4); R(g, '#ff8b3d', x + 6, y + 3, 5, 3); R(g, '#ffd45c', x + 18, y + 5, 4, 3); R(g, '#e5607f', x + 4, y + 10, 24, 2); R(g, '#6f4a3a', x, y + 12, w * T, 4); },
   box(g, x, y, w) { R(g, 'rgba(60,40,80,.2)', x + 1, y + 14, w * T, 3); R(g, '#3b2f4a', x - 1, y - 3, w * T + 2, 19); R(g, '#c99a6b', x, y - 2, w * T, 17); R(g, '#8a5a44', x, y + 2, w * T, 2); R(g, '#ffd45c', x + w * T / 2 - 2, y + 5, 4, 4); },
+  loft(g, x, y, c, mine) { R(g, 'rgba(60,40,80,.2)', x + 2, y + 2 * T - 1, 2 * T, 3); R(g, '#3b2f4a', x - 1, y - 6, 2 * T + 2, 2 * T + 7); R(g, '#a8745a', x, y - 5, 2 * T, 2 * T + 5);
+    R(g, '#fff', x + 3, y - 3, 10, 6); R(g, c, x + 2, y + 3, 2 * T - 4, 9); R(g, 'rgba(255,255,255,.3)', x + 2, y + 3, 2 * T - 4, 2);
+    R(g, '#3b2f4a', x, y + 13, 2 * T, 2); R(g, '#d4a574', x + 1, y + 15, 2 * T - 2, 6); R(g, '#8a5a44', x + 1, y + 21, 2 * T - 2, 9); R(g, '#c9c3d6', x + 4, y + 16, 9, 4); R(g, '#7ec8f0', x + 5, y + 17, 7, 2);
+    for (let k = 0; k < 4; k++) R(g, '#6f4a3a', x + 2 * T - 4, y - 3 + k * 7, 3, 1); R(g, '#6f4a3a', x + 2 * T - 5, y - 5, 1, 2 * T + 4); if (mine) R(g, '#ffd45c', x + 13, y + 24, 6, 4); },
+  closet(g, x, y, w) { R(g, 'rgba(60,40,80,.2)', x + 2, y + 15, w * T, 3); R(g, '#3b2f4a', x - 1, y - 15, w * T + 2, 31); for (let i = 0; i < w; i++) { R(g, ['#c99a6b', '#bf9062', '#c99a6b', '#bf9062'][i], x + i * T, y - 14, T - 1, 29); R(g, '#ffd45c', x + i * T + 11, y, 2, 4); R(g, 'rgba(255,255,255,.25)', x + i * T + 2, y - 12, 3, 24); } },
   doll(g, x, y) { R(g, 'rgba(60,40,80,.2)', x + 1, y + 13, 14, 3); R(g, '#c99a6b', x + 2, y + 4, 12, 10); R(g, '#c99a6b', x + 3, y - 4, 10, 9); R(g, '#c99a6b', x + 2, y - 6, 4, 4); R(g, '#c99a6b', x + 10, y - 6, 4, 4); R(g, '#3b2f4a', x + 5, y - 1, 1, 2); R(g, '#3b2f4a', x + 10, y - 1, 1, 2); R(g, '#e5607f', x + 6, y + 6, 4, 3); }
 };
 const RW = 14, RH = 10;
@@ -598,7 +606,9 @@ put(rClass, 'blackboard', 4, 0, 6, 0, false); FURN.blackboard(rClass.g, 4 * T, 6
 put(rClass, 'counter', 6, 3, 2, 1);
 [[2, 5], [4, 5], [9, 5], [11, 5], [2, 7], [9, 7], [11, 7]].forEach(([x, y]) => put(rClass, 'sdesk', x, y, 1, 1));
 put(rClass, 'sdesk', 4, 7, 1, 1); put(rClass, 'plant', 12, 2, 1, 1);
-rClass.IT.push({ id: 'class', label: '上課', x: 4.5 * T, y: 8 * T + 8, r: 22, ix: 4.5 * T, iy: 5 * T + 6 });
+R(rClass.g, '#3b2f4a', 10 * T + 2, 2, 28, 26); R(rClass.g, '#ffd45c', 10 * T + 4, 4, 24, 22); R(rClass.g, '#e5607f', 10 * T + 7, 8, 18, 6); R(rClass.g, '#3b2f4a', 10 * T + 8, 17, 6, 6); R(rClass.g, '#3b2f4a', 10 * T + 17, 17, 6, 6);
+rClass.labels.push({ t: '分組求生記', x: 11 * T, y: 2 * T + 6, size: 9 });
+rClass.IT.push({ id: 'gs', label: '看海報', x: 11 * T, y: 3 * T + 6, r: 24, ix: 11 * T, iy: 0 * T + 2 }, { id: 'class', label: '上課', x: 4.5 * T, y: 8 * T + 8, r: 22, ix: 4.5 * T, iy: 5 * T + 6 });
 
 const rClub = mkRoom('club', '社團教室', '#ffd9e4', '#efdcc9', '#e8d3be');
 put(rClub, 'window', 2, 0, 2, 0, false); put(rClub, 'board', 5, 2, 4, 1); put(rClub, 'guitar', 11, 2, 1, 2);
@@ -632,6 +642,48 @@ rExpo.labels.push({ t: '輔導中心', x: 5 * T + 10, y: 6 * T + 12, size: 10 })
 const rCorp = mkRoom('corp', '辦公大樓 · 大廳', '#e6ebf3', '#d3d9e4', '#cbd2de');
 put(rCorp, 'counter', 5, 3, 4, 1); put(rCorp, 'plant', 1, 2, 1, 1); put(rCorp, 'plant', 12, 2, 1, 1); put(rCorp, 'window', 2, 0, 2, 0, false); put(rCorp, 'window', 10, 0, 2, 0, false);
 [[2, 6], [3, 6], [10, 6], [11, 6]].forEach(([x, y]) => put(rCorp, 'stool', x, y, 1, 1, false));
+const airport = mkScene('airport', '機場', 24, 12, false);
+(() => {
+  const s = airport, mc = s.g;
+  for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) {
+    const px = x * T, py = y * T;
+    if (y < 2 || x === 0 || x === s.w - 1 || y === s.h - 1) { R(mc, '#c9d3e6', px, py, T, T); if (y === 1) R(mc, 'rgba(60,40,80,.14)', px, py + 12, T, 4); continue; }
+    R(mc, (x + y) % 2 ? '#eef1f7' : '#e6eaf2', px, py, T, T); R(mc, 'rgba(0,0,0,.04)', px, py + T - 1, T, 1);
+  }
+  R(mc, '#3b2f4a', 0, 2 * T - 2, s.w * T, 2);
+  // 窗外的飛機
+  R(mc, '#3b2f4a', 16 * T, 2, 7 * T, 28); R(mc, '#9fd4f5', 16 * T + 2, 4, 7 * T - 4, 24); R(mc, '#fff', 17 * T, 14, 60, 8); R(mc, '#fff', 17 * T + 24, 6, 10, 18); R(mc, '#e5607f', 17 * T + 52, 10, 8, 6); R(mc, '#7ec8f0', 17 * T + 6, 16, 40, 2);
+  // 航班看板
+  R(mc, '#1d1830', 6 * T, 4, 5 * T, 24); for (let i = 0; i < 3; i++) { R(mc, '#ffd45c', 6 * T + 4, 8 + i * 7, 30, 3); R(mc, '#9bd8a0', 6 * T + 50, 8 + i * 7, 20, 3); }
+  for (let x = 0; x < s.w; x++) { solid(s, x, 0); solid(s, x, 1); solid(s, x, s.h - 1); } for (let y = 0; y < s.h; y++) { solid(s, 0, y); solid(s, s.w - 1, y); }
+  FURN.counter(mc, 3 * T, 3 * T, 6); solid(s, 3, 3, 6, 1); FURN.counter(mc, 18 * T, 3 * T, 3); solid(s, 18, 3, 3, 1);
+  for (let k = 0; k < 2; k++) for (let i = 0; i < 4; i++) { R(mc, '#3b2f4a', (11 + i) * T + 2, (6 + k * 2) * T + 2, 12, 11); R(mc, '#7ec8f0', (11 + i) * T + 3, (6 + k * 2) * T + 3, 10, 7); solid(s, 11 + i, 6 + k * 2); }
+  R(mc, '#3b2f4a', 2 * T, 9 * T - 6, 2 * T, 4); R(mc, '#ffd45c', 1 * T + 6, 8 * T - 4, 10, 14); solid(s, 1, 8);
+  s.IT.push({ id: 'checkin', label: '報到', x: 6 * T, y: 4 * T + 12, r: 30, ix: 6 * T, iy: 2 * T + 4 }, { id: 'gate', label: '登機', x: 19.5 * T, y: 4 * T + 12, r: 26, ix: 19.5 * T, iy: 2 * T + 4 }, { id: 'busair', label: '搭公車', x: 2.5 * T, y: 9 * T + 12, r: 26, ix: 2.5 * T, iy: 7 * T });
+  s.labels.push({ t: '報到櫃台', x: 6 * T, y: 3 * T - 4 }, { t: '登機門 A3', x: 19.5 * T, y: 3 * T - 4 }, { t: '往市區、學校的公車', x: 3 * T, y: 7 * T + 4 }, { t: '出發 DEPARTURES', x: 8.5 * T, y: 2 * T + 4, size: 9 });
+  s.spots.push({ x: 12, y: 7, dir: 'up', stay: [8, 14] }, { x: 14, y: 9, dir: 'up', stay: [8, 14] });
+})();
+const abroad = mkScene('abroad', '交換學校 · 楓葉大學', 30, 18, false);
+(() => {
+  const s = abroad, mc = s.g;
+  const path0 = (x, y) => (y >= 9 && y <= 10) || (x >= 14 && x <= 15 && y >= 6);
+  for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) {
+    const px = x * T, py = y * T;
+    if (y === 0 || x === 0 || x === s.w - 1 || y === s.h - 1) { hedge(mc, x, y); continue; }
+    if (path0(x, y)) { R(mc, (x + y) % 2 ? '#b8a48c' : '#ad9a82', px, py, T, T); R(mc, 'rgba(0,0,0,.08)', px, py + T - 1, T, 1); R(mc, 'rgba(0,0,0,.08)', px + T - 1, py, 1, T); }
+    else { R(mc, (x + y) % 2 ? '#8fcf8a' : '#88c983', px, py, T, T); if (hash(x, y, 5) > .93) { R(mc, '#e07a3f', px + 4, py + 5, 4, 3); R(mc, '#c94f2a', px + 6, py + 6, 2, 2); } }
+  }
+  const B = [{ name: '圖書館', x: 2, y: 2, w: 8, h: 6, wall: '#c97a5a', roof: '#5c3a2e', trim: '#3f2a22' }, { name: '國際學生中心', x: 11, y: 1, w: 8, h: 6, wall: '#d9b48a', roof: '#3f4b66', trim: '#2b3550' }, { name: '學生宿舍', x: 20, y: 2, w: 8, h: 6, wall: '#c97a5a', roof: '#5c3a2e', trim: '#3f2a22' }];
+  B.forEach(b => { drawBld(mc, b); solid(s, b.x, b.y, b.w, b.h); for (let i = 0; i < b.w * T; i += 8) for (let j = 2 * T; j < b.h * T - 2 * T; j += 6) if ((i / 8 + j / 6) % 3 === 0) R(mc, 'rgba(0,0,0,.08)', b.x * T + i, b.y * T + j, 7, 1); s.labels.push({ t: b.name, x: (b.x + b.w / 2) * T, y: (b.y + 2) * T + 6, size: 12 }); });
+  // 鐘塔與噴泉
+  R(mc, '#3b2f4a', 15 * T + 3, 12 * T - 52, 26, 52); R(mc, '#c97a5a', 15 * T + 5, 12 * T - 44, 22, 44); R(mc, '#5c3a2e', 15 * T + 1, 12 * T - 56, 30, 10); R(mc, '#5c3a2e', 15 * T + 9, 12 * T - 62, 14, 6); R(mc, '#fff3c4', 15 * T + 9, 12 * T - 38, 14, 14); R(mc, '#3b2f4a', 15 * T + 15, 12 * T - 36, 2, 7); R(mc, '#3b2f4a', 15 * T + 15, 12 * T - 30, 5, 2); R(mc, '#3b2f4a', 15 * T + 12, 12 * T - 12, 8, 12); solid(s, 15, 11, 2, 1);
+  [[4, 13], [7, 15], [24, 13], [26, 15], [20, 14]].forEach(([x, y]) => { solid(s, x, y); s.dyn.push({ y: y * T + 15, f: g => { drawTree(g, x, y); R(g, '#e07a3f', x * T + 2, y * T - 6, 6, 4); R(g, '#c94f2a', x * T + 9, y * T - 9, 5, 3); } }); });
+  drawBench(mc, { x: 9, y: 12 }); solid(s, 9, 12, 2, 1);
+  R(mc, '#3b2f4a', 26 * T, 11 * T - 6, 2 * T, 4); R(mc, '#7ec8f0', 26 * T, 11 * T - 10, 2 * T, 4); R(mc, '#ffd45c', 25 * T + 6, 10 * T - 2, 10, 14); solid(s, 25, 11);
+  s.IT.push({ id: 'flyback', label: '搭機場巴士', x: 26.5 * T, y: 11 * T + 12, r: 26, ix: 26.5 * T, iy: 9 * T });
+  s.labels.push({ t: '機場巴士', x: 26.5 * T, y: 9 * T + 2 });
+  s.spots.push({ x: 9, y: 13, dir: 'up', stay: [6, 12] }, { x: 14, y: 12, dir: 'up', stay: [5, 10] }, { x: 18, y: 10, dir: 'left', stay: [5, 10] });
+})();
 /* 宿舍：可換裝潢，之後重畫 */
 const rDorm = mkScene('dorm', '宿舍', RW, RH, true);
 const WALLS = [{ n: '奶油白', c: '#fff1e0', p: 0 }, { n: '薄荷綠', c: '#cdeedd', p: 300 }, { n: '櫻花粉', c: '#ffd1de', p: 300 }, { n: '夜空藍', c: '#b9c8f2', p: 400 }];
@@ -640,21 +692,23 @@ const ITEMS = [{ id: 'poster', n: '海報', p: 200 }, { id: 'lamp', n: '檯燈',
 function buildDorm() {
   const d = st && st.dorm ? st.dorm : { wall: 0, floor: 0, placed: [] }, w = WALLS[d.wall], f = FLOORS[d.floor];
   const s = rDorm; s.g.clearRect(0, 0, RW * T, RH * T); roomShell(s, w.c, f.a, f.b);
-  put(s, 'window', 6, 0, 2, 0, false);
-  R(s.g, '#8a5a44', 3 * T, 2, T, 28); R(s.g, '#cfe7f5', 3 * T + 2, 4, T - 4, 24); R(s.g, 'rgba(255,255,255,.7)', 3 * T + 4, 6, 3, 8);
-  if (d.placed.includes('poster')) FURN.poster(s.g, 9 * T - 2, 2);
+  put(s, 'window', 5, 0, 2, 0, false);
+  if (d.placed.includes('poster')) FURN.poster(s.g, 1 * T + 3, 2);
   if (d.placed.includes('rug')) FURN.rug(s.g, 5 * T, 5 * T, 4, 2);
-  put(s, 'bed', 1, 2, 2, 2, true, '#7ec8f0'); put(s, 'bed', 11, 2, 2, 2, true, '#ffb86b');
-  put(s, 'desk', 4, 2, 2, 1, true, 2);
-  if (d.placed.includes('lamp')) FURN.lamp(s.g, 5 * T + 2, 2 * T + 4);
-  put(s, 'box', 7, 2, 1, 1, true, 2);
-  if (d.placed.includes('plant')) put(s, 'plant', 9, 2, 1, 1);
-  if (d.placed.includes('beanbag')) put(s, 'beanbag', 2, 6, 1, 1);
-  if (d.placed.includes('guitar')) put(s, 'guitar', 1, 5, 1, 2);
-  if (d.placed.includes('tank')) put(s, 'tank', 11, 6, 2, 1);
+  FURN.loft(s.g, 1 * T, 2 * T, (st && st.look && st.look.shirt) || '#7ec8f0', true); solid(s, 1, 2, 2, 2);
+  FURN.loft(s.g, 11 * T, 2 * T, '#ffb86b'); solid(s, 11, 2, 2, 2);
+  FURN.loft(s.g, 1 * T, 6 * T, '#9bd8a0'); solid(s, 1, 6, 2, 2);
+  FURN.loft(s.g, 11 * T, 6 * T, '#c9b6f5'); solid(s, 11, 6, 2, 2);
+  put(s, 'closet', 7, 2, 3, 1); put(s, 'box', 4, 2, 1, 1, true, 1);
+  if (d.placed.includes('lamp')) FURN.lamp(s.g, 1 * T + 20, 3 * T + 4);
+  if (d.placed.includes('plant')) put(s, 'plant', 3, 2, 1, 1);
+  if (d.placed.includes('guitar')) put(s, 'guitar', 3, 4, 1, 2);
+  if (d.placed.includes('beanbag')) put(s, 'beanbag', 4, 5, 1, 1);
+  if (d.placed.includes('tank')) put(s, 'tank', 9, 8, 2, 1);
   if (d.placed.includes('doll')) put(s, 'doll', 3, 7, 1, 1);
+  s.labels = [{ t: '你', x: 2 * T, y: 1 * T + 10, size: 9 }, { t: '阿芸', x: 12 * T, y: 1 * T + 10, size: 9 }, { t: '小晴', x: 2 * T, y: 5 * T + 10, size: 9 }, { t: '佳佳', x: 12 * T, y: 5 * T + 10, size: 9 }];
 }
-rDorm.IT.push({ id: 'ward', label: '換裝', x: 3.5 * T, y: 3 * T, r: 22, ix: 3.5 * T, iy: 0 * T + 4 }, { id: 'decor', label: '布置房間', x: 7.5 * T, y: 3 * T + 10, r: 26, ix: 7.5 * T, iy: 1 * T }, { id: 'bed', label: '睡一下', x: 2 * T, y: 4 * T + 8, r: 24, ix: 2 * T, iy: 1.5 * T });
+rDorm.IT.push({ id: 'ward', label: '衣櫃換裝', x: 8.5 * T, y: 3 * T + 12, r: 26, ix: 8.5 * T, iy: 0 * T + 6 }, { id: 'decor', label: '布置角落', x: 4.5 * T, y: 3 * T + 12, r: 22, ix: 4.5 * T, iy: 1 * T }, { id: 'bed', label: '睡一下', x: 2 * T, y: 4 * T + 8, r: 24, ix: 2 * T, iy: 1.5 * T });
 
 /* ---------- 狀態 ---------- */
 const KEY = 'jige-town-v1', OLDKEY = 'lifefork-town-demo-v2';
@@ -776,7 +830,9 @@ function updateLoop(b, dt) {
   b.anim += dt; b.step = Math.floor(b.anim / .12) % 2;
 }
 function updateEnt(b, dt) {
-  if (b.wander) updateWander(b, dt); else if (b.loop) updateLoop(b, dt);
+  if (b.route && b.route.length) { const [nx, ny] = b.route[0], dx = nx - b.x, dy = ny - b.y, d = Math.hypot(dx, dy), sp = 40 * dt;
+    if (d <= sp) { b.x = nx; b.y = ny; b.route.shift(); if (!b.route.length) { b.step = 0; const f = b.onArrive; b.onArrive = null; f && f(); } } else { b.x += dx / d * sp; b.y += dy / d * sp; faceToward(b, nx, ny); b.anim += dt; b.step = Math.floor(b.anim / .16) % 2; } }
+  else if (b.wander) updateWander(b, dt); else if (b.loop) updateLoop(b, dt);
   if (b.money !== undefined) b.money += b.rate / 60 * dt;
   if (b.lines) { b.sayT -= dt; if (b.sayT <= 0) { b.sayT = rand(10, 24); say(b, pick(b.lines)); } }
 }
@@ -799,6 +855,8 @@ const PASS_LINES = {
   cafe: ['今天的三杯雞沒有雞，只有三杯。', '我每天都點一樣的，這樣比較不用做決定。'],
   exam: ['我只是來看看，還沒有要考。', '這裡的冷氣比圖書館還冷。'],
   playground: ['我在等我的朋友，他說五分鐘，已經二十分鐘了。', '跑道一圈四百公尺，我跑了兩百就決定散步。'],
+  airport: ['我的行李超重了兩公斤，正在思考要丟掉什麼。', '我是來送機的，結果自己哭得比較慘。'],
+  abroad: ['Hi! Where are you from?（嗨！你從哪裡來？）', 'Taiwan? I love bubble tea!（台灣？我超愛珍奶！）', 'The library closes at midnight, by the way.（對了，圖書館半夜十二點關。）'],
   city: ['市區的咖啡比學校貴一倍，但座位比較多。', '我來面試的，現在腳在發抖。', '博覽會發的原子筆我拿了十支。'],
   expo: ['我已經逛了三圈，還是不知道要幹嘛。', '每個攤位都說自己的路最好。'],
   corp: ['我在等面試，已經在心裡自我介紹二十遍了。'],
@@ -806,7 +864,7 @@ const PASS_LINES = {
 };
 const PLOOK = [['#6b5b4a', '#a8c0a0', '#5a5a6e'], ['#c9a24b', '#d9a6a6', '#4a4a5e'], ['#3b2f4a', '#b8b8c9', '#6a5a4a'], ['#8a8a99', '#c9a98a', '#4a5568'], ['#5a3a2a', '#9ec5e8', '#3a3a4a']];
 const passTalk = sc => () => ok('路人', pick(PASS_LINES[sc]));
-[['campus', 4], ['street', 3], ['playground', 1], ['city', 3]].forEach(([sc, n]) => { for (let i = 0; i < n; i++) { const [x, y] = spawnAt(scenes[sc]); mkEnt(sc, { kind: 'passer', name: '路人', x, y, look: PLOOK[(i + sc.length) % 5], wander: true, speed: rand(18, 26), lines: ['嗯。', '好熱。', '又要上課了。', '肚子餓。'], talk: passTalk(sc) }); } });
+[['campus', 4], ['street', 3], ['playground', 1], ['city', 3], ['airport', 2], ['abroad', 3]].forEach(([sc, n]) => { for (let i = 0; i < n; i++) { const [x, y] = spawnAt(scenes[sc]); mkEnt(sc, { kind: 'passer', name: '路人', x, y, look: PLOOK[(i + sc.length) % 5], wander: true, speed: rand(18, 26), lines: ['嗯。', '好熱。', '又要上課了。', '肚子餓。'], talk: passTalk(sc) }); } });
 const stat = (scene, tx, ty, look, dir = 'down') => { const [x, y] = at(tx, ty); return mkEnt(scene, { kind: 'passer', name: '路人', x, y, look, dir, talk: passTalk(scene) }); };
 stat('office', 4, 7.1, PLOOK[0], 'up'); stat('library', 5.6, 7, PLOOK[1]); stat('library', 8.4, 6, PLOOK[2]);
 stat('club', 10, 5, PLOOK[3], 'left'); stat('store', 8, 7, PLOOK[1], 'up');
@@ -823,7 +881,7 @@ qnpc('chen', 'office', '陳老師', 7, 2.95, ['#9a9aa8', '#7a8fb5', '#4a4a5e']);
 qnpc('lib', 'library', '館員伯伯', 7, 2.95, ['#6b6b6b', '#a8745a', '#3a3a4a']);
 qnpc('xun', 'club', '學姊小薰', 3.5, 4.5, ['#e5607f', '#ffb7c9', '#6a5a7a'], 'right');
 qnpc('boss', 'store', '店長', 11, 5.95, ['#3b2f4a', '#e5607f', '#3a3a4a']);
-qnpc('yun', 'dorm', '室友阿芸', 9.5, 5, ['#5a3a2a', '#b5e48c', '#4a5d8a']);
+qnpc('yun', 'dorm', '室友阿芸', 10, 4.6, ['#5a3a2a', '#b5e48c', '#4a5d8a'], 'left');
 qnpc('late', 'campus', '遲到的同學', 27, 10.6, ['#2b2338', '#f5a5a5', '#3d5a80']);
 qnpc('zhe', 'playground', '籃球隊阿哲', 23, 10, ['#2b2338', '#ff8b3d', '#3a3a4a'], 'right');
 qnpc('prof', 'classroom', '王教授', 7, 2.95, ['#c9c3d6', '#8a6bb5', '#3a3a4a']);
@@ -833,6 +891,8 @@ qnpc('proctor', 'exam', '監考老師', 7, 6.4, ['#8a8a99', '#5a6b7a', '#3a3a4a'
 qnpc('barista', 'cafe2', '咖啡師', 10, 2.95, ['#3b2f4a', '#6f4a3a', '#3a3a4a']);
 qnpc('b_transfer', 'expo', '轉系學長', 2, 2.95, ['#2b2338', '#e5607f', '#3a3a4a']); qnpc('b_double', 'expo', '雙主修學姊', 5, 2.95, ['#8a4b2a', '#7ec8f0', '#4a4a5e']);
 qnpc('b_exchange', 'expo', '國際處老師', 9, 2.95, ['#c9c3d6', '#6aa84f', '#3a3a4a']); qnpc('b_intern', 'expo', '人資小姐', 12, 2.95, ['#3b2f4a', '#ff8b3d', '#3a3a4a']);
+qnpc('emma', 'abroad', 'Buddy Emma', 14, 8.2, ['#c9a24b', '#e5607f', '#3b2f4a']);
+qnpc('qing', 'dorm', '室友小晴', 4.5, 8, ['#2b2338', '#9bd8a0', '#3a3a4a'], 'left'); qnpc('jia', 'dorm', '室友佳佳', 12.5, 4.6, ['#8a4b2a', '#c9b6f5', '#4a4a5e']);
 qnpc('counselor', 'expo', '輔導老師', 7, 5.6, ['#6b6b6b', '#c9b6f5', '#4a4a5e']); qnpc('hr', 'corp', '人資小姐', 7, 2.95, ['#3b2f4a', '#ff8b3d', '#3a3a4a']);
 stat('expo', 6, 8, PLOOK[1], 'up'); stat('expo', 10.5, 7.5, PLOOK[3], 'left'); stat('corp', 3, 5.4, PLOOK[2], 'down');
 stat('cafe2', 3, 5.6, PLOOK[2], 'down');
@@ -847,13 +907,14 @@ function nearest() {
   let best = null, bd = 1e9;
   for (const it of cur.IT) { if (it.hide && it.hide()) continue; const d = Math.hypot(P.x - it.x, P.y - it.y); if (d < it.r && d < bd) { best = it; bd = d; } }
   for (const r of Object.values(remotes)) { if (r.s !== cur.id) continue; const d = Math.hypot(P.x - r.x, P.y - r.y); if (d < 24 && d < bd) { best = { id: 'real', r, label: '揮手', ix: r.x, iy: r.y - 32 }; bd = d; } }
-  for (const e of cur.ents) { if (e.kind === 'deco') continue; const d = Math.hypot(P.x - e.x, P.y - e.y); if (d < 24 && d < bd) { best = { id: 'ent', ent: e, label: e.kind === 'player' ? '揮手' : e.kind === 'quest' ? '對話' : '聊聊', ix: e.x, iy: e.y - 32 }; bd = d; } }
+  for (const e of cur.ents) { if (e.kind === 'deco' || e.hidden || e.temp) continue; const d = Math.hypot(P.x - e.x, P.y - e.y); if (d < 24 && d < bd) { best = { id: 'ent', ent: e, label: e.kind === 'player' ? '揮手' : e.kind === 'quest' ? '對話' : '聊聊', ix: e.x, iy: e.y - 32 }; bd = d; } }
   return best;
 }
 
 /* ---------- 對話框 ---------- */
 let modalOpen = false, busy = false, typeT = null, mg = null;
-const locked = () => modalOpen || busy || !!mg;
+let shift = null;
+const locked = () => modalOpen || busy || !!mg || !!shift;
 function closeModal() { modalOpen = false; $('#modal').classList.remove('on'); clearInterval(typeT); }
 function showModal(o) {
   modalOpen = true; clearInterval(typeT); $('#modal').classList.add('on'); $('#mt').textContent = o.title || '';
@@ -989,7 +1050,8 @@ function markOf(e) {
   if (e.id === 'boss') return side('store');
   if (e.id === 'late') return side('coffee');
   if (e.id === 'zhe') return side('hoop');
-  if (e.id.startsWith('b_')) { const id = e.id.slice(2); if (m === 12 && !st.ch3.booths.includes(id)) return 'main'; if (m === 15 && id === 'exchange' && st.ch3.path === 'exchange') return 'main'; return null; }
+  if (e.id.startsWith('b_')) { const id = e.id.slice(2); if (m === 12 && !st.ch3.booths.includes(id)) return 'main'; if (m === 15 && id === 'exchange' && st.ch3.path === 'exchange' && st.ch3.prog === 0) return 'main'; return null; }
+  if (e.id === 'emma') return m === 15 && st.ch3.path === 'exchange' && st.ch3.prog === 2 ? 'main' : null;
   if (e.id === 'counselor') return (m === 13 || m === 14) ? 'main' : null;
   if (e.id === 'hr') return m === 15 && st.ch3.path === 'intern' ? 'main' : null;
   return null;
@@ -1023,9 +1085,9 @@ function pickTrack(t, text) { st.track = t; logLine('選課傾向：' + { sci: '
 QN.yun.talk = () => {
   const m = st.q.main;
   if (m === 0) return ok('室友阿芸', '你是新生吧？先去學務處報到，不然你連床位都沒有。');
-  if (m === 1) return dialog('室友阿芸', ['你是新室友？我是阿芸，已經住兩天了。這裡的蚊子比人熱情。', '鑰匙給你。左邊那張床是你的，右邊是我的領土，請不要越界。', '中間那個箱子你可以拿來布置房間，宿舍沒有明文禁止。'], [{ label: '收下鑰匙', fn: () => { logLine('拿到宿舍鑰匙'); setMain(2); } }]);
+  if (m === 1) return dialog('室友阿芸', ['你是新室友？我是阿芸，已經住兩天了。這裡的蚊子比人熱情。', '鑰匙給你。這是四人房，左上那張床是你的，我在右上，左下是小晴，右下是佳佳。', '床下面是書桌，你旁邊那個箱子可以拿來布置自己的角落。衣櫃在中間，一人一格。'], [{ label: '收下鑰匙', fn: () => { logLine('拿到宿舍鑰匙'); setMain(2); } }]);
   if (sideFlow('室友阿芸', 'bag', ['垃圾袋用完了，我又沒空出門。', '你能幫我去便利商店買一包嗎？我會給你一點謝禮。'], '垃圾袋，便利商店，謝謝。我現在連站起來的力氣都沒有。', ['有了有了！你真的買回來了。', '我說的謝禮是真的，不是客套。'])) return;
-  ok('室友阿芸', pick(['你的床位在左邊，右邊是我的領土。', '我又忘記帶傘了。', '昨天半夜有人在走廊練吉他，我決定不報警。', '房間布置得怎麼樣？記得別把我這邊也布置了。', '夜市的雞排很大，大到我吃完不想動。']));
+  ok('室友阿芸', pick(['你的床位在左上，我在右上，這是我們的領土分配。', '我又忘記帶傘了。', '昨天半夜有人在走廊練吉他，我決定不報警。', '房間布置得怎麼樣？記得別把我這邊也布置了。', '夜市的雞排很大，大到我吃完不想動。']));
 };
 QN.xun.talk = () => {
   const m = st.q.main;
@@ -1049,7 +1111,7 @@ QN.boss.talk = () => {
   const menu = () => showModal({
     title: '店長', text: '要排班嗎？時薪照 2027 年的最低工資算，$205。',
     choices: [
-      { label: '晚班 6 小時 · $1,230', fn: wait > 0 ? () => ok('店長', '剛下班先休息啦。') : pay(1230, '凌晨三點的便利商店很安靜，只有冰櫃在嗡嗡叫。') },
+      { label: '大夜班 22:00–04:00 · $1,230', fn: wait > 0 ? () => ok('店長', '剛下班先休息啦。') : () => dialog('店長', ['大夜班喔？店裡晚上只有你一個人。', '有事打給我，不過我應該在睡覺。'], [{ label: '開始上班', fn: shiftNight }, { label: '算了' }]) },
       { label: '早班 4 小時 · $820', fn: wait > 0 ? () => ok('店長', '剛下班先休息啦。') : pay(820, '早班一直在補貨。客人只問兩種問題：廁所在哪裡，有沒有加熱。') },
       { label: '店裡有缺人手嗎', fn: () => { if (!sideFlow('店長', 'store', ['缺啊，每天都缺。', '你這個月幫我排兩次班，我給你一點額外的。'], '還沒排滿兩次班。先去排，排完回來領。', ['兩次都排完了？你比我上一個店員撐得久。', '這是額外的，不要跟別的店員說。'])) ok('店長', '你已經幫過我了，現在沒有缺。'); } },
       { label: '先不用' }]
@@ -1065,7 +1127,13 @@ QN.zhe.talk = () => {
   ok('籃球隊阿哲', pick(['我們隊的戰術是：傳給我。', '投籃最重要的是手感，還有不要看籃框以外的地方。', '下週比賽記得來坐板凳。']));
 };
 QN.prof.talk = () => classFlow();
+QN.qing.talk = () => ok('室友小晴', pick(['我每天六點起床跑步，你不用跟。', '冰箱裡貼了名字的不要吃，沒貼名字的也不要吃。', '熄燈是十二點，但我們房間的熄燈是佳佳決定的。']));
+QN.jia.talk = () => ok('室友佳佳', pick(['我的鬧鐘會響五次，先跟你說對不起。', '熄燈以後我會戴耳機，你們聊天吵不到我。', '你的角落布置得不錯耶，可以借我拍照嗎？']));
 ['transfer', 'double', 'exchange', 'intern'].forEach(id => QN['b_' + id].talk = () => boothTalk(id));
+QN.emma.talk = () => {
+  if (st.q.main === 15 && st.ch3.path === 'exchange' && st.ch3.prog === 2) return dialog('Buddy Emma', ['Hi! You must be ' + st.name + '. I\'m Emma, your buddy!\n（嗨！你就是' + st.name + '吧，我是你的 buddy，Emma。）', '這是你的學生證和宿舍鑰匙。上課的教室在圖書館後面，超市晚上八點就關了，這點你要習慣。', 'Don\'t worry, everyone feels lost in the first week.\n（別擔心，大家第一週都會覺得很迷茫。）'], [{ label: 'Thank you!', fn: () => { logLine('抵達交換學校：楓葉大學'); setMain(16); ok('交換學生', '你在交換學校報到了。\n之後可以從機場巴士回台灣，把決定告訴陳老師。\n\n（國外的長椅上好像也有一張明信片。）'); } }]);
+  ok('Buddy Emma', pick(['Have you tried the cafeteria? It\'s... an experience.\n（你吃過學餐了嗎？那是一種體驗。）', 'You can always text me if you get lost!\n（迷路的話隨時傳訊息給我！）', '台灣的珍奶？我在這裡喝過，它們說是台灣的，但我覺得不是。']));
+};
 QN.counselor.talk = counselorTalk; QN.hr.talk = internInterview;
 QN.barista.talk = () => {
   const buy = (p, n, t) => () => { if (st.money < p) return ok('咖啡師', '咖啡師看了看你的錢包，推薦你去喝飲水機。'); spend(p, n); drinkCoffee(); ok('轉角咖啡廳', t); persist(); };
@@ -1159,7 +1227,7 @@ function classFlow() {
       hitT: ['抄到了，字還算看得懂。', '教授剛好轉頭，你剛好在抄。', '這一頁你抄得比投影片還清楚。'], missT: ['你抄到的是上一頁。', '筆沒水了。', '你寫了一行字，後來發現是在寫購物清單。'],
       end: h => { st.exp += 4 * h + 2; dHit('class'); ch3Prog('class'); if (!st.met.class) { st.met.class = 1; logLine('第一次上課：' + c); } ok('下課', ['你的筆記只有標題。知識 +2。', '筆記有一點內容，但有一半是塗鴉。知識 +6。', '筆記寫得不錯，可以借同學了。知識 +10。', '這份筆記之後會被全班拍照傳來傳去。知識 +14。'][h]); persist(); } }) },
     { label: '分組報告', fn: () => { dHit('class'); ch3Prog('class'); const r = Math.random();
-      if (r < .4) { st.exp += 3; ach('teammate'); ok('分組報告', pick(['組員 A 說他負責「精神支持」。組員 B 的頭貼三天沒變，訊息也三天沒讀。', '報告前一晚，組員說他的電腦壞了，檔案也一起壞了，連雲端都壞了。', '你們的群組有五個人，回訊息的只有你和你自己的分身帳號。']) + '\n\n你還是把報告交出去了。知識 +3。'); }
+      if (r < .4) { st.exp += 3; ach('teammate'); ok('分組報告', pick(['組員 A 說他負責「精神支持」。組員 B 的頭貼三天沒變，訊息也三天沒讀。', '報告前一晚，組員說他的電腦壞了，檔案也一起壞了，連雲端都壞了。', '你們的群組有五個人，回訊息的只有你和你自己的分身帳號。']) + '\n\n你還是把報告交出去了。知識 +3。\n（教室後面貼著《分組求生記》的海報，看起來很懂你。）'); }
       else if (r < .7) { st.exp += 8; ach('carry'); ok('分組報告', '最後你一個人做完了簡報、講稿和參考資料。教授說這組做得很好，組員們都點頭，好像有參與一樣。知識 +8。'); }
       else { st.exp += 6; ok('分組報告', '這次的組員很好，大家都準時交了自己的部分。你們還約了下次一起吃飯，這種事很少發生。知識 +6。'); }
       persist(); } },
@@ -1254,7 +1322,7 @@ function runGame() {
 function decor() {
   if (st.q.main < 2) return ok('裝潢箱', '你還沒有自己的床位。先去學務處報到，再找室友阿芸拿鑰匙。');
   const d = st.dorm;
-  showModal({ title: '布置房間', text: '宿舍是你自己的。每擺一件家具，每分鐘收益 +$1。\n你現在有 ' + fmt(st.money) + '，已擺 ' + d.placed.length + ' 件。', choices: [
+  showModal({ title: '布置你的角落', text: '四人房，你的角落在左上。壁紙和地板四個人投票通過了，可以換。每擺一件家具，每分鐘收益 +$1。\n你現在有 ' + fmt(st.money) + '，已擺 ' + d.placed.length + ' 件。', choices: [
     { label: '壁紙', fn: () => listPick('壁紙', WALLS, 'wall', 'wallOwn') }, { label: '地板', fn: () => listPick('地板', FLOORS, 'floor', 'floorOwn') }, { label: '家具', fn: furnMenu }, { label: '完成' }] });
 }
 function listPick(title, arr, key, ownKey) {
@@ -1299,7 +1367,9 @@ function interact() {
   if (it.id === 'stall') return stall(it.stall);
   const f = { board, bench, study, clubboard: clubBoard, shop, decor, bed: sleep, class: classFlow, examseat: examSeat, wall: openWall, psy: () => pickPsy(it.k), pk: pkGame, bar: barGame,
     water: () => ok('飲水機', pick(['你喝了一大口水。免費的東西最好喝，這是大學教你的第一件事。', '飲水機的水有點溫。你決定不要想太多。', '旁邊貼著「請勿直接對嘴」，你看了一下四周，乖乖拿出水壺。'])),
-    bus: () => busRide('city'), busback: () => busRide('street'), ward: openWard, meal, hoop, run: runGame,
+    gs: () => showModal({ title: '牆上的海報', text: '《分組求生記》\n分組報告總是遇到雷隊友？在這個遊戲裡，看你能不能撐到上台那天。\n\n（會開一個新分頁，玩完再回來及格鎮。）', choices: [{ label: '去玩', fn: () => { try { window.open('https://iammay22.github.io/group-survival/', '_blank', 'noopener'); } catch (e) {} } }, { label: '下次' }] }),
+    bus: () => busMenu('street'), busback: () => busMenu('city'), busair: () => busMenu('airport'), gate, flyback: () => dialog('機場巴士', ['回台灣的班機，學校的交換計畫幫你訂好了回程票。', '你看著窗外的楓葉，突然覺得及格鎮的雞排好遠。'], [{ label: '回台灣', fn: () => fly('airport') }, { label: '再待一下' }]),
+    checkin: () => ok('報到櫃台', pick(['地勤小姐：「護照、登機證準備好。行李超過 23 公斤要加價喔。」', '旁邊有人在攤開行李箱，把泡麵塞進外套口袋。', '「行動電源不能托運，要隨身帶上飛機。」'])), ward: openWard, meal, hoop, run: runGame,
     notice: () => ok('考試中心 · 公告', '本中心辦理：英文檢定、學測、分科測驗、轉學考、研究所考試、各類國家考試、駕照筆試。\n\n本週考試：大學英檢，畢業門檻用。60 分及格，補考費 $400。\n\n常見的大學英文畢業門檻是 CEFR B1：全民英檢中級、多益 550、雅思 4.0。要求比較高的學校到 B2，例如台大 112 學年度是全民英檢中高級初試、多益 785、托福網路測驗 72、雅思 6.0。\n\n過了畢業門檻以後，櫃台可以報名中高級、多益、雅思、托福。\n\n人生的考試比你以為的多，這裡只是其中一間。'),
     copier: () => ok('影印機', '影印機吐出一張全黑的紙。沒有人知道它印的是什麼。') }[it.id];
   f && f();
@@ -1393,16 +1463,17 @@ function render(t) {
   oc.imageSmoothingEnabled = false; oc.fillStyle = s.id === 'street' ? '#2f2840' : '#2b2338'; oc.fillRect(0, 0, VW, VH);
   oc.save(); oc.translate(-cam.x, -cam.y); oc.drawImage(s.map, 0, 0);
   const list = s.dyn.slice();
-  s.ents.forEach(e => list.push({ y: e.y, f: g => drawChar(g, e.x, e.y, e.dir, e.step, e.look[0], e.look[1], e.look[2]) }));
+  s.ents.forEach(e => !e.hidden && list.push({ y: e.y, f: g => drawChar(g, e.x, e.y, e.dir, e.step, e.look[0], e.look[1], e.look[2]) }));
   list.push({ y: P.y, f: g => { const L = st.look || {}; drawChar(g, P.x, P.y, P.dir, P.step, L.hair || '#5a3a2a', L.shirt || '#ff8fb1', L.pants || '#4a5d8a', L); } });
   Object.values(remotes).forEach(r => { if (r.s === cur.id && r.look) list.push({ y: r.y, f: g => drawChar(g, r.x, r.y, r.dir || 'down', r.step || 0, r.look.hair, r.look.shirt, r.look.pants, r.look) }); });
   list.sort((a, b) => a.y - b.y).forEach(o => o.f(oc)); oc.restore();
   if (s.id === 'street') { oc.fillStyle = 'rgba(40,30,80,.18)'; oc.fillRect(0, 0, VW, VH); }
+  if (shift && s.id === 'store') { oc.fillStyle = 'rgba(16,18,60,.42)'; oc.fillRect(0, 0, VW, VH); }
   cx.setTransform(1, 0, 0, 1, 0, 0); cx.fillStyle = '#2b2338'; cx.fillRect(0, 0, cv.width, cv.height);
   cx.imageSmoothingEnabled = false; cx.drawImage(off, 0, 0, VW, VH, OX, OY, VW * S, VH * S);
   s.labels.forEach(l => { const [sx, sy] = toScr(l.x, l.y); if (sx > -200 && sx < cv.width + 200 && sy > -50 && sy < cv.height + 50) label(l.t, sx, sy, { size: l.size || 11, bg: 'rgba(255,248,239,.92)' }); });
   s.ents.forEach(e => {
-    if (e.kind === 'passer' || e.kind === 'deco') return;
+    if (e.kind === 'passer' || e.kind === 'deco' || e.hidden) return;
     const [sx, sy] = toScr(Math.round(e.x), Math.round(e.y) + 9); label(e.name, sx, sy, { size: 10, bg: e.kind === 'quest' ? '#ffe9a8' : '#cdeaff' });
     if (e.title) { const [tx, ty] = toScr(Math.round(e.x), Math.round(e.y) - 24); label('「' + e.title + '」', tx, ty, { size: 9, bg: '#2b2338', fg: '#cdeaff' }); }
     const m = markOf(e); if (m) { const [mx, my] = toScr(e.x, e.y - 30 + Math.sin(t / 200) * 2); badge(mx, my, m === 'turn' ? '?' : '!', m === 'side' ? '#7ec8f0' : '#ffd45c'); }
@@ -1448,6 +1519,8 @@ const ACH = [
   { id: 'ielts', n: '雅思 6.0', d: '雅思考到 6.0 以上', t: '留學準備中' },
   { id: 'allexam', n: '考試收集家', d: '四種進階考試都考過一次', t: '考試收集家', h: 1 },
   { id: 'ch3', n: '走到岔路口', d: '完成第三章', t: '岔路口旅人' },
+  { id: 'nightshift', n: '大夜班生存者', d: '撐完一整個便利商店大夜班', t: '大夜班戰士' },
+  { id: 'flight', n: '第一次出國', d: '搭飛機到交換學校', t: '出國見世面' },
   { id: 'path_transfer', n: '轉系成功', d: '第三章選擇轉系', t: '轉系勇者' },
   { id: 'path_double', n: '雙主修開始', d: '第三章選擇雙主修', t: '雙主修狂人' },
   { id: 'path_exchange', n: '交換學生', d: '第三章選擇出國交換', t: '準交換學生' },
@@ -1483,7 +1556,7 @@ const PSY = [
   { n: '漸進式暴露', sync: 1, at: ['library', 1.5, 8.4], how: '書架下掉出來的小卡片', d: '從比較不可怕的小情境開始，一步步面對害怕的事，讓大腦重新學到「其實沒那麼危險」。這是治療焦慮最有證據支持的方法之一。', h: '害怕上台的話，先在三個人面前講一分鐘。下一次再多一個人。' },
   { n: '社交焦慮', sync: 1, at: ['playground', 25.5, 18.4], how: '看台椅子下的便利貼', d: '害怕在社交或表現場合被負面評價，會心跳加快、腦袋空白、想逃走。和內向不同：內向的人可以自在獨處，社交焦慮的人是「想參與但很怕」。認知行為治療和漸進式暴露練習對它很有效。', h: '想參與但很怕，代表你還是想參與。這已經是一個開始。' },
   { n: '沉沒成本謬誤', at: ['classroom', 12.5, 8.4], how: '最後一排桌子底下的小卡片', d: '已經花下去、收不回來的時間或錢，讓人很難放手，於是繼續投入，只因為「都付出這麼多了」。做決定時比較好的問法是：從現在開始，哪個選擇對我最好？', h: '讀了一年發現不喜歡，不代表那一年白費。你知道自己不要什麼了。' },
-  { n: '文化衝擊', sync: 1, at: ['dorm', 12.5, 8.4], how: '床底下的明信片背面', d: '剛到新國家的人，心情常經歷「蜜月期 → 衝擊期 → 調整期 → 適應期」的 U 型曲線。第二、三個月最容易想家、覺得孤單。主動建立在地的人際連結，是適應最好的方法。', h: '換了新環境覺得哪裡都怪怪的，很正常。給自己三個月，再決定喜不喜歡。' },
+  { n: '文化衝擊', sync: 1, at: ['dorm', 12.5, 8.4], how: '宿舍角落掉了一張明信片', d: '剛到新國家的人，心情常經歷「蜜月期 → 衝擊期 → 調整期 → 適應期」的 U 型曲線。第二、三個月最容易想家、覺得孤單。主動建立在地的人際連結，是適應最好的方法。', h: '換了新環境覺得哪裡都怪怪的，很正常。給自己三個月，再決定喜不喜歡。' },
   { n: '霍蘭德興趣理論', sync: 1, at: ['club', 2.5, 4.4], how: '社團布告欄掉下來的小卡片', d: '心理學家 Holland 把職業興趣分成六型：實作 R、研究 I、藝術 A、社會 S、企業 E、事務 C。一個人通常是兩三型的組合，跟工作環境越相符，越容易做得久、做得開心。學校輔導室的興趣測驗很多都是根據這個理論。', h: '加了好幾個社團都不確定喜不喜歡？那是在收集資料，不是浪費時間。' }
 ];
 function drawNote(g, x, y, card) {
@@ -1772,13 +1845,16 @@ function joinRoom(room) {
   return new Promise(res => {
     const ch = sb.channel('pass-town-' + room, { config: { presence: { key: sbUid }, broadcast: { self: false } } });
     ch.on('broadcast', { event: 'pos' }, ({ payload: p }) => {
-      if (!p || p.id === sbUid) return; let r = remotes[p.id];
-      if (!r || r.s !== p.s) r = remotes[p.id] = Object.assign(r || {}, { x: p.x, y: p.y, bubble: null });
-      Object.assign(r, { id: p.id, tx: p.x, ty: p.y, s: p.s, dir: p.d, moving: p.m, name: p.n, title: p.t, look: p.l, seen: performance.now() });
+      if (!p || p.id === sbUid) return; const now = Date.now(); let r = remotes[p.id];
+      if (!r || r.s !== p.s) r = remotes[p.id] = Object.assign(r || {}, { x: p.x, y: p.y, buf: [], off: undefined, bubble: null });
+      const ts = p.ts || now, off = now - ts; r.off = r.off === undefined ? off : Math.min(r.off + 1, off);
+      r.buf.push({ t: ts + r.off, x: p.x, y: p.y }); if (r.buf.length > 16) r.buf.shift();
+      Object.assign(r, { id: p.id, s: p.s, pdir: p.d, name: p.n, title: p.t, look: p.l, seen: performance.now() });
     });
-    ch.on('broadcast', { event: 'wave' }, ({ payload: p }) => { if (!p || p.to !== sbUid) return; const r = remotes[p.from]; if (r) say(r, '👋', 2); toast(p.n + ' 跟你揮手'); beep(990, .06); });
-    ch.on('presence', { event: 'sync' }, () => { rtCount = Object.keys(ch.presenceState()).length; hud(); });
-    ch.on('presence', { event: 'leave' }, ({ key }) => { delete remotes[key]; });
+    ch.on('broadcast', { event: 'wave' }, ({ payload: p }) => { if (!p || p.to !== sbUid) return; const r = remotes[p.from]; if (r) say(r, '👋', 2); toast(p.n + ' 跟你揮手'); beep(990, .06); try { navigator.vibrate && navigator.vibrate([70, 50, 70]); } catch (e) {} });
+    ch.on('presence', { event: 'sync' }, () => { ch.__keys = Object.keys(ch.presenceState()); hud(); });
+    ch.on('presence', { event: 'join' }, () => { ch.__keys = Object.keys(ch.presenceState()); hud(); });
+    ch.on('presence', { event: 'leave' }, ({ key }) => { delete remotes[key]; ch.__keys = Object.keys(ch.presenceState()); hud(); });
     let done = false;
     ch.subscribe(async status => {
       if (status === 'SUBSCRIBED' && !done) { done = true; try { await ch.track({ n: st.name }); } catch (e) {} res(ch); }
@@ -1796,19 +1872,32 @@ async function rtStart() {
     try { sb.removeChannel(ch); } catch (e) {}
   }
 }
+function onlineCount() {
+  const set = new Set(rt && rt.__keys || []); set.add(sbUid);
+  const now = performance.now(); for (const id in remotes) if (now - (remotes[id].seen || 0) < 15000) set.add(id);
+  return set.size;
+}
 function rtSend(force) {
   if (!rt) return; const now = performance.now();
   const key = cur.id + ',' + Math.round(P.x) + ',' + Math.round(P.y) + ',' + P.dir;
-  if (!force && (key === rtKey ? now - rtLastSend < 3000 : now - rtLastSend < 250)) return;
+  if (!force && (key === rtKey ? now - rtLastSend < 2500 : now - rtLastSend < 200)) return;
   rtKey = key; rtLastSend = now;
-  try { rt.send({ type: 'broadcast', event: 'pos', payload: { id: sbUid, s: cur.id, x: Math.round(P.x), y: Math.round(P.y), d: P.dir, m: P.step ? 1 : 0, n: st.name, t: titleOf(), l: st.look } }); } catch (e) {}
+  try { rt.send({ type: 'broadcast', event: 'pos', payload: { id: sbUid, ts: Date.now(), s: cur.id === 'dorm' ? 'dorm#' + sbUid : cur.id, x: Math.round(P.x), y: Math.round(P.y), d: P.dir, m: P.step ? 1 : 0, n: st.name, t: titleOf(), l: st.look } }); } catch (e) {}
 }
 function rtUpdate(dt) {
   const now = performance.now();
   for (const id in remotes) {
     const r = remotes[id]; if (now - (r.seen || 0) > 12000) { delete remotes[id]; continue; }
-    const dx = r.tx - r.x, dy = r.ty - r.y, d = Math.hypot(dx, dy);
-    if (d > 40) { r.x = r.tx; r.y = r.ty; } else if (d > .5) { const sp = Math.min(d, 75 * dt); r.x += dx / d * sp; r.y += dy / d * sp; r.anim = (r.anim || 0) + dt; r.step = Math.floor(r.anim / .15) % 2; } else r.step = 0;
+    const b = r.buf || []; if (!b.length) continue;
+    const at = Date.now() - 300; let x, y;
+    if (at <= b[0].t) { x = b[0].x; y = b[0].y; }
+    else if (at >= b[b.length - 1].t) { x = b[b.length - 1].x; y = b[b.length - 1].y; }
+    else { for (let i = 0; i < b.length - 1; i++) if (at >= b[i].t && at <= b[i + 1].t) { const f = (at - b[i].t) / Math.max(1, b[i + 1].t - b[i].t); x = b[i].x + (b[i + 1].x - b[i].x) * f; y = b[i].y + (b[i + 1].y - b[i].y) * f; break; } }
+    if (x === undefined) { x = b[b.length - 1].x; y = b[b.length - 1].y; }
+    const mdx = x - r.x, mdy = y - r.y, md = Math.hypot(mdx, mdy);
+    if (md > 60) { r.x = x; r.y = y; } else { r.x = x; r.y = y; }
+    if (md > .05) { r.anim = (r.anim || 0) + dt; r.step = Math.floor(r.anim / .15) % 2; if (md > .2) r.dir = Math.abs(mdx) > Math.abs(mdy) ? (mdx > 0 ? 'right' : 'left') : (mdy > 0 ? 'down' : 'up'); }
+    else { r.step = 0; r.dir = r.pdir || r.dir; }
   }
 }
 function realWave(r) {
@@ -1841,15 +1930,17 @@ const PATHS = {
   exchange: { n: '交換學生', need: () => st.certs.ielts >= 5.5 || st.certs.toefl >= 60, needF: () => '要有雅思 5.5 或托福 60 分。考試中心可以考（現在雅思 ' + (st.certs.ielts || '未考') + '、托福 ' + (st.certs.toefl || '未考') + '）。', task: '回博覽會找國際處老師，通過英文面試', goal: 1, ach: 'path_exchange' },
   intern: { n: '實習', need: () => st.certs.toeic >= 550 || st.q.c.workAll >= 5, needF: () => '要有多益 550 分，或在便利商店打工滿 5 次（現在 ' + st.q.c.workAll + ' 次）。', task: '去市區的辦公大樓參加實習面試', goal: 1, ach: 'path_intern' }
 };
-function ch3Task() { const p = PATHS[st.ch3.path]; return p ? p.task + (p.goal > 1 ? '（' + Math.min(p.goal, st.ch3.prog) + ' / ' + p.goal + '）' : '') : '完成你選的岔路任務'; }
+function ch3Task() { const p = PATHS[st.ch3.path]; if (st.ch3.path === 'exchange') return ['回博覽會找國際處老師，通過英文面試', '搭公車到機場，從登機門飛去交換學校', '在交換學校的國際學生中心找 buddy 報到'][Math.min(2, st.ch3.prog)]; return p ? p.task + (p.goal > 1 ? '（' + Math.min(p.goal, st.ch3.prog) + ' / ' + p.goal + '）' : '') : '完成你選的岔路任務'; }
 function ch3Prog(kind) {
   if (st.q.main !== 15) return; const p = st.ch3.path;
   if (kind === 'class' && (p === 'transfer' || p === 'double')) { st.ch3.prog++; toast(ch3Task()); if (st.ch3.prog >= PATHS[p].goal) setMain(16); }
-  if (kind === 'pass' && (p === 'exchange' || p === 'intern')) setMain(16);
+  if (kind === 'pass' && p === 'intern') setMain(16);
+  if (kind === 'pass' && p === 'exchange' && st.ch3.prog === 0) { st.ch3.prog = 1; setTimeout(() => toast('下一步：' + ch3Task()), 1500); hud(); }
 }
 function boothTalk(id) {
   const b = BOOTHS[id], m = st.q.main;
-  if (m === 15 && id === 'exchange' && st.ch3.path === 'exchange') return exchangeInterview();
+  if (m === 15 && id === 'exchange' && st.ch3.path === 'exchange' && st.ch3.prog === 0) return exchangeInterview();
+  if (m === 15 && id === 'exchange' && st.ch3.path === 'exchange') return ok('國際處老師', '面試過了！接下來去機場。從校外或市區的公車站搭往機場的車。');
   dialog(b.npc, b.info, [{ label: '好，我記下來了', fn: () => {
     if (!st.ch3.booths.includes(id)) { st.ch3.booths.push(id); if (m === 12) { toast('博覽會攤位：' + Math.min(3, st.ch3.booths.length) + ' / 3'); if (st.ch3.booths.length >= 3) setTimeout(() => setMain(13), 400); } }
     persist(); hud();
@@ -1920,6 +2011,65 @@ function busRide(to) {
   } }, { label: '不搭了' }] });
 }
 
+/* ---------- 大夜班 ---------- */
+const NIGHT = [
+  ['22:40', '穿著高中制服的男生拿了一包菸到櫃台。', [['請他出示證件', 1, '他摸了摸口袋，說忘了帶，把菸放回去走了。菸不能賣給未滿 20 歲的人，賣了店會被罰。'], ['直接幫他結帳', 0, '他走了以後你才想到，菸不能賣給未滿 20 歲的人。希望店長不會去看監視器。']]],
+  ['23:50', '外送員衝進來：「1834 號，拿單！」櫃台後面放著三袋外送。', [['對一下單號和名字再交給他', 1, '他說了聲謝謝就衝出去了。訂單沒有拿錯，這就是好夜晚。'], ['隨便拿一袋給他', 0, '十分鐘後電話響了。有個客人說他的炸雞變成了關東煮。']]],
+  ['01:20', '冰櫃的牛奶空了一半，新貨剛送到。', [['舊的往前排，新的放後面', 1, '先進先出。店長說過，過期的東西被客人買走，比沒貨還麻煩。'], ['新的直接塞在最前面', 0, '看起來很滿，但後面那幾瓶明天就過期了。']]],
+  ['02:30', '一個喝醉的大叔趴在櫃台前睡著了。', [['輕輕叫醒他，問要不要幫他叫車', 1, '他迷迷糊糊地說謝謝，你幫他叫了計程車。走之前他買了一瓶水。'], ['在旁邊大聲咳嗽', 0, '他沒有醒。你咳到喉嚨痛，最後還是得叫醒他。']]],
+  ['03:30', '有人只買了一顆茶葉蛋，拿出一張千元大鈔。', [['對著光檢查一下再找錢', 1, '浮水印和防偽線都在。客人說「你很專業耶」，然後拿著一大把零錢走了。'], ['直接找錢', 0, '應該沒事吧。你一邊想，一邊盯著收銀機裡那張鈔票。']]]
+];
+function setClock(t) { const c = $('#clock'); c.style.display = 'block'; c.textContent = '🌙 ' + t; }
+function shiftNight() {
+  const evs = NIGHT.slice(0, 1).concat(shuffle(NIGHT.slice(1)).slice(0, 3)).sort((a, b) => (a[0] < '12' ? 24 : 0) + parseFloat(a[0]) - ((b[0] < '12' ? 24 : 0) + parseFloat(b[0])));
+  QN.boss.hidden = true; shift = { evs, i: 0, good: 0 };
+  goScene('store', 11 * T, 5 * T + 12, 'down'); setClock('22:00');
+  setTimeout(() => toast('大夜班開始。店裡只剩你和冰櫃的聲音。'), 400);
+  setTimeout(nextCustomer, 2200);
+}
+function nextCustomer() {
+  if (!shift) return;
+  if (shift.i >= shift.evs.length) return endShift();
+  const [time, q, opts] = shift.evs[shift.i]; setClock(time);
+  const c = mkEnt('store', { kind: 'passer', name: '客人', temp: true, x: 7 * T, y: 9 * T + 6, look: pick(PLOOK), dir: 'up' });
+  c.route = [[7 * T, 8 * T], [11 * T, 8 * T], [11 * T, 7 * T + 12]]; beep(660, .05); setTimeout(() => beep(880, .08), 120);
+  c.onArrive = () => { c.dir = 'up'; showModal({ title: time + ' · 便利商店', text: q, choices: shuffle(opts).map(([t, g, fb]) => ({ label: t, fn: () => { shift.good += g; ok(g ? '處理得不錯' : '嗯⋯', fb, () => {
+    c.route = [[11 * T, 8 * T], [7 * T, 8 * T], [7 * T, 9 * T + 8]]; c.onArrive = () => { scenes.store.ents = scenes.store.ents.filter(e => e !== c); };
+    shift.i++; setTimeout(nextCustomer, 2600);
+  }); } })) }); };
+}
+function endShift() {
+  setClock('04:00'); const g = shift.good, bonus = g * 80;
+  setTimeout(() => {
+    $('#clock').style.display = 'none'; QN.boss.hidden = false; shift = null;
+    earn(1230, '便利商店大夜班'); if (bonus) earn(bonus, '大夜班表現獎金');
+    st.storeAt = Date.now(); st.q.c.work++; st.q.c.workAll++; if (st.q.c.workAll === 1) logLine('第一份打工：便利商店'); chkReady(); dHit('work'); ach('nightshift');
+    ok('下班', '四點，交班的同事打著哈欠走進來。\n你走出店門，天還沒亮，路燈還開著。\n\n薪水 $1,230（時薪 $205 × 6 小時）' + (bonus ? '\n處理得好的事 ' + g + ' 件，店長留了紙條：表現獎金 ' + fmt(bonus) + '。' : '\n店長留了紙條：「下次加油。」')); persist(); hud();
+  }, 1500);
+}
+
+/* ---------- 機場與國外 ---------- */
+function busMenu(from) {
+  const dest = { street: [['city', '往市區'], ['airport', '往機場']], city: [['street', '回學校'], ['airport', '往機場']], airport: [['city', '往市區'], ['street', '回學校']] }[from];
+  if (from === 'street' && st.q.main < 11) return ok('公車站', '站牌上寫著：往市區、往機場、往你沒去過的地方。\n\n第三章開放後，公車會帶你去市區。');
+  showModal({ title: '公車站', text: '要去哪裡？車資都是 $15。', choices: dest.map(([to, n]) => ({ label: n + ' $15', fn: () => {
+    if (st.money < 15) return ok('公車站', '悠遊卡餘額不足。司機看著你，你看著司機。');
+    spend(15, '公車'); const at = { street: [15.5 * T, 22 * T + 12, 'down'], city: [3.5 * T, 12 * T + 10, 'right'], airport: [2.5 * T, 9 * T + 12, 'right'] }[to];
+    goScene(to, at[0], at[1], at[2]); if (to === 'city' && st.q.main === 11) setTimeout(() => setMain(12), 400);
+  } })).concat([{ label: '不搭了' }]) });
+}
+function gate() {
+  const m = st.q.main, ex = st.ch3.path === 'exchange';
+  if (m === 15 && ex && st.ch3.prog === 1) return dialog('登機門 A3', ['地勤看了你的護照和登機證：「交換學生嗎？祝你一切順利。」', '學校的交換獎學金幫你付了這趟機票。你在窗邊坐下，看著跑道慢慢往後退。'], [{ label: '起飛', fn: () => fly('abroad') }]);
+  if (m >= 17 || (ex && m === 16)) return showModal({ title: '登機門 A3', text: '飛往交換學校的班機。機票 $20,000（遊戲裡的價格）。', choices: [{ label: '買票飛過去', fn: () => { if (st.money < 20000) return ok('登機門', '錢不夠。機票比你想像的貴，大家都這樣說。'); spend(20000, '機票'); fly('abroad'); } }, { label: '先不要' }] });
+  ok('登機門 A3', '地勤看了你一眼：「同學，你今天沒有要搭飛機喔。」\n\n（第三章選擇交換學生，就會從這裡出發。）');
+}
+function fly(to) {
+  busy = true; $('#fade').style.transition = 'opacity .5s'; $('#fade').style.opacity = 1; toast(to === 'abroad' ? '飛行中⋯⋯ 十三個小時後' : '飛回台灣⋯⋯');
+  setTimeout(() => { busy = false; $('#fade').style.opacity = 0; $('#fade').style.transition = ''; const at = to === 'abroad' ? [26.5 * T, 12 * T + 12, 'left'] : [19.5 * T, 5 * T, 'down'];
+    goScene(to, at[0], at[1], at[2]); if (to === 'abroad') { ach('flight'); if (st.q.main === 15 && st.ch3.prog === 1) { st.ch3.prog = 2; setTimeout(() => toast(ch3Task()), 800); } } }, 1800);
+}
+
 /* ---------- 電腦按鍵說明 ---------- */
 function keysHelp() {
   st.met.keysIntro = 1;
@@ -1934,7 +2084,7 @@ function goals() {
   if (m === 9) out.push({ at: 'exam', c: '#ffd45c', ch: '!' });
   if (m === 11) out.push({ at: { scene: 'street', x: 15.5 * T, y: 22 * T }, c: '#ffd45c', ch: '!' });
   if (m >= 12 && m <= 14) out.push({ at: 'expo', c: '#ffd45c', ch: '!' });
-  if (m === 15) out.push({ at: { transfer: 'classroom', double: 'classroom', exchange: 'expo', intern: 'corp' }[st.ch3.path] || 'expo', c: '#ffd45c', ch: '!' });
+  if (m === 15) out.push({ at: st.ch3.path === 'exchange' ? [ 'expo', { scene: 'airport', x: 19.5 * T, y: 5 * T }, { scene: 'abroad', x: 14 * T, y: 9 * T } ][Math.min(2, st.ch3.prog)] : ({ transfer: 'classroom', double: 'classroom', intern: 'corp' }[st.ch3.path] || 'expo'), c: '#ffd45c', ch: '!' });
   st.daily.ids.forEach(id => { if (!st.daily.done[id] && DAILY[id].at) out.push({ at: DAILY[id].at, c: '#9bd8a0', ch: '日' }); });
   return out.map(g => typeof g.at === 'string' ? Object.assign(g, parentOf(g.at)) : Object.assign(g, g.at));
 }
@@ -1944,12 +2094,13 @@ function goalBadges(t) {
 }
 /* ---------- 小地圖 ---------- */
 let mapView = 'campus';
-const OUT = [['campus', '校園'], ['playground', '操場'], ['street', '校外'], ['city', '市區']];
+const OUT = [['campus', '校園'], ['playground', '操場'], ['street', '校外'], ['city', '市區'], ['airport', '機場'], ['abroad', '國外']];
+const zoneOf = id => { const p = parentOf(id).scene; return p === 'city' ? 'city' : p === 'airport' ? 'airport' : p === 'abroad' ? 'abroad' : 'home'; };
 function parentOf(sceneId) { const s = scenes[sceneId]; if (!s.indoor) return { scene: sceneId }; const b = BLD.find(b => b.id === sceneId); const d = door(b); return { scene: b.scene, x: d.x, y: d.y - 10 }; }
 function openMap() { mapView = parentOf(cur.id).scene; drawMap(); $('#mapOv').classList.add('on'); modalOpen = true; }
 function closeMap() { $('#mapOv').classList.remove('on'); modalOpen = false; }
 function drawMap() {
-  $('#mapTabs').innerHTML = OUT.map(([id, n]) => '<button class="tab' + (id === mapView ? ' on' : '') + '" data-m="' + id + '" type="button">' + n + '</button>').join('');
+  $('#mapTabs').innerHTML = OUT.filter(([id]) => ['campus', 'playground', 'street'].includes(id) || (st.visited || {})[id]).map(([id, n]) => '<button class="tab' + (id === mapView ? ' on' : '') + '" data-m="' + id + '" type="button">' + n + '</button>').join('');
   $('#mapTabs').querySelectorAll('button').forEach(b => b.onclick = () => { mapView = b.dataset.m; drawMap(); });
   const s = scenes[mapView], c = $('#mapCv'), g = c.getContext('2d');
   const maxW = Math.min(innerWidth * .86, 620), maxH = innerHeight * .58, k = Math.min(maxW / (s.w * T), maxH / (s.h * T)), d = Math.min(DPR, 2);
@@ -1961,6 +2112,7 @@ function drawMap() {
   const txt = (t, x, y, size = 11) => { g.font = `700 ${size * d}px ${FONT}`; const w = g.measureText(t).width + 8 * d; g.fillStyle = 'rgba(255,248,239,.92)'; rr(g, x * K - w / 2, y * K - 9 * d, w, 17 * d, 4 * d); g.fill(); g.lineWidth = 1.5 * d; g.strokeStyle = '#3b2f4a'; g.stroke(); g.fillStyle = '#3b2f4a'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(t, x * K, y * K); };
   s.labels.forEach(l => txt(l.t, l.x, l.y + 4, 11));
   s.ents.forEach(e => { if (e.kind === 'player') dot(e.x, e.y - 4, '#7ec8f0', 4); });
+  Object.values(remotes).forEach(r => { if (r.s === mapView) dot(r.x, r.y - 4, '#9bd8a0', 5); });
   Object.values(QN).forEach(e => {
     const m = markOf(e); if (!m) return; const p = parentOf(e.scene); if (p.scene !== mapView) return;
     const x = p.x === undefined ? e.x : p.x, y = p.y === undefined ? e.y : p.y;
@@ -1974,7 +2126,7 @@ function drawMap() {
 }
 $('#mapBtn').addEventListener('click', () => { if (started && !locked()) openMap(); });
 $('#mapClose').addEventListener('click', closeMap);
-const FAST = { playground: [{ n: '籃球場', x: 26 * T, y: 9 * T + 8 }, { n: '起跑線', x: 11.5 * T, y: 20 * T + 4 }, { n: '操場入口', x: 15 * T, y: 1 * T + 14 }], street: [{ n: '夜市', x: 7 * T, y: 6 * T + 8 }, { n: '公車站', x: 15.5 * T, y: 22 * T + 12 }, { n: '校外入口', x: 1.5 * T, y: 8 * T + 4 }], city: [{ n: '市區公車站', x: 3.5 * T, y: 12 * T + 10 }], campus: [{ n: '樹洞留言牆', x: 16.5 * T, y: 18 * T }, { n: '噴水池', x: 24 * T, y: 16 * T + 8 }] };
+const FAST = { playground: [{ n: '籃球場', x: 26 * T, y: 9 * T + 8 }, { n: '起跑線', x: 11.5 * T, y: 20 * T + 4 }, { n: '操場入口', x: 15 * T, y: 1 * T + 14 }], street: [{ n: '夜市', x: 7 * T, y: 6 * T + 8 }, { n: '公車站', x: 15.5 * T, y: 22 * T + 12 }, { n: '校外入口', x: 1.5 * T, y: 8 * T + 4 }], city: [{ n: '市區公車站', x: 3.5 * T, y: 12 * T + 10 }], airport: [{ n: '報到櫃台', x: 6 * T, y: 5 * T }, { n: '登機門', x: 19.5 * T, y: 5 * T }], abroad: [{ n: '國際學生中心', x: 14 * T, y: 9 * T }], campus: [{ n: '樹洞留言牆', x: 16.5 * T, y: 18 * T }, { n: '噴水池', x: 24 * T, y: 16 * T + 8 }] };
 $('#mapCv').addEventListener('click', e => {
   if (!st || mg || busy) return; const c = $('#mapCv'), r = c.getBoundingClientRect(), s = scenes[mapView];
   const wx = (e.clientX - r.left) / r.width * s.w * T, wy = (e.clientY - r.top) / r.height * s.h * T;
@@ -1983,6 +2135,12 @@ $('#mapCv').addEventListener('click', e => {
   let best = null, bd = 56; cand.forEach(t => { const dd = Math.hypot(wx - t.cx, wy - t.cy); if (dd < bd) { bd = dd; best = t; } });
   if (!best) return;
   if (!st.visited[best.need]) return toast('還沒去過' + best.n + '，第一次要自己走過去');
+  const za = zoneOf(cur.id), zb = zoneOf(mapView);
+  if (za !== zb) {
+    if (za === 'abroad' || zb === 'abroad') return toast('國外要搭飛機才到得了，先去機場');
+    if (st.money < 15) return toast('車資 $15 不夠，先存點錢');
+    spend(15, '公車（快速移動）'); closeMap(); toast('搭公車到 ' + best.n + '，車資 $15'); goScene(mapView, best.x, best.y, 'down'); return;
+  }
   closeMap(); toast('快速移動到 ' + best.n); goScene(mapView, best.x, best.y, 'down');
 });
 
@@ -2032,10 +2190,12 @@ function hud() {
   $('#hRate').textContent = st.challenge ? '30,900 生存挑戰中 · 每天房租 $327' : '每分鐘 +$' + rate() + (st.track ? ' · ' + TRACK_NAME[st.track] : '');
   $('#hMoney').style.color = st.money < 0 ? '#e5607f' : '';
   const m = st.q.main; $('#hQuest').textContent = m < MAIN.length ? '主線：' + mainText(m) + ENG_PROG() : '第三章完成 · 第四章準備中';
+  { const ids = Object.keys(SIDE).filter(id => sideSt(id) === 1), rdy = ids.find(id => SIDE[id].ready()), cur1 = rdy || ids[0], el = $('#hSide');
+    if (cur1) { const q = SIDE[cur1]; el.style.display = ''; el.textContent = rdy ? '支線：回去找' + q.who + '領獎勵（' + q.n + '）' : '支線：' + q.desc + '（' + q.prog() + '）' + (ids.length > 1 ? '　還有 ' + (ids.length - 1) + ' 條' : ''); } else el.style.display = 'none'; }
   const act = Object.keys(SIDE).filter(id => sideSt(id) === 1).length, rd = Object.keys(SIDE).filter(id => sideSt(id) === 1 && SIDE[id].ready()).length;
   $('#hBadge').textContent = act ? '支線 ' + act + (rd ? '·可回報' : '') : '';
   $('#hDaily').textContent = st.daily.ids.filter(i => st.daily.done[i]).length + ' / 3';
-  $('#hPlace').textContent = cur.name; $('#hOnline').textContent = rt ? '真人在線 ' + rtCount + ' 人 · ' + rt.room + ' 號房' : '同屆在線 6 人 · 示範';
+  $('#hPlace').textContent = cur.name; $('#hOnline').textContent = rt ? '同屆真人 ' + onlineCount() + ' 人在線' + (rt.room > 1 ? '（第' + '一二三四五'[rt.room - 1] + '屆）' : '') : '同屆在線 6 人 · 示範';
 }
 
 /* ---------- 手冊 ---------- */
@@ -2125,7 +2285,7 @@ resize(); snapCam();
 document.addEventListener('visibilitychange', () => { if (document.hidden && started) persist(); });
 addEventListener('pagehide', () => { if (started) persist(); });
 requestAnimationFrame(loop);
-window.__town = { get st() { return st; }, P, scenes, get cur() { return cur; }, interact, nearest, QN, SIDE, goScene, setMain, cam, get S() { return S; }, get mg() { return mg; }, mgPress, findPath, BLD, quizAnswer, quizElim, examSeat, engPractice, goals, remotes, openWard, holTest, choosePath, busRide, internInterview, exchangeInterview, get rt() { return rt; }, ach, BLD2: BLD, get mapView() { return mapView; }, pickPsy, PSY, randomEvent, dayTick, openCard, openWall, startChallenge, makeCard, EXAMS, takeExam };
+window.__town = { get st() { return st; }, P, scenes, get cur() { return cur; }, interact, nearest, QN, SIDE, goScene, setMain, cam, get S() { return S; }, get mg() { return mg; }, mgPress, findPath, BLD, quizAnswer, quizElim, examSeat, engPractice, goals, remotes, openWard, shiftNight, get shift() { return shift; }, gate, fly, busMenu, holTest, choosePath, busRide, internInterview, exchangeInterview, get rt() { return rt; }, ach, BLD2: BLD, get mapView() { return mapView; }, pickPsy, PSY, randomEvent, dayTick, openCard, openWall, startChallenge, makeCard, EXAMS, takeExam };
 })();
 </script>
 </body>
