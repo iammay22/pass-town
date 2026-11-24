@@ -102,3 +102,29 @@ grant execute on function public.post_note(text, text, text) to authenticated;
 grant execute on function public.pat_note(bigint) to authenticated;
 grant execute on function public.send_coffee(bigint, text) to authenticated;
 grant execute on function public.claim_coffee() to authenticated;
+
+-- ============================================================
+-- v18 新增：公告欄存款排行（只要多貼這一段，Run 一次）
+-- ============================================================
+create table if not exists public.money_board (
+  uid uuid primary key,
+  name text not null check (char_length(name) between 1 and 12),
+  title text not null default '' check (char_length(title) <= 20),
+  money bigint not null default 0,
+  updated_at timestamptz not null default now()
+);
+alter table public.money_board enable row level security;
+drop policy if exists "anyone can read board" on public.money_board;
+create policy "anyone can read board" on public.money_board for select using (true);
+
+-- 每個人只能更新自己那一列，金額限制在 -100 萬到 1000 萬之間
+create or replace function public.set_money(p_name text, p_title text, p_money bigint) returns void
+language plpgsql security definer set search_path = public as $$
+declare me uuid := auth.uid();
+begin
+  if me is null then raise exception 'not signed in'; end if;
+  insert into money_board (uid, name, title, money, updated_at)
+  values (me, left(clean_text(coalesce(nullif(trim(p_name), ''), '同學')), 12), left(coalesce(p_title, ''), 20), greatest(-1000000, least(p_money, 10000000)), now())
+  on conflict (uid) do update set name = excluded.name, title = excluded.title, money = excluded.money, updated_at = now();
+end $$;
+grant execute on function public.set_money(text, text, bigint) to authenticated;
