@@ -101,6 +101,33 @@ button.tab.on{background:var(--gold)}
 .pnote .row{margin-top:6px;gap:4px}.pnote button{padding:3px 7px;font-size:12px;box-shadow:none}
 .ledger td{padding:3px 6px;border-bottom:1px dashed #c9bfd6;font-size:13px}.ledger{border-collapse:collapse;width:100%}
 .keyt td{padding:4px 8px;font-size:14px;border-bottom:1px dashed #c9bfd6}.keyt kbd{display:inline-block;border:2px solid var(--ink);border-bottom-width:4px;border-radius:4px;padding:0 6px;font-family:inherit;font-weight:800;background:#fff;margin:1px}
+.nb{position:relative;display:flex;flex-direction:column;overflow:hidden;padding:0 0 0 0;width:min(94vw,760px);background:#fffdf6;border-radius:4px 10px 10px 4px}
+.nb::before{content:"";position:absolute;left:0;top:0;bottom:0;width:34px;background:#e9dfcc;border-right:2px solid var(--ink);z-index:1}
+.nb::after{content:"";position:absolute;left:9px;top:10px;bottom:10px;width:16px;background:radial-gradient(circle at 8px 8px,#2b2338 0 5px,transparent 6px) 0 0/16px 34px repeat-y;z-index:2}
+.nbtabs{display:flex;gap:4px;padding:10px 54px 0 46px;border-bottom:2px solid var(--ink);background:#f3ecdc;flex-wrap:wrap}
+.nbtabs .tab{border-radius:8px 8px 0 0;border-bottom:none;margin-bottom:-2px;padding:6px 12px;background:#e9dfcc;box-shadow:none}
+.nbtabs .tab.on{background:#fffdf6;padding-bottom:8px}
+.nbtabs .tab:nth-child(1).on{background:#fff3c4}.nbtabs .tab:nth-child(4).on{background:#ffe0ea}.nbtabs .tab:nth-child(5).on{background:#e2f3ff}.nbtabs .tab:nth-child(6).on{background:#e6f7df}
+.nbbody{flex:1;overflow:auto;padding:12px 16px 14px 50px;background:repeating-linear-gradient(#fffdf6 0 27px,#d8e7f3 27px 28px);background-attachment:local;position:relative}
+.nbbody::before{content:"";position:absolute;left:44px;top:0;bottom:0;width:2px;background:#f2a1b4}
+.nbfoot{padding:6px 16px 10px 50px;background:#fffdf6;display:flex;gap:8px;border-top:1px dashed #c9bfd6}
+.xbtn{position:absolute;right:8px;top:8px;z-index:3;width:38px;height:38px;padding:0;font-size:20px;line-height:1;border-radius:50%;background:#fff}
+.nb .item{background:rgba(255,255,255,.85)}
+#wardOv .card{display:flex;gap:14px;flex-wrap:wrap}
+#wardPrev{width:144px;height:180px;image-rendering:pixelated;border:3px solid var(--ink);background:#cdeefa;border-radius:4px;flex:none}
+.wrow{margin:6px 0}.wrow h3{font-size:13px;opacity:.8;margin-bottom:3px}
+.wrow button{padding:5px 9px;font-size:13px;box-shadow:none;margin:0 4px 4px 0}
+.wrow button.on{background:var(--gold)}
+.sw{width:30px;height:30px;padding:0!important;border-radius:50%!important}
+.sw.on{outline:3px solid var(--gold);outline-offset:2px}
+@media (hover:hover) and (pointer:fine) and (min-width:1000px){
+  .chip{font-size:16px;padding:4px 10px}.chip small{font-size:14px}
+  .card p{font-size:16px}.card h2{font-size:21px}button{font-size:16px}
+  .item{font-size:15px}.ach{font-size:14px}.ach b{font-size:15px}
+  .card{width:min(92vw,780px)}.nb{width:min(92vw,860px)}
+  #toast{font-size:16px}#mc{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+  .pnote{font-size:16px}.passage{font-size:16px}.qq{font-size:17px}
+}
 .big{font-size:20px;padding:16px 10px;flex:1}
 .prog{height:16px;border:2px solid var(--ink);border-radius:4px;background:#fff;margin:10px 0 4px;overflow:hidden}
 .prog i{display:block;height:100%;width:0;background:var(--pink)}
@@ -154,8 +181,9 @@ button.tab.on{background:var(--gold)}
 <div class="ov" id="modal"><div class="card"><h2 id="mt"></h2><p id="mx"></p><div id="mc"></div></div></div>
 
 <div class="ov" id="book">
-  <div class="card">
-    <div class="row" style="margin:0 0 8px">
+  <div class="card nb">
+    <button class="xbtn" id="bookClose" type="button" aria-label="關閉">✕</button>
+    <div class="nbtabs">
       <button class="tab on" data-t="d" type="button">每日</button>
       <button class="tab" data-t="q" type="button">任務簿</button>
       <button class="tab" data-t="r" type="button">履歷</button>
@@ -163,10 +191,17 @@ button.tab.on{background:var(--gold)}
       <button class="tab" data-t="p" type="button">小卡</button>
       <button class="tab" data-t="m" type="button">帳本</button>
     </div>
-    <div id="bookBody"></div>
-    <div class="row">
-      <button id="fastBtn" type="button">示範用：假裝離開 1 小時</button>
-      <button class="pri" id="bookClose" type="button">關閉</button>
+    <div id="bookBody" class="nbbody"></div>
+    <div class="nbfoot"><button id="fastBtn" type="button" style="font-size:12px;padding:5px 9px">示範用：假裝離開 1 小時</button></div>
+  </div>
+</div>
+<div class="ov" id="wardOv">
+  <div class="card">
+    <canvas id="wardPrev" width="48" height="60"></canvas>
+    <div style="flex:1;min-width:240px">
+      <h2>換裝</h2>
+      <div id="wardBody"></div>
+      <div class="row"><button class="pri" id="wardDone" type="button">好了</button></div>
     </div>
   </div>
 </div>
@@ -215,7 +250,7 @@ let VH = 180;
 const $ = s => document.querySelector(s);
 const cv = $('#game'), cx = cv.getContext('2d');
 const off = document.createElement('canvas'), oc = off.getContext('2d');
-let S = 1, VW = 320, DPR = 1, OX = 0, OY = 0;
+let S = 1, VW = 320, DPR = 1, OX = 0, OY = 0, U = 1;
 
 /* ---------- 工具 ---------- */
 const hash = (x, y, k = 0) => { let h = (x * 374761393 + y * 668265263 + k * 2147483647) | 0; h = (h ^ (h >>> 13)) * 1274126177 | 0; return ((h ^ (h >>> 16)) >>> 0) / 4294967295; };
@@ -256,6 +291,8 @@ const BLD = [
   { id: 'dorm', name: '宿舍', scene: 'campus', x: 30, y: 17, w: 8, h: 5, wall: '#f8ecb8', roof: '#c9a24b', trim: '#9b7a2c' },
   { id: 'cafe', name: '學生餐廳', scene: 'campus', x: 39, y: 17, w: 8, h: 5, wall: '#ffe0c2', roof: '#d9534f', trim: '#a93a37' },
   { id: 'exam', name: '考試中心', scene: 'street', x: 23, y: 1, w: 8, h: 5, wall: '#e2e2ea', roof: '#5c6b8a', trim: '#3f4b66' },
+  { id: 'expo', name: '生涯博覽會', scene: 'city', x: 6, y: 2, w: 8, h: 6, wall: '#fde2a7', roof: '#e07a3f', trim: '#b25a24' },
+  { id: 'corp', name: '辦公大樓', scene: 'city', x: 17, y: 2, w: 8, h: 6, wall: '#cfd8e8', roof: '#3f4b66', trim: '#2b3550' },
   { id: 'cafe2', name: '轉角咖啡廳', scene: 'street', x: 23, y: 10, w: 8, h: 5, wall: '#f0dcc4', roof: '#6f4a3a', trim: '#4a2f24', awning: true }
 ];
 const door = b => ({ x: (b.x + b.w / 2) * T, y: (b.y + b.h) * T + 6, ix: (b.x + b.w / 2) * T, iy: (b.y + b.h - 2) * T - 6 });
@@ -290,16 +327,24 @@ function path(mc, x, y, isP) {
 }
 
 /* 角色 */
-function drawChar(g, x, y, dir, step, hair, shirt, pants) {
-  x = Math.round(x); y = Math.round(y);
+function drawChar(g, x, y, dir, step, hair, shirt, pants, o) {
+  x = Math.round(x); y = Math.round(y); const sk = o && o.skin || '#ffd9bb', sty = o && o.style || 'short';
   R(g, 'rgba(60,40,80,.22)', x - 5, y - 1, 10, 3);
   R(g, pants, x - 3, y - 5, 3, step ? 4 : 5); R(g, pants, x, y - 5, 3, step ? 5 : 4);
   R(g, shirt, x - 4, y - 10, 8, 6);
-  R(g, '#ffd9bb', x - 5, y - 9 + (step ? 1 : 0), 1, 3); R(g, '#ffd9bb', x + 4, y - 9 + (step ? 0 : 1), 1, 3);
-  R(g, '#ffd9bb', x - 4, y - 16, 8, 6);
-  if (dir === 'up') R(g, hair, x - 4, y - 17, 8, 7); else { R(g, hair, x - 4, y - 17, 8, 3); R(g, hair, x - 4, y - 17, 1, 5); R(g, hair, x + 3, y - 17, 1, 5); }
+  R(g, sk, x - 5, y - 9 + (step ? 1 : 0), 1, 3); R(g, sk, x + 4, y - 9 + (step ? 0 : 1), 1, 3);
+  R(g, sk, x - 4, y - 16, 8, 6);
+  if (sty === 'long') { if (dir === 'up') R(g, hair, x - 4, y - 17, 8, 10); else { R(g, hair, x - 4, y - 17, 8, 3); R(g, hair, x - 5, y - 16, 2, 9); R(g, hair, x + 3, y - 16, 2, 9); } }
+  else if (sty === 'bob') { if (dir === 'up') R(g, hair, x - 5, y - 17, 10, 7); else { R(g, hair, x - 4, y - 17, 8, 3); R(g, hair, x - 5, y - 16, 2, 6); R(g, hair, x + 3, y - 16, 2, 6); } }
+  else if (dir === 'up') R(g, hair, x - 4, y - 17, 8, 7); else { R(g, hair, x - 4, y - 17, 8, 3); R(g, hair, x - 4, y - 17, 1, 5); R(g, hair, x + 3, y - 17, 1, 5); }
+  if (sty === 'bun') { R(g, hair, x - 2, y - 20, 4, 3); R(g, hair, x - 1, y - 21, 2, 1); }
+  if (sty === 'cap') { const cc = o.cap || '#3ba3d8'; R(g, cc, x - 5, y - 18, 10, 3); R(g, 'rgba(255,255,255,.35)', x - 4, y - 18, 3, 1); if (dir === 'down') R(g, cc, x - 4, y - 15, 8, 1); else if (dir === 'left') R(g, cc, x - 7, y - 16, 3, 1); else if (dir === 'right') R(g, cc, x + 4, y - 16, 3, 1); }
   if (dir === 'down') { R(g, '#2b2338', x - 2, y - 13, 1, 2); R(g, '#2b2338', x + 1, y - 13, 1, 2); }
   else if (dir === 'left') R(g, '#2b2338', x - 3, y - 13, 1, 2); else if (dir === 'right') R(g, '#2b2338', x + 2, y - 13, 1, 2);
+  const acc = o && o.acc;
+  if (acc === 'glasses' && dir !== 'up') { if (dir === 'down') { R(g, '#3b2f4a', x - 3, y - 14, 3, 1); R(g, '#3b2f4a', x + 1, y - 14, 3, 1); R(g, '#3b2f4a', x - 3, y - 12, 3, 1); R(g, '#3b2f4a', x + 1, y - 12, 3, 1); R(g, '#3b2f4a', x, y - 13, 1, 1); } else R(g, '#3b2f4a', dir === 'left' ? x - 4 : x + 1, y - 14, 3, 3); }
+  if (acc === 'phones') { R(g, '#3b2f4a', x - 4, y - 18, 8, 1); R(g, '#e5607f', x - 5, y - 15, 2, 4); R(g, '#e5607f', x + 3, y - 15, 2, 4); }
+  if (acc === 'bag' && dir !== 'down') R(g, '#c97a5a', dir === 'up' ? x - 3 : (dir === 'left' ? x + 2 : x - 5), y - 10, dir === 'up' ? 6 : 3, 5);
 }
 function drawTree(g, tx, ty) {
   const x = tx * T + 8, y = ty * T + 15;
@@ -363,7 +408,7 @@ const TREE_C = [[1,4],[2,7],[9,4],[10,9],[19,5],[20,9],[27,4],[28,9],[35,5],[36,
     R(g, '#3b2f4a', x - 1, y - 22, 50, 28); R(g, '#c99a6b', x + 1, y - 20, 46, 24); const c = ['#fff3a8', '#ffd1de', '#cdeefa', '#d9f2c4'];
     for (let i = 0; i < 9; i++) { R(g, c[i % 4], x + 3 + (i % 5) * 9, y - 18 + Math.floor(i / 5) * 11, 7, 7); R(g, '#3b2f4a', x + 4 + (i % 5) * 9, y - 15 + Math.floor(i / 5) * 11, 4, 1); } } });
   s.spots.push({ x: 22, y: 16, dir: 'up', stay: [5, 10] }, { x: 9, y: 11, dir: 'up', stay: [4, 9] }, { x: 26, y: 13, dir: 'left', stay: [5, 10] });
-  BLD.filter(b => b.scene === 'campus').forEach(b => s.labels.push({ t: b.name, x: (b.x + b.w / 2) * T, y: (b.y + 1) * T, size: 12 }));
+  BLD.filter(b => b.scene === 'campus').forEach(b => s.labels.push({ t: b.name, x: (b.x + b.w / 2) * T, y: (b.y + 2) * T + 6, size: 12 }));
   s.labels.push({ t: '樹洞留言牆', x: 16.5 * T, y: 16 * T - 30 }, { t: '公佈欄', x: (BOARD.x + 1) * T, y: BOARD.y * T - 22 }, { t: '校外 →', x: 46 * T, y: 11 * T }, { t: '↓ 操場', x: 24 * T, y: 28 * T });
   s.exits.push({ t: p => p.x > 47 * T + 6, to: 'street', sx: 1.5 * T, sy: 8 * T + 4, dir: 'right' });
   s.exits.push({ t: p => p.y > 29 * T + 6, to: 'playground', sx: 15 * T, sy: 1 * T + 14, dir: 'down' });
@@ -461,9 +506,34 @@ function drawStall(g, st0) {
   solid(s, 14, 21, 3, 1); solid(s, 13, 20);
   s.IT.push({ id: 'bus', label: '等公車', x: 15.5 * T, y: 22 * T + 8, r: 26, ix: 15.5 * T, iy: 19 * T });
   STALLS.forEach(t => { solid(s, t.x, t.y, 4, 3); s.dyn.push({ y: (t.y + 2) * T + 15, f: g => drawStall(g, t) }); s.IT.push({ id: 'stall', stall: t.id, label: { ring: '玩', moto: '修車', rent: '看看' }[t.id] || '買', x: (t.x + 2) * T, y: (t.y + 3) * T + 10, r: 24, ix: (t.x + 2) * T, iy: (t.y - 1) * T - 6 }); s.labels.push({ t: t.n, x: (t.x + 2) * T, y: t.y * T - 14, size: 10 }); });
-  s.labels.push({ t: '考試中心', x: 27 * T, y: 2 * T, size: 12 }, { t: '轉角咖啡廳', x: 27 * T, y: 11 * T, size: 12 }, { t: '← 校園', x: 1.5 * T, y: 5 * T + 4 }, { t: '公車站', x: 15.5 * T, y: 19 * T - 14 }, { t: '施工中 · 第三章', x: 20.5 * T, y: 23 * T + 4 });
+  s.labels.push({ t: '考試中心', x: 27 * T, y: 3 * T + 6, size: 12 }, { t: '轉角咖啡廳', x: 27 * T, y: 12 * T + 6, size: 12 }, { t: '← 校園', x: 1.5 * T, y: 5 * T + 4 }, { t: '公車站', x: 15.5 * T, y: 19 * T - 14 }, { t: '道路施工中', x: 20.5 * T, y: 23 * T + 4 });
   s.exits.push({ t: p => p.x < 6, to: 'campus', sx: 46 * T, sy: 14 * T + 4, dir: 'left' });
   s.spots.push({ x: 8, y: 21, dir: 'up', stay: [6, 12] }, { x: 3, y: 5, dir: 'up', stay: [4, 8] }, { x: 12, y: 5, dir: 'up', stay: [4, 8] }, { x: 15, y: 23, dir: 'up', stay: [6, 12] });
+})();
+
+/* ===== 市區 30×18 ===== */
+const city = mkScene('city', '市區', 30, 18, false);
+(() => {
+  const s = city, mc = s.g;
+  const road = (x, y) => y >= 8 && y <= 11;
+  for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) {
+    const px = x * T, py = y * T;
+    if (y === 0 || x === 0 || x === s.w - 1 || y === s.h - 1) { R(mc, '#5a5f7a', px, py, T, T); R(mc, '#4a4f6a', px, py + (x % 2 ? 4 : 10), T, 1); continue; }
+    if (road(x, y)) { R(mc, '#5d566e', px, py, T, T); if (y === 9 && x % 3 !== 2) R(mc, '#fff', px, py + T - 1, T - 4, 2); if (x === 14) for (let k = 0; k < 4; k++) R(mc, '#fff', px + 2, py + k * 4, 12, 2); }
+    else { R(mc, (x + y) % 2 ? '#d8d2e2' : '#cfc8db', px, py, T, T); R(mc, 'rgba(0,0,0,.06)', px, py + T - 1, T, 1); }
+  }
+  // 遠處的大樓
+  for (let i = 0; i < 9; i++) { const x = 2 + i * 3, h = 2 + (i * 7) % 3; R(mc, '#3b2f4a', x * T - 1, (16 - h) * T - 1, 3 * T - 2, h * T + 1); R(mc, ['#8a8fb5', '#9fb0c9', '#b5a8cf'][i % 3], x * T, (16 - h) * T, 3 * T - 4, h * T); for (let w = 0; w < h * 2; w++) for (let k = 0; k < 2; k++) R(mc, (w + k + i) % 3 ? '#fff3c4' : '#6b7090', x * T + 6 + k * 18, (16 - h) * T + 4 + w * 8, 8, 4); }
+  solid(s, 1, 13, 28, 4);
+  BLD.filter(b => b.scene === 'city').forEach(b => { drawBld(mc, b); solid(s, b.x, b.y, b.w, b.h); });
+  R(mc, '#3b2f4a', 9 * T, 3 * T + 3, 4 * T, 10); R(mc, '#ffd45c', 9 * T + 2, 3 * T + 5, 4 * T - 4, 6);
+  // 公車站
+  R(mc, '#3b2f4a', 2 * T, 12 * T - 6, 3 * T, 4); R(mc, '#7ec8f0', 2 * T, 12 * T - 10, 3 * T, 4); R(mc, '#3b2f4a', 2 * T + 2, 12 * T - 6, 2, 22); R(mc, '#3b2f4a', 5 * T - 4, 12 * T - 6, 2, 22);
+  for (const [x, y] of [[16, 6], [27, 6], [6, 12]]) { R(mc, '#3b2f4a', x * T + 7, y * T - 14, 2, 28); R(mc, '#fff3c4', x * T + 3, y * T - 18, 10, 5); solid(s, x, y); }
+  s.dyn = [[1, 5], [14, 4], [28, 3]].map(([x, y]) => { solid(s, x, y); return { y: y * T + 15, f: g => drawTree(g, x, y) }; });
+  s.IT.push({ id: 'busback', label: '搭公車回去', x: 3.5 * T, y: 12 * T + 10, r: 26, ix: 3.5 * T, iy: 10 * T });
+  s.labels.push({ t: '岔路口生涯博覽會', x: 10 * T, y: 3 * T + 6, size: 12 }, { t: '辦公大樓', x: 21 * T, y: 3 * T + 6, size: 12 }, { t: '公車站', x: 3.5 * T, y: 11 * T - 6 });
+  s.spots.push({ x: 10, y: 7, dir: 'up', stay: [4, 9] }, { x: 21, y: 7, dir: 'up', stay: [4, 9] }, { x: 4, y: 12, dir: 'up', stay: [6, 12] });
 })();
 
 /* ===== 室內 ===== */
@@ -555,6 +625,13 @@ const rCafe2 = mkRoom('cafe2', '轉角咖啡廳', '#f3e3cf', '#c99a6b', '#bf9062
 put(rCafe2, 'shelf', 1, 2, 4, 1); put(rCafe2, 'counter', 8, 3, 5, 1); put(rCafe2, 'plant', 6, 2, 1, 1);
 put(rCafe2, 'table', 2, 6, 2, 1); put(rCafe2, 'table', 9, 6, 2, 1); put(rCafe2, 'window', 6, 0, 2, 0, false);
 [[2, 7], [3, 7], [9, 7], [10, 7]].forEach(([x, y]) => put(rCafe2, 'stool', x, y, 1, 1, false));
+const rExpo = mkRoom('expo', '生涯博覽會', '#fff0d6', '#e8dfcf', '#e1d7c5');
+[[1, '#e5607f', '轉系'], [4, '#3ba3d8', '雙主修'], [8, '#6aa84f', '交換學生'], [11, '#ff8b3d', '實習']].forEach(([x, c, n]) => { R(rExpo.g, c, x * T, 4, 2 * T, 20); R(rExpo.g, '#fff', x * T + 2, 8, 2 * T - 4, 2); put(rExpo, 'counter', x, 3, 2, 1); rExpo.labels.push({ t: n, x: (x + 1) * T, y: 14, size: 10 }); });
+put(rExpo, 'desk', 5, 6, 4, 1); put(rExpo, 'plant', 1, 7, 1, 1); put(rExpo, 'plant', 12, 7, 1, 1);
+rExpo.labels.push({ t: '輔導中心', x: 5 * T + 10, y: 6 * T + 12, size: 10 });
+const rCorp = mkRoom('corp', '辦公大樓 · 大廳', '#e6ebf3', '#d3d9e4', '#cbd2de');
+put(rCorp, 'counter', 5, 3, 4, 1); put(rCorp, 'plant', 1, 2, 1, 1); put(rCorp, 'plant', 12, 2, 1, 1); put(rCorp, 'window', 2, 0, 2, 0, false); put(rCorp, 'window', 10, 0, 2, 0, false);
+[[2, 6], [3, 6], [10, 6], [11, 6]].forEach(([x, y]) => put(rCorp, 'stool', x, y, 1, 1, false));
 /* 宿舍：可換裝潢，之後重畫 */
 const rDorm = mkScene('dorm', '宿舍', RW, RH, true);
 const WALLS = [{ n: '奶油白', c: '#fff1e0', p: 0 }, { n: '薄荷綠', c: '#cdeedd', p: 300 }, { n: '櫻花粉', c: '#ffd1de', p: 300 }, { n: '夜空藍', c: '#b9c8f2', p: 400 }];
@@ -564,6 +641,7 @@ function buildDorm() {
   const d = st && st.dorm ? st.dorm : { wall: 0, floor: 0, placed: [] }, w = WALLS[d.wall], f = FLOORS[d.floor];
   const s = rDorm; s.g.clearRect(0, 0, RW * T, RH * T); roomShell(s, w.c, f.a, f.b);
   put(s, 'window', 6, 0, 2, 0, false);
+  R(s.g, '#8a5a44', 3 * T, 2, T, 28); R(s.g, '#cfe7f5', 3 * T + 2, 4, T - 4, 24); R(s.g, 'rgba(255,255,255,.7)', 3 * T + 4, 6, 3, 8);
   if (d.placed.includes('poster')) FURN.poster(s.g, 9 * T - 2, 2);
   if (d.placed.includes('rug')) FURN.rug(s.g, 5 * T, 5 * T, 4, 2);
   put(s, 'bed', 1, 2, 2, 2, true, '#7ec8f0'); put(s, 'bed', 11, 2, 2, 2, true, '#ffb86b');
@@ -576,7 +654,7 @@ function buildDorm() {
   if (d.placed.includes('tank')) put(s, 'tank', 11, 6, 2, 1);
   if (d.placed.includes('doll')) put(s, 'doll', 3, 7, 1, 1);
 }
-rDorm.IT.push({ id: 'decor', label: '布置房間', x: 7.5 * T, y: 3 * T + 10, r: 26, ix: 7.5 * T, iy: 1 * T }, { id: 'bed', label: '睡一下', x: 2 * T, y: 4 * T + 8, r: 24, ix: 2 * T, iy: 1.5 * T });
+rDorm.IT.push({ id: 'ward', label: '換裝', x: 3.5 * T, y: 3 * T, r: 22, ix: 3.5 * T, iy: 0 * T + 4 }, { id: 'decor', label: '布置房間', x: 7.5 * T, y: 3 * T + 10, r: 26, ix: 7.5 * T, iy: 1 * T }, { id: 'bed', label: '睡一下', x: 2 * T, y: 4 * T + 8, r: 24, ix: 2 * T, iy: 1.5 * T });
 
 /* ---------- 狀態 ---------- */
 const KEY = 'jige-town-v1', OLDKEY = 'lifefork-town-demo-v2';
@@ -586,7 +664,7 @@ function newState(name) {
     inv: { coffee: 0, bag: 0, card: 0, past: 0 }, dorm: { wall: 0, floor: 0, wallOwn: [0], floorOwn: [0], own: [], placed: [] },
     q: { main: 0, side: {}, notified: {}, c: { work: 0, workAt: 0, workAll: 0, waves: [], study: 0, hoop4: 0, eng: 0, examTry: 0, examScore: 0 } },
     daily: { date: '', ids: [], prog: {}, done: {}, bonus: false }, best: { hoop: 0, run: 0, exam: 0, bar: 0, pk: 0 }, met: {}, pos: null,
-    visited: { campus: 1 }, ach: [], title: '', psy: [], certs: { upper: 0, toeic: 0, ielts: 0, toefl: 0 }, cnt: { wave: 0, sleep: 0, studyFail: 0 }, day: { d: '', coffee: 0, food: 0 },
+    visited: { campus: 1 }, look: { style: 'short', hair: '#5a3a2a', skin: '#ffd9bb', shirt: '#ff8fb1', pants: '#4a5d8a', acc: 'none', cap: '#3ba3d8' }, ch3: { booths: [], hol: '', path: '', prog: 0, tries: 0 }, ach: [], title: '', psy: [], certs: { upper: 0, toeic: 0, ielts: 0, toefl: 0 }, cnt: { wave: 0, sleep: 0, studyFail: 0 }, day: { d: '', coffee: 0, food: 0 },
     ledger: { m: '', inc: 0, exp: 0, idle: 0, lines: [] }, rentDay: 0, challenge: false, bank: 0, salaryM: '', uid: '', wall: { lastPost: '', pats: [], coffees: [], mine: [] } };
 }
 function fill(def, s) { for (const k in def) { if (s[k] === undefined) s[k] = def[k]; else if (def[k] && typeof def[k] === 'object' && !Array.isArray(def[k]) && typeof s[k] === 'object') fill(def[k], s[k]); } return s; }
@@ -721,11 +799,14 @@ const PASS_LINES = {
   cafe: ['今天的三杯雞沒有雞，只有三杯。', '我每天都點一樣的，這樣比較不用做決定。'],
   exam: ['我只是來看看，還沒有要考。', '這裡的冷氣比圖書館還冷。'],
   playground: ['我在等我的朋友，他說五分鐘，已經二十分鐘了。', '跑道一圈四百公尺，我跑了兩百就決定散步。'],
+  city: ['市區的咖啡比學校貴一倍，但座位比較多。', '我來面試的，現在腳在發抖。', '博覽會發的原子筆我拿了十支。'],
+  expo: ['我已經逛了三圈，還是不知道要幹嘛。', '每個攤位都說自己的路最好。'],
+  corp: ['我在等面試，已經在心裡自我介紹二十遍了。'],
   street: ['雞排要排二十分鐘，我在思考人生。', '老闆說珍奶半糖，我覺得是全糖。', '我只是來散步，手上的東西都是不小心買的。']
 };
 const PLOOK = [['#6b5b4a', '#a8c0a0', '#5a5a6e'], ['#c9a24b', '#d9a6a6', '#4a4a5e'], ['#3b2f4a', '#b8b8c9', '#6a5a4a'], ['#8a8a99', '#c9a98a', '#4a5568'], ['#5a3a2a', '#9ec5e8', '#3a3a4a']];
 const passTalk = sc => () => ok('路人', pick(PASS_LINES[sc]));
-[['campus', 4], ['street', 3], ['playground', 1]].forEach(([sc, n]) => { for (let i = 0; i < n; i++) { const [x, y] = spawnAt(scenes[sc]); mkEnt(sc, { kind: 'passer', name: '路人', x, y, look: PLOOK[(i + sc.length) % 5], wander: true, speed: rand(18, 26), lines: ['嗯。', '好熱。', '又要上課了。', '肚子餓。'], talk: passTalk(sc) }); } });
+[['campus', 4], ['street', 3], ['playground', 1], ['city', 3]].forEach(([sc, n]) => { for (let i = 0; i < n; i++) { const [x, y] = spawnAt(scenes[sc]); mkEnt(sc, { kind: 'passer', name: '路人', x, y, look: PLOOK[(i + sc.length) % 5], wander: true, speed: rand(18, 26), lines: ['嗯。', '好熱。', '又要上課了。', '肚子餓。'], talk: passTalk(sc) }); } });
 const stat = (scene, tx, ty, look, dir = 'down') => { const [x, y] = at(tx, ty); return mkEnt(scene, { kind: 'passer', name: '路人', x, y, look, dir, talk: passTalk(scene) }); };
 stat('office', 4, 7.1, PLOOK[0], 'up'); stat('library', 5.6, 7, PLOOK[1]); stat('library', 8.4, 6, PLOOK[2]);
 stat('club', 10, 5, PLOOK[3], 'left'); stat('store', 8, 7, PLOOK[1], 'up');
@@ -750,6 +831,10 @@ qnpc('aunt', 'cafe', '打菜阿姨', 5, 2.95, ['#3b2f4a', '#fff', '#e5607f']);
 qnpc('desk', 'exam', '櫃台人員', 7, 2.95, ['#3b2f4a', '#5c6b8a', '#3a3a4a']);
 qnpc('proctor', 'exam', '監考老師', 7, 6.4, ['#8a8a99', '#5a6b7a', '#3a3a4a']);
 qnpc('barista', 'cafe2', '咖啡師', 10, 2.95, ['#3b2f4a', '#6f4a3a', '#3a3a4a']);
+qnpc('b_transfer', 'expo', '轉系學長', 2, 2.95, ['#2b2338', '#e5607f', '#3a3a4a']); qnpc('b_double', 'expo', '雙主修學姊', 5, 2.95, ['#8a4b2a', '#7ec8f0', '#4a4a5e']);
+qnpc('b_exchange', 'expo', '國際處老師', 9, 2.95, ['#c9c3d6', '#6aa84f', '#3a3a4a']); qnpc('b_intern', 'expo', '人資小姐', 12, 2.95, ['#3b2f4a', '#ff8b3d', '#3a3a4a']);
+qnpc('counselor', 'expo', '輔導老師', 7, 5.6, ['#6b6b6b', '#c9b6f5', '#4a4a5e']); qnpc('hr', 'corp', '人資小姐', 7, 2.95, ['#3b2f4a', '#ff8b3d', '#3a3a4a']);
+stat('expo', 6, 8, PLOOK[1], 'up'); stat('expo', 10.5, 7.5, PLOOK[3], 'left'); stat('corp', 3, 5.4, PLOOK[2], 'down');
 stat('cafe2', 3, 5.6, PLOOK[2], 'down');
 
 /* ---------- 互動點與最近目標 ---------- */
@@ -761,6 +846,7 @@ street.IT.push({ id: 'bench', label: '坐下', x: 9 * T, y: 20 * T + 14, ix: 9 *
 function nearest() {
   let best = null, bd = 1e9;
   for (const it of cur.IT) { if (it.hide && it.hide()) continue; const d = Math.hypot(P.x - it.x, P.y - it.y); if (d < it.r && d < bd) { best = it; bd = d; } }
+  for (const r of Object.values(remotes)) { if (r.s !== cur.id) continue; const d = Math.hypot(P.x - r.x, P.y - r.y); if (d < 24 && d < bd) { best = { id: 'real', r, label: '揮手', ix: r.x, iy: r.y - 32 }; bd = d; } }
   for (const e of cur.ents) { if (e.kind === 'deco') continue; const d = Math.hypot(P.x - e.x, P.y - e.y); if (d < 24 && d < bd) { best = { id: 'ent', ent: e, label: e.kind === 'player' ? '揮手' : e.kind === 'quest' ? '對話' : '聊聊', ix: e.x, iy: e.y - 32 }; bd = d; } }
   return best;
 }
@@ -857,9 +943,12 @@ function mgTick(dt) {
 
 /* ---------- 任務 ---------- */
 const MAIN = ['去學務處找陳老師報到', '去宿舍找室友阿芸', '去社團教室，加入一個社團', '去圖書館找館員伯伯，領期中考範圍', '在圖書館自習區讀書兩次', '回學務處向陳老師報告',
-  '去校外的考試中心報名英檢', '在圖書館讀英文三次', '去社團教室找學姊小薰借考古題', '去考試中心考英檢，60 分及格', '回學務處給陳老師看成績'];
-const CHAPTERS = [{ n: '第一章 大一新生', a: 0, b: 6 }, { n: '第二章 畢業門檻', a: 6, b: 11 }];
-const ENG_PROG = () => st.q.main === 7 ? '（' + Math.min(3, st.q.c.eng) + ' / 3）' : '';
+  '去校外的考試中心報名英檢', '在圖書館讀英文三次', '去社團教室找學姊小薰借考古題', '去考試中心考英檢，60 分及格', '回學務處給陳老師看成績',
+  '去校外的公車站，搭車到市區', '在生涯博覽會逛三個攤位', '到輔導中心做興趣測驗', '跟輔導老師決定你的岔路', '完成你選的岔路任務', '回學務處跟陳老師說你的決定'];
+const CHAPTERS = [{ n: '第一章 大一新生', a: 0, b: 6 }, { n: '第二章 畢業門檻', a: 6, b: 11 }, { n: '第三章 岔路', a: 11, b: 17 }];
+const ENG_PROG = () => st.q.main === 7 ? '（' + Math.min(3, st.q.c.eng) + ' / 3）' : st.q.main === 12 ? '（' + Math.min(3, st.ch3.booths.length) + ' / 3）' : '';
+const grade = () => st.q.main >= 11 ? '大二' : '大一';
+const mainText = i => i === 15 && st.ch3.path ? ch3Task() : MAIN[i];
 const sideSt = id => st.q.side[id] || 0;
 const SIDE = {
   store: { n: '店長的缺人手', who: '便利商店店長', desc: '幫店長排班兩次', ready: () => st.q.c.work - st.q.c.workAt >= 2, prog: () => Math.min(2, st.q.c.work - st.q.c.workAt) + ' / 2', reward: '$500' },
@@ -869,7 +958,7 @@ const SIDE = {
   card: { n: '不見的借書證', who: '圖書館館員伯伯', desc: '去校園長椅找借書證', ready: () => st.inv.card > 0, prog: () => st.inv.card > 0 ? '已找到' : '還沒找到', reward: '知識 +15' },
   hoop: { n: '籃球隊缺一個人', who: '操場的阿哲', desc: '一場投籃投進 4 球', ready: () => st.q.c.hoop4 > 0, prog: () => st.q.c.hoop4 ? '做到了' : '還沒做到', reward: '$400、知識 +10' }
 };
-function setMain(n) { st.q.main = n; if (n === 6) ach('ch1'); if (n === 11) ach('ch2'); if (n < MAIN.length) toast('主線更新：' + MAIN[n]); hud(); persist(); }
+function setMain(n) { st.q.main = n; if (n === 6) ach('ch1'); if (n === 11) ach('ch2'); if (n === 17) ach('ch3'); if (n < MAIN.length) toast('主線更新：' + mainText(n)); hud(); persist(); }
 function chkReady() { for (const id in SIDE) if (sideSt(id) === 1 && SIDE[id].ready() && !st.q.notified[id]) { st.q.notified[id] = 1; toast('支線可以回報了：' + SIDE[id].n); } hud(); }
 function acceptSide(id) { st.q.side[id] = 1; if (id === 'store') st.q.c.workAt = st.q.c.work; if (id === 'wave') st.q.c.waves = []; if (id === 'hoop') st.q.c.hoop4 = 0; toast('接下支線：' + SIDE[id].n); chkReady(); persist(); }
 function finishSide(id) {
@@ -900,6 +989,9 @@ function markOf(e) {
   if (e.id === 'boss') return side('store');
   if (e.id === 'late') return side('coffee');
   if (e.id === 'zhe') return side('hoop');
+  if (e.id.startsWith('b_')) { const id = e.id.slice(2); if (m === 12 && !st.ch3.booths.includes(id)) return 'main'; if (m === 15 && id === 'exchange' && st.ch3.path === 'exchange') return 'main'; return null; }
+  if (e.id === 'counselor') return (m === 13 || m === 14) ? 'main' : null;
+  if (e.id === 'hr') return m === 15 && st.ch3.path === 'intern' ? 'main' : null;
   return null;
 }
 /* NPC 對話 */
@@ -918,8 +1010,11 @@ QN.chen.talk = () => {
   if (m === 7) return ok('陳老師', '報名了？很好。圖書館自習區可以讀英文，讀三次再去考，不要裸考。');
   if (m === 8) return ok('陳老師', '小薰手上有考古題，她每年都借，每年都說是最後一次。');
   if (m === 9) return ok('陳老師', '考試中心在校門外。記得帶學生證，手機要關機。');
-  if (m === 10) { const sc = st.q.c.examScore; return dialog('陳老師', ['給我看看。' + sc + ' 分。', sc >= 90 ? '這分數我可以拿去跟其他老師炫耀，我不會說是你的。' : sc >= 70 ? '穩穩過了。英文這件事，以後至少不會卡你畢業。' : '剛好及格。我跟你說實話，及格就是及格，畢業證書上不會寫幾分。', '畢業門檻過了一個。接下來的路會開始分岔：轉系、雙主修、交換學生、直接工作。那是第三章的事。'], [{ label: '收下 $3,000', fn: () => { earn(3000); setMain(11); logLine('完成第二章：畢業門檻'); ok('第二章 · 畢業門檻 完成', '第三章「岔路」還在準備：大二了，每個人開始往不同方向走。\n\n現在可以繼續做每日任務和支線，或回考試中心挑戰更高分。'); } }]); }
-  ok('陳老師', '第三章還在準備。先把每天過好。');
+  if (m === 10) { const sc = st.q.c.examScore; return dialog('陳老師', ['給我看看。' + sc + ' 分。', sc >= 90 ? '這分數我可以拿去跟其他老師炫耀，我不會說是你的。' : sc >= 70 ? '穩穩過了。英文這件事，以後至少不會卡你畢業。' : '剛好及格。我跟你說實話，及格就是及格，畢業證書上不會寫幾分。', '畢業門檻過了一個。接下來的路會開始分岔：轉系、雙主修、交換學生、直接工作。那是第三章的事。'], [{ label: '收下 $3,000', fn: () => { earn(3000); setMain(11); logLine('完成第二章：畢業門檻'); ok('第二章 · 畢業門檻 完成', '第三章「岔路」開始了。\n大二了，每個人開始往不同方向走。去校外的公車站，搭車到市區的生涯博覽會看看。'); } }]); }
+  if (m === 11) return ok('陳老師', '大二了。市區有生涯博覽會，從校外的公車站搭車去。去看看各條路長什麼樣子。');
+  if (m >= 12 && m <= 15) return ok('陳老師', '慢慢想。現在選的路不是終點，是下一個岔路口。');
+  if (m === 16) { const p = PATHS[st.ch3.path]; return dialog('陳老師', ['你決定' + p.n + '了。', { transfer: '轉系不是逃跑，是換一條比較適合你的路。新系的課會很累，但你是自己選的。', double: '雙主修會很累，你會比別人晚睡很多年，大概。記得留時間給自己。', exchange: '交換學生啊。出去以後你會發現，世界比及格鎮大很多。也會發現及格鎮的雞排其實很好吃。', intern: '實習啊。進公司以後你會發現，很多事情學校沒教，但你會學得很快。' }[st.ch3.path], '第三章就到這裡。下一章是大三和大四：畢業、找工作、薪水。勞動部的調查說，大學畢業新鮮人平均起薪大約 3.6 萬。到時候你就知道那是什麼感覺了。'], [{ label: '收下 $5,000', fn: () => { earn(5000, '第三章獎勵'); ach(p.ach); setMain(17); logLine('完成第三章：岔路（' + p.n + '）'); ok('第三章 · 岔路 完成', '你選了' + p.n + '。\n\n第四章「畢業」還在準備。手冊的成就裡多了一個新稱號，可以戴上看看。'); } }]); }
+  ok('陳老師', '第四章還在準備。先把每天過好。');
 };
 function ch2Start() {
   dialog('陳老師', ['對了，有件事入學說明會應該講過，但大家通常沒在聽。', '學校規定，畢業前要通過英文檢定。沒過的話，學分修滿也拿不到畢業證書。', '考試中心在校門外，往右走到 T 字路口，右手邊那棟就是。先去櫃台報名，報名費 $800。'], [{ label: '知道了', fn: () => { if (st.q.main < 6) setMain(6); else toast('主線：' + MAIN[6]); } }]);
@@ -970,6 +1065,8 @@ QN.zhe.talk = () => {
   ok('籃球隊阿哲', pick(['我們隊的戰術是：傳給我。', '投籃最重要的是手感，還有不要看籃框以外的地方。', '下週比賽記得來坐板凳。']));
 };
 QN.prof.talk = () => classFlow();
+['transfer', 'double', 'exchange', 'intern'].forEach(id => QN['b_' + id].talk = () => boothTalk(id));
+QN.counselor.talk = counselorTalk; QN.hr.talk = internInterview;
 QN.barista.talk = () => {
   const buy = (p, n, t) => () => { if (st.money < p) return ok('咖啡師', '咖啡師看了看你的錢包，推薦你去喝飲水機。'); spend(p, n); drinkCoffee(); ok('轉角咖啡廳', t); persist(); };
   showModal({ title: '咖啡師', text: '今天的手沖是衣索比亞，聞起來像莓果。\n書架上的小卡片是客人留下來的，你可以看看。', choices: [
@@ -1060,13 +1157,13 @@ function classFlow() {
   showModal({ title: '教室 · ' + c, text: '王教授站在講台上，投影片停在第 3 頁，已經停了十分鐘。\n抄筆記的時候，要在重點出現的那一刻按下去。', choices: [
     { label: '認真抄筆記', fn: () => meterGame({ title: c + ' · 抄筆記', desc: '指針跑到綠色區域時按「抄」。綠色區域就是教授說「這個會考」的時候。', btn: '抄', rounds: 3, speed: .9, zone: .32, shrink: .82,
       hitT: ['抄到了，字還算看得懂。', '教授剛好轉頭，你剛好在抄。', '這一頁你抄得比投影片還清楚。'], missT: ['你抄到的是上一頁。', '筆沒水了。', '你寫了一行字，後來發現是在寫購物清單。'],
-      end: h => { st.exp += 4 * h + 2; dHit('class'); if (!st.met.class) { st.met.class = 1; logLine('第一次上課：' + c); } ok('下課', ['你的筆記只有標題。知識 +2。', '筆記有一點內容，但有一半是塗鴉。知識 +6。', '筆記寫得不錯，可以借同學了。知識 +10。', '這份筆記之後會被全班拍照傳來傳去。知識 +14。'][h]); persist(); } }) },
-    { label: '分組報告', fn: () => { dHit('class'); const r = Math.random();
+      end: h => { st.exp += 4 * h + 2; dHit('class'); ch3Prog('class'); if (!st.met.class) { st.met.class = 1; logLine('第一次上課：' + c); } ok('下課', ['你的筆記只有標題。知識 +2。', '筆記有一點內容，但有一半是塗鴉。知識 +6。', '筆記寫得不錯，可以借同學了。知識 +10。', '這份筆記之後會被全班拍照傳來傳去。知識 +14。'][h]); persist(); } }) },
+    { label: '分組報告', fn: () => { dHit('class'); ch3Prog('class'); const r = Math.random();
       if (r < .4) { st.exp += 3; ach('teammate'); ok('分組報告', pick(['組員 A 說他負責「精神支持」。組員 B 的頭貼三天沒變，訊息也三天沒讀。', '報告前一晚，組員說他的電腦壞了，檔案也一起壞了，連雲端都壞了。', '你們的群組有五個人，回訊息的只有你和你自己的分身帳號。']) + '\n\n你還是把報告交出去了。知識 +3。'); }
       else if (r < .7) { st.exp += 8; ach('carry'); ok('分組報告', '最後你一個人做完了簡報、講稿和參考資料。教授說這組做得很好，組員們都點頭，好像有參與一樣。知識 +8。'); }
       else { st.exp += 6; ok('分組報告', '這次的組員很好，大家都準時交了自己的部分。你們還約了下次一起吃飯，這種事很少發生。知識 +6。'); }
       persist(); } },
-    { label: '趴著睡', fn: () => { st.exp += 1; dHit('class'); ok('下課', '你醒來的時候，黑板上的字已經換過兩輪。旁邊的同學說教授有點你的名字，但你沒有證據。知識 +1。'); } },
+    { label: '趴著睡', fn: () => { st.exp += 1; dHit('class'); ch3Prog('class'); ok('下課', '你醒來的時候，黑板上的字已經換過兩輪。旁邊的同學說教授有點你的名字，但你沒有證據。知識 +1。'); } },
     { label: '先離開' }] });
 }
 function meal() {
@@ -1197,11 +1294,12 @@ function interact() {
   if (!started || locked()) return;
   const it = nearest(); if (!it) return;
   if (it.id === 'ent') { const e = it.ent; if (e.kind === 'player') return wave(e); if (!e.loop) faceToward(e, P.x, P.y); if (e.wander) e.wait = Math.max(e.wait, 3); return e.talk(); }
+  if (it.id === 'real') return realWave(it.r);
   if (it.id === 'enter') return goScene(it.to, 7 * T, 8 * T + 12, 'up');
   if (it.id === 'stall') return stall(it.stall);
   const f = { board, bench, study, clubboard: clubBoard, shop, decor, bed: sleep, class: classFlow, examseat: examSeat, wall: openWall, psy: () => pickPsy(it.k), pk: pkGame, bar: barGame,
     water: () => ok('飲水機', pick(['你喝了一大口水。免費的東西最好喝，這是大學教你的第一件事。', '飲水機的水有點溫。你決定不要想太多。', '旁邊貼著「請勿直接對嘴」，你看了一下四周，乖乖拿出水壺。'])),
-    bus: () => ok('公車站', '站牌上寫著：往市區、往機場、往你沒去過的地方。\n\n第三章「岔路」開放後，公車會帶你去更遠的地方。'), meal, hoop, run: runGame,
+    bus: () => busRide('city'), busback: () => busRide('street'), ward: openWard, meal, hoop, run: runGame,
     notice: () => ok('考試中心 · 公告', '本中心辦理：英文檢定、學測、分科測驗、轉學考、研究所考試、各類國家考試、駕照筆試。\n\n本週考試：大學英檢，畢業門檻用。60 分及格，補考費 $400。\n\n常見的大學英文畢業門檻是 CEFR B1：全民英檢中級、多益 550、雅思 4.0。要求比較高的學校到 B2，例如台大 112 學年度是全民英檢中高級初試、多益 785、托福網路測驗 72、雅思 6.0。\n\n過了畢業門檻以後，櫃台可以報名中高級、多益、雅思、托福。\n\n人生的考試比你以為的多，這裡只是其中一間。'),
     copier: () => ok('影印機', '影印機吐出一張全黑的紙。沒有人知道它印的是什麼。') }[it.id];
   f && f();
@@ -1221,6 +1319,7 @@ addEventListener('keydown', e => {
   if (e.code === 'Tab') { e.preventDefault(); if ($('#book').classList.contains('on')) closeBook(); else if (started && !locked()) openBook(); }
   if (e.code === 'KeyH' && started && !locked()) keysHelp();
   if (e.code === 'KeyM') { if ($('#mapOv').classList.contains('on')) closeMap(); else if (started && !locked()) openMap(); }
+  if (e.code === 'Escape' && $('#wardOv').classList.contains('on')) $('#wardDone').click();
   if (e.code === 'Escape') { if ($('#wallOv').classList.contains('on')) $('#wallClose').click(); if ($('#cardOv').classList.contains('on')) $('#cardClose').click(); if ($('#book').classList.contains('on')) closeBook(); if ($('#mapOv').classList.contains('on')) closeMap(); }
   if (e.code.startsWith('Arrow')) e.preventDefault();
 });
@@ -1262,24 +1361,24 @@ function resize() {
   DPR = Math.min(window.devicePixelRatio || 1, 3);
   cv.width = Math.floor(innerWidth * DPR); cv.height = Math.floor(innerHeight * DPR);
   S = Math.max(1, Math.round(cv.height / (innerHeight < 500 ? 150 : 180))); VH = Math.ceil(cv.height / S); VW = Math.ceil(cv.width / S);
-  off.width = VW; off.height = VH; OX = Math.floor((cv.width - VW * S) / 2); OY = Math.floor((cv.height - VH * S) / 2);
+  U = Math.max(DPR, S / 3.2); off.width = VW; off.height = VH; OX = Math.floor((cv.width - VW * S) / 2); OY = Math.floor((cv.height - VH * S) / 2);
 }
 addEventListener('resize', () => { resize(); snapCam(); });
 const rr = (g, x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
 const FONT = '"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif';
 const toScr = (wx, wy) => [OX + (wx - cam.x) * S, OY + (wy - cam.y) * S];
 function label(text, x, y, o = {}) {
-  const fs = (o.size || 11) * DPR; cx.font = `700 ${fs}px ${FONT}`;
-  const w = cx.measureText(text).width + 8 * DPR, h = fs + 5 * DPR;
-  cx.fillStyle = o.bg || 'rgba(255,248,239,.88)'; rr(cx, x - w / 2, y - h / 2, w, h, 4 * DPR); cx.fill();
-  cx.lineWidth = 1.5 * DPR; cx.strokeStyle = '#3b2f4a'; cx.stroke();
+  const fs = (o.size || 11) * U; cx.font = `700 ${fs}px ${FONT}`;
+  const w = cx.measureText(text).width + 8 * U, h = fs + 5 * U;
+  cx.fillStyle = o.bg || 'rgba(255,248,239,.88)'; rr(cx, x - w / 2, y - h / 2, w, h, 4 * U); cx.fill();
+  cx.lineWidth = 1.5 * U; cx.strokeStyle = '#3b2f4a'; cx.stroke();
   cx.fillStyle = o.fg || '#3b2f4a'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText(text, x, y + DPR * .5);
 }
 function bubble(e) {
   if (!e.bubble || performance.now() > e.bubble.until) { e.bubble = null; return; }
-  const [sx, sy] = toScr(Math.round(e.x), Math.round(e.y) - 20), fs = 12 * DPR; cx.font = `700 ${fs}px ${FONT}`;
-  const w = cx.measureText(e.bubble.text).width + 12 * DPR, h = fs + 9 * DPR, bx = sx - w / 2, by = sy - h - 6 * DPR;
-  cx.fillStyle = '#fff'; rr(cx, bx, by, w, h, 6 * DPR); cx.fill(); cx.lineWidth = 2 * DPR; cx.strokeStyle = '#3b2f4a'; cx.stroke();
+  const [sx, sy] = toScr(Math.round(e.x), Math.round(e.y) - 20), fs = 12 * U; cx.font = `700 ${fs}px ${FONT}`;
+  const w = cx.measureText(e.bubble.text).width + 12 * U, h = fs + 9 * U, bx = sx - w / 2, by = sy - h - 6 * U;
+  cx.fillStyle = '#fff'; rr(cx, bx, by, w, h, 6 * U); cx.fill(); cx.lineWidth = 2 * U; cx.strokeStyle = '#3b2f4a'; cx.stroke();
   cx.beginPath(); cx.moveTo(sx - 4 * DPR, by + h - 1); cx.lineTo(sx, by + h + 5 * DPR); cx.lineTo(sx + 4 * DPR, by + h - 1); cx.fillStyle = '#fff'; cx.fill();
   cx.fillStyle = '#3b2f4a'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText(e.bubble.text, sx, by + h / 2 + DPR * .5);
 }
@@ -1295,7 +1394,8 @@ function render(t) {
   oc.save(); oc.translate(-cam.x, -cam.y); oc.drawImage(s.map, 0, 0);
   const list = s.dyn.slice();
   s.ents.forEach(e => list.push({ y: e.y, f: g => drawChar(g, e.x, e.y, e.dir, e.step, e.look[0], e.look[1], e.look[2]) }));
-  list.push({ y: P.y, f: g => drawChar(g, P.x, P.y, P.dir, P.step, '#5a3a2a', '#ff8fb1', '#4a5d8a') });
+  list.push({ y: P.y, f: g => { const L = st.look || {}; drawChar(g, P.x, P.y, P.dir, P.step, L.hair || '#5a3a2a', L.shirt || '#ff8fb1', L.pants || '#4a5d8a', L); } });
+  Object.values(remotes).forEach(r => { if (r.s === cur.id && r.look) list.push({ y: r.y, f: g => drawChar(g, r.x, r.y, r.dir || 'down', r.step || 0, r.look.hair, r.look.shirt, r.look.pants, r.look) }); });
   list.sort((a, b) => a.y - b.y).forEach(o => o.f(oc)); oc.restore();
   if (s.id === 'street') { oc.fillStyle = 'rgba(40,30,80,.18)'; oc.fillRect(0, 0, VW, VH); }
   cx.setTransform(1, 0, 0, 1, 0, 0); cx.fillStyle = '#2b2338'; cx.fillRect(0, 0, cv.width, cv.height);
@@ -1307,6 +1407,7 @@ function render(t) {
     if (e.title) { const [tx, ty] = toScr(Math.round(e.x), Math.round(e.y) - 24); label('「' + e.title + '」', tx, ty, { size: 9, bg: '#2b2338', fg: '#cdeaff' }); }
     const m = markOf(e); if (m) { const [mx, my] = toScr(e.x, e.y - 30 + Math.sin(t / 200) * 2); badge(mx, my, m === 'turn' ? '?' : '!', m === 'side' ? '#7ec8f0' : '#ffd45c'); }
   });
+  Object.values(remotes).forEach(r => { if (r.s !== cur.id) return; const [sx, sy] = toScr(Math.round(r.x), Math.round(r.y) + 9); label(r.name || '同學', sx, sy, { size: 10, bg: '#b7f0b1' }); if (r.title) { const [tx, ty] = toScr(Math.round(r.x), Math.round(r.y) - 24); label('「' + r.title + '」', tx, ty, { size: 9, bg: '#2b2338', fg: '#b7f0b1' }); } bubble(r); });
   if (started) { const [sx, sy] = toScr(Math.round(P.x), Math.round(P.y) + 9); label(st.name, sx, sy, { size: 10, bg: '#ffd45c' }); const tt = titleOf(); if (tt) { const [tx, ty] = toScr(Math.round(P.x), Math.round(P.y) - 24); label('「' + tt + '」', tx, ty, { size: 10, bg: '#2b2338', fg: '#f2c14e' }); } }
   bubble(P); s.ents.forEach(bubble);
   if (started && !cur.indoor) goalBadges(t);
@@ -1345,7 +1446,12 @@ const ACH = [
   { id: 'coffeegive', n: '請你喝一杯', d: '在留言牆請別人喝咖啡', t: '咖啡天使' },
   { id: 'toeic', n: '多益 785', d: '多益考到 785 分以上', t: '外商履歷預備軍' },
   { id: 'ielts', n: '雅思 6.0', d: '雅思考到 6.0 以上', t: '留學準備中' },
-  { id: 'allexam', n: '考試收集家', d: '四種進階考試都考過一次', t: '考試收集家', h: 1 }
+  { id: 'allexam', n: '考試收集家', d: '四種進階考試都考過一次', t: '考試收集家', h: 1 },
+  { id: 'ch3', n: '走到岔路口', d: '完成第三章', t: '岔路口旅人' },
+  { id: 'path_transfer', n: '轉系成功', d: '第三章選擇轉系', t: '轉系勇者' },
+  { id: 'path_double', n: '雙主修開始', d: '第三章選擇雙主修', t: '雙主修狂人' },
+  { id: 'path_exchange', n: '交換學生', d: '第三章選擇出國交換', t: '準交換學生' },
+  { id: 'path_intern', n: '實習錄取', d: '第三章選擇去實習', t: '實習生' }
 ];
 const ACHM = Object.fromEntries(ACH.map(a => [a.id, a]));
 let achQ = [], achBusy = false;
@@ -1511,12 +1617,12 @@ function makeCard(kind) {
   txt('及格鎮大學', 110, 140, 64); txt(kind === 'id' ? '學生證' : '畢業成績單（預覽版）', 110, 190, 34, '#3b2f4a', 700);
   txt('PASS-TOWN', W - 110, 140, 34, '#3b2f4a', 800, 'right');
   // 角色
-  const sp = document.createElement('canvas'); sp.width = 24; sp.height = 24; const sg = sp.getContext('2d'); drawChar(sg, 12, 22, 'down', 0, '#5a3a2a', '#ff8fb1', '#4a5d8a');
+  const sp = document.createElement('canvas'); sp.width = 24; sp.height = 24; const sg = sp.getContext('2d'); { const L = st.look; drawChar(sg, 12, 22, 'down', 0, L.hair, L.shirt, L.pants, L); }
   box(110, 270, 300, 360, '#cdeefa', 8); g.fillStyle = '#9bd8a0'; g.fillRect(110, 540, 300, 90);
   g.drawImage(sp, 0, 0, 24, 24, 110 + 150 - 156, 270 + 360 - 312 - 40, 312, 312);
   let id = 0; for (const ch of st.name + (st.uid || '')) id = (Math.imul(id, 31) + ch.charCodeAt(0)) >>> 0;
-  const rows = [['姓名', st.name], ['學號', 'PT' + String(id % 1000000).padStart(6, '0')], ['年級', '大一'], ['選課', TRACK_NAME[st.track] || '還沒選'], ['稱號', titleOf() || '（還沒戴）'], ['資產', fmt(st.money + (st.bank || 0))]];
-  rows.forEach(([k, v], i) => { txt(k, 460, 320 + i * 62, 30, '#8b8198', 700); txt(v, 560, 320 + i * 62, 38); });
+  const rows = [['姓名', st.name], ['學號', 'PT' + String(id % 1000000).padStart(6, '0')], ['年級', grade()], ['選課', TRACK_NAME[st.track] || '還沒選'], ['岔路', st.ch3 && st.ch3.path ? PATHS[st.ch3.path].n : '還沒決定'], ['稱號', titleOf() || '（還沒戴）'], ['資產', fmt(st.money + (st.bank || 0))]];
+  rows.forEach(([k, v], i) => { txt(k, 460, 310 + i * 54, 28, '#8b8198', 700); txt(v, 560, 310 + i * 54, 34); });
   if (kind === 'id') {
     txt('解鎖成就 ' + st.ach.length + ' / ' + ACH.length, 110, 720, 36);
     st.ach.slice(-12).forEach((a, i) => { const x = 110 + (i % 6) * 145, y = 750 + Math.floor(i / 6) * 150; box(x, y, 120, 120, '#f2c14e', 6); txt(ACHM[a].n[0], x + 60, y + 82, 60, '#2b2338', 800, 'center'); g.font = `700 20px ${FONT}`; txt(ACHM[a].n.slice(0, 6), x + 60, y + 145, 20, '#3b2f4a', 700, 'center'); });
@@ -1633,6 +1739,187 @@ document.addEventListener('fullscreenchange', fsSync); document.addEventListener
 $('#fsBtn').addEventListener('click', () => goFull(false));
 fsSync();
 
+/* ---------- 換裝 ---------- */
+const WARD = {
+  style: [['short', '短髮'], ['long', '長髮'], ['bob', '鮑伯頭'], ['bun', '包包頭'], ['cap', '棒球帽']],
+  hair: ['#2b2338', '#5a3a2a', '#8a4b2a', '#c9a24b', '#e5607f', '#7a8fb5', '#e8e3f2'],
+  skin: ['#ffe3cc', '#ffd9bb', '#e8b48a', '#b9805a', '#8a5a3c'],
+  shirt: ['#ff8fb1', '#7ec8f0', '#ffd45c', '#9bd8a0', '#c9b6f5', '#ffffff', '#3b2f4a', '#e5607f', '#ff8b3d'],
+  pants: ['#4a5d8a', '#3b2f4a', '#8a8a99', '#a8745a', '#2f5d4a', '#c9c3d6'],
+  acc: [['none', '無'], ['glasses', '眼鏡'], ['phones', '耳機'], ['bag', '後背包']],
+  cap: ['#3ba3d8', '#e5607f', '#3b2f4a', '#ffd45c', '#9bd8a0']
+};
+function drawWardPrev() {
+  const c = $('#wardPrev'), g = c.getContext('2d'), L = st.look; g.imageSmoothingEnabled = false; g.clearRect(0, 0, 48, 60);
+  R(g, '#9bd8a0', 0, 44, 48, 16);
+  drawChar(g, 14, 50, 'down', 0, L.hair, L.shirt, L.pants, L); drawChar(g, 34, 50, 'right', 0, L.hair, L.shirt, L.pants, L);
+}
+function renderWard() {
+  const L = st.look;
+  const opt = (k, list) => '<div class="wrow"><h3>' + { style: '髮型', acc: '配件' }[k] + '</h3>' + list.map(([v, n]) => '<button type="button" data-k="' + k + '" data-v="' + v + '" class="' + (L[k] === v ? 'on' : '') + '">' + n + '</button>').join('') + '</div>';
+  const sw = (k, n, list) => '<div class="wrow"><h3>' + n + '</h3>' + list.map(v => '<button type="button" class="sw ' + (L[k] === v ? 'on' : '') + '" data-k="' + k + '" data-v="' + v + '" style="background:' + v + '" aria-label="' + n + '"></button>').join('') + '</div>';
+  $('#wardBody').innerHTML = opt('style', WARD.style) + (L.style === 'cap' ? sw('cap', '帽子顏色', WARD.cap) : '') + sw('hair', '髮色', WARD.hair) + sw('skin', '膚色', WARD.skin) + sw('shirt', '上衣', WARD.shirt) + sw('pants', '褲子', WARD.pants) + opt('acc', WARD.acc);
+  $('#wardBody').querySelectorAll('[data-k]').forEach(b => b.onclick = () => { st.look[b.dataset.k] = b.dataset.v; beep(700, .03); renderWard(); });
+  drawWardPrev();
+}
+function openWard() { st.look = Object.assign({ style: 'short', hair: '#5a3a2a', skin: '#ffd9bb', shirt: '#ff8fb1', pants: '#4a5d8a', acc: 'none', cap: '#3ba3d8' }, st.look || {}); renderWard(); $('#wardOv').classList.add('on'); modalOpen = true; }
+$('#wardDone').onclick = () => { $('#wardOv').classList.remove('on'); modalOpen = false; persist(); toast('換好了'); if (rt) rtSend(true); };
+
+/* ---------- 真人同步（Supabase Realtime） ---------- */
+const remotes = {};
+let rt = null, rtCount = 0, rtT = 0, rtKey = '', rtLastSend = 0;
+function joinRoom(room) {
+  return new Promise(res => {
+    const ch = sb.channel('pass-town-' + room, { config: { presence: { key: sbUid }, broadcast: { self: false } } });
+    ch.on('broadcast', { event: 'pos' }, ({ payload: p }) => {
+      if (!p || p.id === sbUid) return; let r = remotes[p.id];
+      if (!r || r.s !== p.s) r = remotes[p.id] = Object.assign(r || {}, { x: p.x, y: p.y, bubble: null });
+      Object.assign(r, { id: p.id, tx: p.x, ty: p.y, s: p.s, dir: p.d, moving: p.m, name: p.n, title: p.t, look: p.l, seen: performance.now() });
+    });
+    ch.on('broadcast', { event: 'wave' }, ({ payload: p }) => { if (!p || p.to !== sbUid) return; const r = remotes[p.from]; if (r) say(r, '👋', 2); toast(p.n + ' 跟你揮手'); beep(990, .06); });
+    ch.on('presence', { event: 'sync' }, () => { rtCount = Object.keys(ch.presenceState()).length; hud(); });
+    ch.on('presence', { event: 'leave' }, ({ key }) => { delete remotes[key]; });
+    let done = false;
+    ch.subscribe(async status => {
+      if (status === 'SUBSCRIBED' && !done) { done = true; try { await ch.track({ n: st.name }); } catch (e) {} res(ch); }
+      else if ((status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') && !done) { done = true; res(null); }
+    });
+    setTimeout(() => { if (!done) { done = true; res(null); } }, 8000);
+  });
+}
+async function rtStart() {
+  if (rt || !SB_KEY || !await sbInit()) return;
+  for (let room = 1; room <= 5; room++) {
+    const ch = await joinRoom(room); if (!ch) return;
+    await new Promise(r => setTimeout(r, 1200));
+    if (Object.keys(ch.presenceState()).length <= 20) { rt = ch; rt.room = room; rtSend(true); hud(); return; }
+    try { sb.removeChannel(ch); } catch (e) {}
+  }
+}
+function rtSend(force) {
+  if (!rt) return; const now = performance.now();
+  const key = cur.id + ',' + Math.round(P.x) + ',' + Math.round(P.y) + ',' + P.dir;
+  if (!force && (key === rtKey ? now - rtLastSend < 3000 : now - rtLastSend < 250)) return;
+  rtKey = key; rtLastSend = now;
+  try { rt.send({ type: 'broadcast', event: 'pos', payload: { id: sbUid, s: cur.id, x: Math.round(P.x), y: Math.round(P.y), d: P.dir, m: P.step ? 1 : 0, n: st.name, t: titleOf(), l: st.look } }); } catch (e) {}
+}
+function rtUpdate(dt) {
+  const now = performance.now();
+  for (const id in remotes) {
+    const r = remotes[id]; if (now - (r.seen || 0) > 12000) { delete remotes[id]; continue; }
+    const dx = r.tx - r.x, dy = r.ty - r.y, d = Math.hypot(dx, dy);
+    if (d > 40) { r.x = r.tx; r.y = r.ty; } else if (d > .5) { const sp = Math.min(d, 75 * dt); r.x += dx / d * sp; r.y += dy / d * sp; r.anim = (r.anim || 0) + dt; r.step = Math.floor(r.anim / .15) % 2; } else r.step = 0;
+  }
+}
+function realWave(r) {
+  say(P, '👋', 1.6); beep(780, .05); dHit('wave'); st.cnt.wave++; if (st.cnt.wave >= 10) ach('wave10');
+  if (!st.q.c.waves.includes('真人:' + r.id)) st.q.c.waves.push('真人:' + r.id); chkReady();
+  try { rt.send({ type: 'broadcast', event: 'wave', payload: { to: r.id, from: sbUid, n: st.name } }); } catch (e) {}
+}
+
+/* ---------- 第三章：岔路 ---------- */
+const CAR = [["軟體工程師", 4.6, 15.0, "IC"], ["晶圓廠製程工程師", 6.2, 15.0, "RI"], ["醫師", 11.0, 40.0, "IS"], ["牙醫師", 8.0, 30.0, "IR"], ["藥師", 5.0, 7.5, "IC"], ["護理師", 4.6, 6.2, "SR"], ["物理治療師", 4.3, 7.0, "SR"], ["律師", 5.5, 15.0, "EI"], ["會計／審計員", 3.9, 10.0, "CE"], ["金融業（銀行／證券）", 3.9, 8.0, "EC"], ["公務員", 5.0, 6.5, "CS"], ["教師", 4.8, 7.0, "SA"], ["社工師", 3.6, 4.8, "SE"], ["心理師", 4.5, 7.0, "SI"], ["設計師（平面／UI）", 3.3, 6.0, "AE"], ["建築設計師", 3.6, 8.0, "AI"], ["記者／編輯", 3.5, 5.0, "AE"], ["行銷企劃", 3.5, 6.5, "EA"], ["業務", 3.5, 9.0, "ES"], ["廚師", 3.0, 6.0, "RA"], ["水電／冷氣技師", 3.8, 8.0, "RC"], ["內容創作者", 1.5, 6.0, "AE"], ["研究員／大學教授", 5.0, 9.0, "IA"], ["遊戲企劃", 3.8, 6.5, "AI"], ["新農人", 2.5, 5.0, "RI"], ["警察／消防員", 5.0, 6.5, "RS"], ["科技新創創辦人", 2.0, 15.0, "EI"], ["電商／個人品牌", 1.5, 8.0, "EA"], ["開店（咖啡／餐飲／手搖）", 2.0, 10.0, "ES"], ["接案工作室", 2.5, 8.0, "AE"], ["空服員", 5.0, 7.0, "SE"], ["機械／土木工程師", 4.0, 6.5, "RI"], ["生技研發人員", 4.0, 6.5, "IR"], ["飯店／旅遊業", 3.3, 5.0, "SE"], ["海外工作（之後返台）", 5.5, 12.0, "EI"], ["服務業／外送員", 2.95, 3.4, "RS"]];
+const HOL = { R: '實作型', I: '研究型', A: '藝術型', S: '社會型', E: '企業型', C: '事務型' };
+const HOLD = { R: '喜歡動手做、操作工具或機器、在現場解決實際問題。', I: '喜歡觀察、分析、搞懂事情背後的原理。', A: '喜歡創作、表達，不喜歡被框架限制。', S: '喜歡幫助、教導、陪伴別人。', E: '喜歡帶領、說服、推動事情，願意承擔風險。', C: '喜歡有條理地處理資料和細節，把事情做得精準。' };
+const HOLQS = [
+  ['週末突然空出一整天，你會？', [['R', '把壞掉的東西拆開來修'], ['I', '看一部紀錄片，再查一堆資料'], ['A', '畫畫、寫東西或剪影片']]],
+  ['分組報告時，你通常是？', [['E', '主動當組長、分配工作'], ['C', '整理資料、做表格和格式'], ['S', '照顧大家的心情，誰卡住就幫誰']]],
+  ['想參加哪一種社團？', [['R', '登山或手作'], ['S', '服務隊、志工'], ['A', '熱舞、戲劇或樂團']]],
+  ['打工比較想做？', [['C', '行政櫃台，把文件分類歸檔'], ['S', '當家教'], ['E', '當業務，去說服客人']]],
+  ['上課最期待哪一種？', [['I', '做實驗看結果'], ['R', '實際操作機器或工具'], ['E', '簡報比賽，上台拿名次']]],
+  ['遇到一個新問題，你第一個反應是？', [['I', '先想它為什麼會這樣'], ['C', '先列清單，排好順序'], ['A', '先想怎麼做會比較好看、比較有趣']]]
+];
+const BOOTHS = {
+  transfer: { n: '轉系', npc: '轉系學長', info: ['大部分學校大一或大二可以申請轉系。各系會看成績，有些系還要面試或筆試，名額要看那個系有沒有缺額。', '我自己是從化學系轉到資管系的。轉過去之後，大一的必修要重修一輪，課表很滿。但我不後悔。'] },
+  double: { n: '雙主修與輔系', npc: '雙主修學姊', info: ['雙主修要把另一個系的主修學分修完，比輔系多很多；輔系學分少一點，壓力也小一點。', '我雙主修經濟，大三那年每天都有課到晚上九點。很多人是因為雙主修延畢的，先想清楚你要它做什麼。'] },
+  exchange: { n: '交換學生', npc: '國際處老師', info: ['交換學生多半看在校成績和語言成績，例如雅思、托福。去一學期或一年，學費通常是繳原本學校的。', '出去之前最擔心的是語言，回來之後大家說最大的收穫是：知道自己一個人也活得下去。'] },
+  intern: { n: '實習與工作', npc: '人資小姐', info: ['實習有暑期、學期和學年的。有些系會把實習算學分。找實習時，履歷、作品和語言成績都會被看。', '我們最常看的其實是：你有沒有做過一件完整的事，然後說得出你在裡面做了什麼。'] }
+};
+const PATHS = {
+  transfer: { n: '轉系', need: () => st.exp >= 120, needT: '知識要有 120（現在 ' + 0 + '）', needF: () => '知識要到 120，現在是 ' + st.exp + '。去圖書館讀書、上課都會加。', task: '去教學大樓上新科系的課 3 次', goal: 3, ach: 'path_transfer' },
+  double: { n: '雙主修', need: () => st.exp >= 80, needF: () => '知識要到 80，現在是 ' + st.exp + '。', task: '去教學大樓上兩個系的課，共 4 次', goal: 4, ach: 'path_double' },
+  exchange: { n: '交換學生', need: () => st.certs.ielts >= 5.5 || st.certs.toefl >= 60, needF: () => '要有雅思 5.5 或托福 60 分。考試中心可以考（現在雅思 ' + (st.certs.ielts || '未考') + '、托福 ' + (st.certs.toefl || '未考') + '）。', task: '回博覽會找國際處老師，通過英文面試', goal: 1, ach: 'path_exchange' },
+  intern: { n: '實習', need: () => st.certs.toeic >= 550 || st.q.c.workAll >= 5, needF: () => '要有多益 550 分，或在便利商店打工滿 5 次（現在 ' + st.q.c.workAll + ' 次）。', task: '去市區的辦公大樓參加實習面試', goal: 1, ach: 'path_intern' }
+};
+function ch3Task() { const p = PATHS[st.ch3.path]; return p ? p.task + (p.goal > 1 ? '（' + Math.min(p.goal, st.ch3.prog) + ' / ' + p.goal + '）' : '') : '完成你選的岔路任務'; }
+function ch3Prog(kind) {
+  if (st.q.main !== 15) return; const p = st.ch3.path;
+  if (kind === 'class' && (p === 'transfer' || p === 'double')) { st.ch3.prog++; toast(ch3Task()); if (st.ch3.prog >= PATHS[p].goal) setMain(16); }
+  if (kind === 'pass' && (p === 'exchange' || p === 'intern')) setMain(16);
+}
+function boothTalk(id) {
+  const b = BOOTHS[id], m = st.q.main;
+  if (m === 15 && id === 'exchange' && st.ch3.path === 'exchange') return exchangeInterview();
+  dialog(b.npc, b.info, [{ label: '好，我記下來了', fn: () => {
+    if (!st.ch3.booths.includes(id)) { st.ch3.booths.push(id); if (m === 12) { toast('博覽會攤位：' + Math.min(3, st.ch3.booths.length) + ' / 3'); if (st.ch3.booths.length >= 3) setTimeout(() => setMain(13), 400); } }
+    persist(); hud();
+  } }]);
+}
+function holTest() {
+  const sc = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 }; let i = 0;
+  const next = () => {
+    if (i >= HOLQS.length) return holResult(sc);
+    const [q, opts] = HOLQS[i]; i++;
+    showModal({ title: '興趣測驗 ' + i + ' / ' + HOLQS.length, text: q + '\n（選最接近真實感受的，沒有標準答案。）', choices: shuffle(opts).map(([k, t]) => ({ label: t, fn: () => { sc[k]++; next(); } })) });
+  };
+  next();
+}
+function holResult(sc) {
+  const order = 'RIASEC'.split('').sort((a, b) => sc[b] - sc[a] || 'RIASEC'.indexOf(a) - 'RIASEC'.indexOf(b)), code = order[0] + order[1];
+  st.ch3.hol = code;
+  const both = CAR.filter(c => c[3].includes(order[0]) && c[3].includes(order[1])), one = CAR.filter(c => c[3][0] === order[0] && !both.includes(c));
+  const list = both.concat(one).slice(0, 4).map(c => '・' + c[0] + '：起薪約 ' + c[1] + ' 萬，資深約 ' + c[2] + ' 萬');
+  const holIdx = PSY.findIndex(p => p.n === '霍蘭德興趣理論'); if (holIdx >= 0 && !st.psy.includes('霍蘭德興趣理論')) { st.psy.push('霍蘭德興趣理論'); syncLifeFork('霍蘭德興趣理論'); }
+  logLine('興趣代碼：' + code);
+  dialog('輔導老師', ['你的興趣代碼是 ' + code + '。\n\n' + HOL[order[0]] + '：' + HOLD[order[0]] + '\n' + HOL[order[1]] + '：' + HOLD[order[1]],
+    '跟這個組合比較合的工作（薪水資料來自《人生岔路口》的職業圖鑑）：\n' + (list.join('\n') || '・這個組合很少見，可以多探索看看'),
+    '測驗只是參考，不是判決。真的想知道適不適合，最好的方法是去試，或找正在做這份工作的人聊聊。\n\n（霍蘭德興趣理論的小卡已經放進你的手冊，也同步到《人生岔路口》了。）'],
+    [{ label: '好', fn: () => { if (st.q.main === 13) setMain(14); persist(); } }]);
+}
+function choosePath() {
+  showModal({ title: '輔導老師', text: '大二了，接下來想往哪裡走？\n每條路都有門檻。還沒達到也沒關係，我會告訴你差什麼。' + (st.ch3.hol ? '\n你的興趣代碼是 ' + st.ch3.hol + '。' : ''), choices: Object.entries(PATHS).map(([id, p]) => ({ label: p.n, fn: () => {
+    if (!p.need()) return ok('輔導老師', '想走' + p.n + '的話：\n' + p.needF() + '\n\n準備好了再來找我，或先選別條路。', choosePath);
+    dialog('輔導老師', ['好，' + p.n + '。', '接下來要做的事：' + p.task + '。', '選了也不代表不能改。很多人的路都是走一走才轉彎的。'], [{ label: '就這條', fn: () => { st.ch3.path = id; st.ch3.prog = 0; logLine('第三章選擇：' + p.n); setMain(15); } }, { label: '再想想', fn: choosePath }]);
+  } })).concat([{ label: '還沒想好' }]) });
+}
+function counselorTalk() {
+  const m = st.q.main;
+  if (m < 12) return ok('輔導老師', '博覽會還在布置。你先去各個攤位看看吧。');
+  if (m === 12) return ok('輔導老師', '先去逛三個攤位，聽聽看每條路是什麼樣子，再回來找我做測驗。');
+  if (m === 13) return dialog('輔導老師', ['你好。這是興趣測驗，六題，大概兩分鐘。', '它是根據心理學家 Holland 的理論做的，把興趣分成六種類型。'], [{ label: '開始測驗', fn: holTest }]);
+  if (m === 14) return choosePath();
+  if (m === 15) return ok('輔導老師', '你選的是' + PATHS[st.ch3.path].n + '。接下來：' + ch3Task());
+  showModal({ title: '輔導老師', text: '想再做一次興趣測驗嗎？人會變，答案也會變。', choices: [{ label: '再測一次', fn: holTest }, { label: '不用了' }] });
+}
+function exchangeInterview() {
+  showModal({ title: '國際處老師', text: '交換學生的英文面試。五題，答對三題就通過。\n別緊張，國外的學校也知道你英文不是母語。', choices: [{ label: '開始', fn: () => quizGame({ title: '交換學生面試', desc: '電腦可以按數字鍵 1 到 4 作答。', qs: vocabFrom(ACAD, 3).concat(shuffle(READ_ACAD).slice(0, 2).map(readQ)), time: 20, elim: 0,
+    end: c => { if (c >= 3) { logLine('通過交換學生面試'); ok('面試結果', '答對 ' + c + ' 題，通過了！國際處老師說：「到那邊記得多跟當地人講話，不要只跟台灣人吃火鍋。」'); ch3Prog('pass'); } else ok('面試結果', '答對 ' + c + ' 題，差一點。去咖啡廳或圖書館多讀一點英文，再回來試。'); persist(); } }) }, { label: '再準備一下' }] });
+}
+const INTERVIEW = [
+  ['先簡單自我介紹一下？', [[0, '把履歷上的東西照順序念一遍', '面試官點點頭，眼神開始飄向手錶。'], [1, '講一件你做過、跟這份工作有關的具體事情', '面試官停下筆，問了你兩個追問。是好現象。'], [0, '說你很有熱忱，什麼都願意學', '「大家都這樣說。」面試官笑了一下。']]],
+  ['你覺得自己最大的缺點是什麼？', [[0, '我太追求完美了', '面試官的表情沒有變化。這個答案他今天聽了第五次。'], [1, '我以前常拖延，現在會把工作拆小、幫自己設截止時間', '「很好，有發現問題也有方法。」'], [0, '我沒有缺點', '空氣安靜了三秒。']]],
+  ['最後，你有什麼問題想問我們嗎？', [[0, '沒有', '面試官說好，今天就到這裡。'], [1, '實習生平常會參與哪些專案？會有人帶嗎？', '面試官眼睛亮了一下，講了五分鐘。'], [0, '請問薪水多少？可以遠端嗎？', '可以問，但第一個問題就問這個，面試官的筆停了一下。']]]
+];
+function internInterview() {
+  let i = 0, score = 0;
+  const next = () => {
+    if (i >= INTERVIEW.length) { if (score >= 2) { logLine('通過實習面試'); ok('面試結果', '一週後你收到信：「恭喜錄取暑期實習。」你把信看了三遍。'); ch3Prog('pass'); } else ok('面試結果', '一週後你收到信：「感謝您的參與，我們會將您的資料留存。」\n\n這封信的意思大家都懂。可以再來面試一次。'); persist(); return; }
+    const [q, opts] = INTERVIEW[i]; i++;
+    showModal({ title: '面試官', text: q, choices: shuffle(opts).map(([v, t, fb]) => ({ label: t, fn: () => { score += v; ok('面試官', fb, next); } })) });
+  };
+  if (st.q.main === 15 && st.ch3.path === 'intern') dialog('人資小姐', ['你好，今天是實習面試對吧？', '面試官在裡面等你。三個問題，放輕鬆。'], [{ label: '進去面試', fn: next }]);
+  else ok('人資小姐', st.q.main < 15 ? '我們現在在招暑期實習生。先去博覽會看看，再決定要不要走這條路。' : '你今天沒有約面試喔。');
+}
+function busRide(to) {
+  if (to === 'city' && st.q.main < 11) return ok('公車站', '站牌上寫著：往市區、往機場、往你沒去過的地方。\n\n第三章開放後，公車會帶你去市區。');
+  showModal({ title: '公車站', text: to === 'city' ? '往市區的公車來了。車資 $15。' : '回學校的公車來了。車資 $15。', choices: [{ label: '上車 $15', fn: () => {
+    if (st.money < 15) return ok('公車站', '悠遊卡餘額不足。司機看著你，你看著司機。');
+    spend(15, '公車');
+    if (to === 'city') { goScene('city', 3.5 * T, 12 * T + 10, 'right'); if (st.q.main === 11) setTimeout(() => setMain(12), 400); }
+    else goScene('street', 15.5 * T, 22 * T + 12, 'down');
+  } }, { label: '不搭了' }] });
+}
+
 /* ---------- 電腦按鍵說明 ---------- */
 function keysHelp() {
   st.met.keysIntro = 1;
@@ -1645,16 +1932,19 @@ function goals() {
   const out = [], m = st.q.main;
   if (m === 4 || m === 7) out.push({ at: 'library', c: '#ffd45c', ch: '!' });
   if (m === 9) out.push({ at: 'exam', c: '#ffd45c', ch: '!' });
+  if (m === 11) out.push({ at: { scene: 'street', x: 15.5 * T, y: 22 * T }, c: '#ffd45c', ch: '!' });
+  if (m >= 12 && m <= 14) out.push({ at: 'expo', c: '#ffd45c', ch: '!' });
+  if (m === 15) out.push({ at: { transfer: 'classroom', double: 'classroom', exchange: 'expo', intern: 'corp' }[st.ch3.path] || 'expo', c: '#ffd45c', ch: '!' });
   st.daily.ids.forEach(id => { if (!st.daily.done[id] && DAILY[id].at) out.push({ at: DAILY[id].at, c: '#9bd8a0', ch: '日' }); });
   return out.map(g => typeof g.at === 'string' ? Object.assign(g, parentOf(g.at)) : Object.assign(g, g.at));
 }
 function goalBadges(t) {
   const seen = {};
-  goals().forEach(g => { if (g.scene !== cur.id) return; const key = Math.round(g.x) + ',' + Math.round(g.y); const n = seen[key] = (seen[key] || 0) + 1; const [sx, sy] = toScr(g.x + (n - 1) * 18, g.y - 40 + Math.sin(t / 220) * 2); badge(sx, sy, g.ch, g.c); });
+  goals().forEach(g => { if (g.scene !== cur.id) return; const key = Math.round(g.x) + ',' + Math.round(g.y); const n = seen[key] = (seen[key] || 0) + 1; const [sx, sy] = toScr(g.x + 26 + (n - 1) * 20, g.y - 30 + Math.sin(t / 220) * 2); badge(sx, sy, g.ch, g.c); });
 }
 /* ---------- 小地圖 ---------- */
 let mapView = 'campus';
-const OUT = [['campus', '校園'], ['playground', '操場'], ['street', '校外']];
+const OUT = [['campus', '校園'], ['playground', '操場'], ['street', '校外'], ['city', '市區']];
 function parentOf(sceneId) { const s = scenes[sceneId]; if (!s.indoor) return { scene: sceneId }; const b = BLD.find(b => b.id === sceneId); const d = door(b); return { scene: b.scene, x: d.x, y: d.y - 10 }; }
 function openMap() { mapView = parentOf(cur.id).scene; drawMap(); $('#mapOv').classList.add('on'); modalOpen = true; }
 function closeMap() { $('#mapOv').classList.remove('on'); modalOpen = false; }
@@ -1684,7 +1974,7 @@ function drawMap() {
 }
 $('#mapBtn').addEventListener('click', () => { if (started && !locked()) openMap(); });
 $('#mapClose').addEventListener('click', closeMap);
-const FAST = { playground: [{ n: '籃球場', x: 26 * T, y: 9 * T + 8 }, { n: '起跑線', x: 11.5 * T, y: 20 * T + 4 }, { n: '操場入口', x: 15 * T, y: 1 * T + 14 }], street: [{ n: '夜市', x: 7 * T, y: 6 * T + 8 }, { n: '公車站', x: 15.5 * T, y: 22 * T + 12 }, { n: '校外入口', x: 1.5 * T, y: 8 * T + 4 }], campus: [{ n: '樹洞留言牆', x: 16.5 * T, y: 18 * T }, { n: '噴水池', x: 24 * T, y: 16 * T + 8 }] };
+const FAST = { playground: [{ n: '籃球場', x: 26 * T, y: 9 * T + 8 }, { n: '起跑線', x: 11.5 * T, y: 20 * T + 4 }, { n: '操場入口', x: 15 * T, y: 1 * T + 14 }], street: [{ n: '夜市', x: 7 * T, y: 6 * T + 8 }, { n: '公車站', x: 15.5 * T, y: 22 * T + 12 }, { n: '校外入口', x: 1.5 * T, y: 8 * T + 4 }], city: [{ n: '市區公車站', x: 3.5 * T, y: 12 * T + 10 }], campus: [{ n: '樹洞留言牆', x: 16.5 * T, y: 18 * T }, { n: '噴水池', x: 24 * T, y: 16 * T + 8 }] };
 $('#mapCv').addEventListener('click', e => {
   if (!st || mg || busy) return; const c = $('#mapCv'), r = c.getBoundingClientRect(), s = scenes[mapView];
   const wx = (e.clientX - r.left) / r.width * s.w * T, wy = (e.clientY - r.top) / r.height * s.h * T;
@@ -1725,6 +2015,7 @@ function loop(now) {
     }
     { const g = rate() / 60 * dt; st.money += g; st.ledger.idle += g; }
     evT -= dt; if (evT <= 0 && !locked()) { evT = rand(200, 380); if (Math.random() < .45) randomEvent(); }
+    rtUpdate(dt); rtSend(false);
     mutT -= dt; if (mutT <= 0) { mutT = rand(11, 19); if (!locked()) mutter(); }
     nearIt = locked() ? null : nearest();
     $('#act').classList.toggle('on', !!nearIt); $('#actLabel').textContent = nearIt ? nearIt.label : '互動';
@@ -1737,14 +2028,14 @@ function loop(now) {
 const TRACK_NAME = { sci: '理工類', art: '人文類', biz: '商管類' };
 function hud() {
   if (!st || !started) return;
-  $('#hName').textContent = st.name + ' · 大一'; $('#hMoney').textContent = fmt(st.money);
+  $('#hName').textContent = st.name + ' · ' + grade(); $('#hMoney').textContent = fmt(st.money);
   $('#hRate').textContent = st.challenge ? '30,900 生存挑戰中 · 每天房租 $327' : '每分鐘 +$' + rate() + (st.track ? ' · ' + TRACK_NAME[st.track] : '');
   $('#hMoney').style.color = st.money < 0 ? '#e5607f' : '';
-  const m = st.q.main; $('#hQuest').textContent = m < MAIN.length ? '主線：' + MAIN[m] + ENG_PROG() : '第二章完成 · 第三章準備中';
+  const m = st.q.main; $('#hQuest').textContent = m < MAIN.length ? '主線：' + mainText(m) + ENG_PROG() : '第三章完成 · 第四章準備中';
   const act = Object.keys(SIDE).filter(id => sideSt(id) === 1).length, rd = Object.keys(SIDE).filter(id => sideSt(id) === 1 && SIDE[id].ready()).length;
   $('#hBadge').textContent = act ? '支線 ' + act + (rd ? '·可回報' : '') : '';
   $('#hDaily').textContent = st.daily.ids.filter(i => st.daily.done[i]).length + ' / 3';
-  $('#hPlace').textContent = cur.name; $('#hOnline').textContent = '同屆在線 6 人 · 示範';
+  $('#hPlace').textContent = cur.name; $('#hOnline').textContent = rt ? '真人在線 ' + rtCount + ' 人 · ' + rt.room + ' 號房' : '同屆在線 6 人 · 示範';
 }
 
 /* ---------- 手冊 ---------- */
@@ -1762,10 +2053,10 @@ function bookHTML() {
     CHAPTERS.forEach(ch => {
       h += '<div class="sec"><h3>主線 · ' + ch.n + '</h3>';
       if (m < ch.a) h += '<div class="item done">完成上一章後開放</div>';
-      else for (let i = ch.a; i < ch.b; i++) h += '<div class="item ' + (i === m ? 'main' : i < m ? 'done' : '') + '"><b>' + (i < m ? '✓ ' : i === m ? '▶ ' : '・') + MAIN[i] + (i === m ? ENG_PROG() : '') + '</b></div>';
+      else for (let i = ch.a; i < ch.b; i++) h += '<div class="item ' + (i === m ? 'main' : i < m ? 'done' : '') + '"><b>' + (i < m ? '✓ ' : i === m ? '▶ ' : '・') + mainText(i) + (i === m ? ENG_PROG() : '') + '</b></div>';
       h += '</div>';
     });
-    h += '<div class="sec"><h3>主線 · 第三章 岔路</h3><div class="item done">還在準備</div></div><div class="sec"><h3>支線</h3>';
+    h += '<div class="sec"><h3>主線 · 第四章 畢業</h3><div class="item done">還在準備</div></div><div class="sec"><h3>支線</h3>';
     Object.keys(SIDE).forEach(id => { const q = SIDE[id], s = sideSt(id); h += '<div class="item ' + (s === 3 ? 'done' : '') + '"><b>' + (s === 3 ? '✓ ' : '') + q.n + '</b>' + (s === 0 ? '還沒遇到委託人：' + q.who : s === 3 ? '已完成' : q.desc + '（' + q.prog() + '）<br>獎勵：' + q.reward) + '</div>'; });
     return h + '</div>';
   }
@@ -1789,14 +2080,14 @@ function bookHTML() {
   }
   const cl = st.clubs.map(i => CLUBS.find(c => c.id === i).n).join('、') || '無';
   let h = '<div class="sec"><h3>基本</h3><div class="item"><b>' + st.name + ' · 大一</b>選課傾向：' + (TRACK_NAME[st.track] || '未選') + '<br>知識：' + st.exp + '<br>社團：' + cl + '<br>便利商店打工：' + st.q.c.workAll + ' 次<br>宿舍家具：' + st.dorm.placed.length + ' 件' + (st.best.exam ? '<br>英檢最高：' + st.best.exam + ' 分' : '') + '</div></div>';
-  h += '<div class="row" style="margin:4px 0 8px"><button type="button" class="pri" id="cardId">產生學生證圖卡</button><button type="button" id="cardTr">產生畢業成績單</button></div>';
+  h += '<div class="row" style="margin:4px 0 8px"><button type="button" class="pri" id="cardId">產生學生證圖卡</button><button type="button" id="cardTr">產生畢業成績單</button><button type="button" id="wardBtn">換裝</button></div>';
   h += '<div class="sec"><h3>證照</h3><div class="item">' + EXAMS.map(x => x.n + '：' + (st.certs[x.id] ? x.show(st.certs[x.id]) : '未考')).join('<br>') + '</div></div>';
   h += '<div class="sec"><h3>人生紀錄</h3>' + (st.log.length ? st.log.slice().reverse().map(l => '<div class="item">' + l + '</div>').join('') : '<div class="item done">還沒有紀錄。去走走。</div>') + '</div>';
   return h;
 }
 function openBook() { $('#bookBody').innerHTML = bookHTML();
   const on = (id, f) => { const b = $('#bookBody').querySelector('#' + id); if (b) b.onclick = f; };
-  on('cardId', () => openCard('id')); on('cardTr', () => openCard('tr')); on('untitle', () => { st.title = ''; persist(); openBook(); });
+  on('cardId', () => openCard('id')); on('wardBtn', () => { closeBook(); openWard(); }); on('cardTr', () => openCard('tr')); on('untitle', () => { st.title = ''; persist(); openBook(); });
   on('chStart', () => { closeBook(); startChallenge(); }); on('chStop', () => { closeBook(); stopChallenge(); });
   $('#bookBody').querySelectorAll('[data-ti]').forEach(b => b.onclick = () => { st.title = b.dataset.ti; persist(); toast('戴上稱號：' + ACHM[st.title].t); openBook(); }); document.querySelectorAll('#book .tab').forEach(b => b.classList.toggle('on', b.dataset.t === tab)); $('#book').classList.add('on'); modalOpen = true; }
 function closeBook() { $('#book').classList.remove('on'); modalOpen = false; }
@@ -1813,10 +2104,10 @@ function begin() {
   if (st.pos && scenes[st.pos.s] && !scenes[st.pos.s].indoor) { cur = scenes[st.pos.s]; P.x = st.pos.x; P.y = st.pos.y; if (blocked(P.x, P.y)) { cur = campus; P.x = 24 * T; P.y = 17 * T; } }
   if (!st.uid) st.uid = Math.random().toString(36).slice(2, 10);
   st.visited = st.visited || { campus: 1 }; st.visited[cur.id] = 1;
-  checkDay(true); dayTick(true); snapCam(); hud(); claimCoffee();
+  checkDay(true); dayTick(true); snapCam(); hud(); claimCoffee(); rtStart();
   const away = (Date.now() - (st.lastSeen || Date.now())) / 60000;
   const desk = matchMedia('(hover:hover) and (pointer:fine)').matches;
-  if (st.fresh) { delete st.fresh; if (desk) keysHelp(); toast('先去學務處找陳老師報到。右上角的地圖可以看路。'); }
+  if (st.fresh) { delete st.fresh; setTimeout(openWard, 200); if (desk) setTimeout(keysHelp, 300); toast('先去學務處找陳老師報到。右上角的地圖可以看路。'); }
   else if (desk && !st.met.keysIntro) keysHelp();
   else if (away >= 1) setTimeout(() => settle(away, false), 300);
   persist();
@@ -1834,7 +2125,7 @@ resize(); snapCam();
 document.addEventListener('visibilitychange', () => { if (document.hidden && started) persist(); });
 addEventListener('pagehide', () => { if (started) persist(); });
 requestAnimationFrame(loop);
-window.__town = { get st() { return st; }, P, scenes, get cur() { return cur; }, interact, nearest, QN, SIDE, goScene, setMain, cam, get S() { return S; }, get mg() { return mg; }, mgPress, findPath, BLD, quizAnswer, quizElim, examSeat, engPractice, goals, ach, BLD2: BLD, get mapView() { return mapView; }, pickPsy, PSY, randomEvent, dayTick, openCard, openWall, startChallenge, makeCard, EXAMS, takeExam };
+window.__town = { get st() { return st; }, P, scenes, get cur() { return cur; }, interact, nearest, QN, SIDE, goScene, setMain, cam, get S() { return S; }, get mg() { return mg; }, mgPress, findPath, BLD, quizAnswer, quizElim, examSeat, engPractice, goals, remotes, openWard, holTest, choosePath, busRide, internInterview, exchangeInterview, get rt() { return rt; }, ach, BLD2: BLD, get mapView() { return mapView; }, pickPsy, PSY, randomEvent, dayTick, openCard, openWall, startChallenge, makeCard, EXAMS, takeExam };
 })();
 </script>
 </body>
