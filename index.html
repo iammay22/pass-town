@@ -379,7 +379,7 @@ const BLD = [
   { id: 'health', name: '健康中心', scene: 'playground', x: 30, y: 1, w: 6, h: 5, wall: '#e8f4f8', roof: '#e5607f', trim: '#b53c5a' },
   { id: 'ktv', name: '星光 KTV', scene: 'city', x: 30, y: 2, w: 6, h: 6, wall: '#c9b6f5', roof: '#3b2f4a', trim: '#2b2338' },
   { id: 'cinema', name: '及格影城', scene: 'city', x: 37, y: 2, w: 6, h: 6, wall: '#ffe0a8', roof: '#c8102e', trim: '#8a0b20' },
-  { id: 'arcade', name: '夾娃娃機店', scene: 'street', x: 23, y: 17, w: 6, h: 5, wall: '#ffd1de', roof: '#3ba3d8', trim: '#2578a6', awning: true },
+  { id: 'arcade', name: '夾娃娃機店', scene: 'street', x: 4, y: 10, w: 7, h: 5, wall: '#ffd1de', roof: '#3ba3d8', trim: '#2578a6', awning: true },
   { id: 'cafe2', name: '轉角咖啡廳', scene: 'street', x: 23, y: 10, w: 8, h: 5, wall: '#f0dcc4', roof: '#6f4a3a', trim: '#4a2f24', awning: true }
 ];
 const door = b => ({ x: (b.x + b.w / 2) * T, y: (b.y + b.h) * T + 6, ix: (b.x + b.w / 2) * T, iy: (b.y + b.h - 2) * T - 6 });
@@ -577,9 +577,8 @@ const HOOP = { x: 25, y: 4 }, STARTLINE = { x: 11, y: 19 };
 
 /* ===== 校外 T 字路口 32×26 ===== */
 const street = mkScene('street', '校外', 32, 26, false);
-const STALLS = [{ id: 'chicken', n: '雞排', x: 1, y: 3, c: '#e5607f' }, { id: 'tea', n: '手搖飲', x: 5, y: 3, c: '#c9a24b' }, { id: 'ring', n: '套圈圈', x: 10, y: 3, c: '#3ba3d8' }, { id: 'corn', n: '烤玉米', x: 14, y: 3, c: '#6aa84f' },
-  { id: 'moto', n: '機車行', x: 2, y: 11, c: '#8a8a99' }, { id: 'rent', n: '租屋看板', x: 8, y: 11, c: '#ff8b3d' }];
-const LAMPS = [[7, 10], [12, 10], [17, 17], [29, 23]];
+const STALLS = [{ id: 'chicken', n: '雞排', x: 1, y: 3, c: '#e5607f' }, { id: 'tea', n: '手搖飲', x: 5, y: 3, c: '#c9a24b' }, { id: 'ring', n: '套圈圈', x: 10, y: 3, c: '#3ba3d8' }, { id: 'corn', n: '烤玉米', x: 14, y: 3, c: '#6aa84f' }];
+const LAMPS = [[12, 10], [17, 17], [29, 23], [2, 14]];
 function drawStall(g, st0) {
   const x = st0.x * T, y = st0.y * T;
   R(g, 'rgba(0,0,0,.25)', x + 2, y + 3 * T - 1, 4 * T, 4);
@@ -843,7 +842,7 @@ const aAir = mkScene('a_airport', '國外機場 · 楓葉國際機場', 20, 10, 
   s.spots.push({ x: 4, y: 5, dir: 'down', stay: [6, 12] }, { x: 9, y: 6, dir: 'left', stay: [5, 10] });
 })();
 (() => { const b = BLD.find(b => b.id === 'health'); drawBld(pgd.g, b); solid(pgd, b.x, b.y, b.w, b.h); pgd.labels.push({ t: '健康中心', x: (b.x + 3) * T, y: (b.y + 2) * T + 6, size: 11 }); R(pgd.g, '#fff', (b.x + 2) * T + 10, b.y * T + 8, 12, 4); R(pgd.g, '#fff', (b.x + 2) * T + 14, b.y * T + 4, 4, 12); })();
-(() => { ['ktv', 'cinema'].forEach(id => { const b = BLD.find(x => x.id === id); city.labels.push({ t: b.name, x: (b.x + 3) * T, y: (b.y + 2) * T + 6, size: 11 }); }); street.labels.push({ t: '夾娃娃機店', x: 26 * T, y: 19 * T + 6, size: 10 }); })();
+(() => { ['ktv', 'cinema'].forEach(id => { const b = BLD.find(x => x.id === id); city.labels.push({ t: b.name, x: (b.x + 3) * T, y: (b.y + 2) * T + 6, size: 11 }); }); street.labels.push({ t: '夾娃娃機店', x: 7.5 * T, y: 12 * T + 6, size: 10 }); })();
 (() => { const b = BLD.find(x => x.id === 'arcade'); drawBld(street.g, b); solid(street, b.x, b.y, b.w, b.h); })();
 const rHealth = mkRoom('health', '健康中心', '#f3fbfd', '#e6f1f5', '#dcebf0');
 put(rHealth, 'counter', 3, 3, 6, 1); put(rHealth, 'bed', 11, 5, 2, 2, true, '#ffffff'); put(rHealth, 'plant', 1, 6, 1, 1);
@@ -1049,6 +1048,7 @@ const ICON = {
   f_guitar: ['.....kk.....', '.....dd.....', '.....dd.....', '.....dd.....', '....kkkk....', '...krrrrk...', '..krrkkrrk..', '..krrkkrrk..', '..krrrrrrk..', '...kkkkkk...', '............', '............'],
   f_tank: ['............', '.kkkkkkkkkk.', '.kuuuuuuuuk.', '.kuwuuuuuuk.', '.kuuouuuguk.', '.kuuuuyuguk.', '.kuuuuuuuuk.', '.kkkkkkkkkk.', '.kddddddddk.', '............', '............', '............'],
   f_fridge: ['...kkkkkk...', '...kwpwwk...', '...kwwwsk...', '...kwwwsk...', '...kkkkkk...', '...kwwwwk...', '...kwwwsk...', '...kwwwsk...', '...kwwwwk...', '...kkkkkk...', '...k....k...', '............'],
+  egg: ['............', '....kkkk....', '...kdbbdk...', '..kbdlbbdk..', '..kdbbdlbk..', '.kbbldbbbdk.', '.kdbbbdlbbk.', '.kbldbbdbdk.', '..kdbbldbk..', '...kkkkkk...', '............', '............'],
   f_doll: ['..kk....kk..', '..kwk..kwk..', '..kwwwwwwk..', '.kwwkwwkwwk.', '.kwwwwwwwwk.', '.kwwwrrwwwk.', '..kwwwwwwk..', '.kwwwwwwwwk.', '.kwwwwwwwwk.', '..kkkkkkkk..', '............', '............'],
   groc: ['....kkk.....', '...k...k....', '..kkkkkkkk..', '..kbbbbbbk..', '..kbgrgybk..', '..kbggrybk..', '..kbbbbbbk..', '..kbbbbbbk..', '..kbbbbbbk..', '..kkkkkkkk..', '............', '............'],
   milk: ['....kkkk....', '....kuuk....', '...kwwwwk...', '..kwwwwwwk..', '..kwuuuuwk..', '..kwuwwuwk..', '..kwuuuuwk..', '..kwwwwwwk..', '..kwwwwwwk..', '..kkkkkkkk..', '............', '............'],
@@ -1111,7 +1111,7 @@ function feed(n) {
 }
 const expMul = () => (hungerNow() < 15 ? .5 : 1) * (st.sick ? .5 : 1);
 const expNote = () => hungerNow() < 15 ? '\n（太餓了，讀進去的只有一半。）' : st.sick ? '\n（感冒中，讀進去的只有一半。）' : '';
-function breakfastItems() { return inTime(6, 10.5) ? [{ icon: 'rice', n: '早餐 鮪魚飯糰', p: 35, d: '早上才有', buy: () => takeout({ n: '鮪魚飯糰', icon: 'rice', f: 35, t: '飯糰的海苔要自己拆，你又拆歪了。' }) }, { icon: 'bento', n: '早餐 火腿蛋三明治', p: 45, d: '早上才有', buy: () => takeout({ n: '火腿蛋三明治', icon: 'bento', f: 40, t: '三明治配一杯大冰奶，標準的早八組合。' }) }, { icon: 'potato', n: '早餐 茶葉蛋', p: 18, d: '在電鍋裡滷了一整晚', buy: () => takeout({ n: '茶葉蛋', icon: 'potato', f: 15, t: '茶葉蛋的殼剝得很漂亮，蛋白上有一圈一圈的花紋。' }) }] : []; }
+function breakfastItems() { return inTime(6, 10.5) ? [{ icon: 'rice', n: '早餐 鮪魚飯糰', p: 35, d: '早上才有', buy: () => takeout({ n: '鮪魚飯糰', icon: 'rice', f: 35, t: '飯糰的海苔要自己拆，你又拆歪了。' }) }, { icon: 'bento', n: '早餐 火腿蛋三明治', p: 45, d: '早上才有', buy: () => takeout({ n: '火腿蛋三明治', icon: 'bento', f: 40, t: '三明治配一杯大冰奶，標準的早八組合。' }) }, { icon: 'egg', n: '早餐 茶葉蛋', p: 18, d: '在電鍋裡滷了一整晚', buy: () => takeout({ n: '茶葉蛋', icon: 'egg', f: 15, t: '茶葉蛋的殼剝得很漂亮，蛋白上有一圈一圈的花紋。' }) }] : []; }
 function weighIn() {
   const w = st.weight || 0, t = st.meals.d === today() ? st.meals : { b: 0, l: 0, n: 0, x: 0 };
   ok('量體重', '體重計嗶了一聲。\n跟開學比：' + (w > 0 ? '+' : '') + w.toFixed(1) + ' 公斤\n今天：早餐' + (t.b ? '✓' : '✗') + '　午餐' + (t.l ? '✓' : '✗') + '　晚餐' + (t.n ? '✓' : '✗') + '　宵夜' + (t.x ? '吃了' : '沒吃') + '\n\n校護：' + (w >= 2 ? '「宵夜吃太多囉，晚上餓的話喝杯溫牛奶。去操場跑跑步也會消掉一點。」' : w <= -2 ? '「瘦了不少，三餐要記得吃，不要只喝咖啡。」' : !t.b ? '「早餐不要省，早八的課才聽得進去。」' : '「維持得不錯，繼續保持三餐正常。」'));
@@ -1882,14 +1882,28 @@ BENCHES.forEach(b => seatIT(campus, b));
 [{ x: 8, y: 20 }, { x: 5, y: 17 }, { x: 29, y: 15 }].forEach((b, i) => { if (i) { drawBench(street.g, b); solid(street, b.x, b.y, 2, 1); } seatIT(street, b); });
 { const b = { x: 31, y: 12 }; drawBench(pgd.g, b); solid(pgd, b.x, b.y, 2, 1); seatIT(pgd, b); }
 Object.entries(TRASH).forEach(([id, arr]) => { const s = scenes[id]; arr.forEach(([x, y]) => { if (id === 'campus') s.dyn.push({ y: y * T + 14, f: g => drawTrash(g, x * T, y * T) }); else drawTrash(s.g, x * T, y * T); solid(s, x, y); s.IT.push({ id: 'trash', label: '丟垃圾', x: x * T + 8, y: y * T + 22, r: 20, ix: x * T + 8, iy: y * T - 10 }); }); });
-/* 美甲店、拍貼機（校外） */
-{ const s = street, nb = { x: 12, y: 14, w: 5, h: 4, wall: '#ffe0ec', roof: '#e5607f', trim: '#b53c5a', awning: true };
-  drawBld(s.g, nb); solid(s, nb.x, nb.y, nb.w, nb.h); s.labels.push({ t: 'Slaycure 美甲', x: 14.5 * T, y: 16 * T + 4, size: 11 });
-  s.IT.push({ id: 'nails', label: '美甲店', x: 14.5 * T, y: 18 * T + 6, r: 24, ix: 14.5 * T, iy: 15 * T });
-  const g = s.g, x = 1 * T, y = 15 * T; R(g, 'rgba(60,40,80,.2)', x + 2, y + 2 * T - 1, 2 * T, 4); R(g, '#3b2f4a', x - 1, y - 9, 2 * T + 2, 2 * T + 9); R(g, '#c9b6f5', x, y - 8, 2 * T, 2 * T + 7); R(g, '#ff8fb1', x, y - 8, 2 * T, 7); R(g, '#fff', x + 3, y - 6, 2 * T - 6, 3);
+/* 校外：租屋看板、機車行、美甲店；拍貼機在夾娃娃機店和校園 */
+{ const s = street, g = s.g;
+  drawBoard(g, { x: 1, y: 10 }); R(g, '#ff8b3d', 1 * T + 2, 10 * T - 11, 2 * T - 4, 4); solid(s, 1, 10, 2, 1); s.labels.push({ t: '租屋看板', x: 2 * T, y: 9 * T + 2, size: 10 });
+  s.IT.push({ id: 'stall', stall: 'rent', label: '看看', x: 2 * T, y: 11 * T + 8, r: 22, ix: 2 * T, iy: 9 * T });
+  const mx = 13 * T, my = 10 * T, mw = 5 * T;
+  R(g, 'rgba(0,0,0,.25)', mx + 2, my + 3 * T - 1, mw, 4); R(g, '#3b2f4a', mx - 1, my - 6, mw + 2, 3 * T + 6); R(g, '#4a4458', mx, my, mw, 3 * T - 1);
+  for (let i = 0; i < mw + 4; i += 4) R(g, (i / 4) % 2 ? '#a8b4c8' : '#8e9ab0', mx - 2 + i, my - 8, 4, 10); R(g, '#3b2f4a', mx - 2, my + 1, mw + 4, 1.5);
+  R(g, '#ffd45c', mx + 6, my + 4, 3 * T - 4, 7); R(g, '#3b2f4a', mx + 8, my + 6, 3 * T - 8, 1); R(g, '#3b2f4a', mx + 8, my + 8, 2 * T, 1);
+  R(g, '#6b6b78', mx + 4, my + 14, 3, 2 * T); R(g, '#6b6b78', mx + mw - 7, my + 14, 3, 2 * T); for (let k = 0; k < 4; k++) R(g, '#8a8a99', mx + 10 + k * 7, my + 16, 4, 6); R(g, '#c9a24b', mx + 40, my + 17, 10, 2);
+  [[mx + 10, '#e5607f'], [mx + 34, '#7ec8f0'], [mx + 58, '#9bd8a0']].forEach(([px, c]) => { const py = my + 2 * T + 2; R(g, '#3b2f4a', px + 1, py + 11, 4, 4); R(g, '#3b2f4a', px + 10, py + 11, 4, 4); R(g, c, px + 2, py + 4, 11, 7); R(g, '#3b2f4a', px + 11, py, 2, 5); R(g, '#fff', px + 3, py + 5, 3, 1); });
+  solid(s, 13, 10, 5, 3); s.labels.push({ t: '機車行', x: 15.5 * T, y: 10 * T - 4, size: 11 });
+  s.IT.push({ id: 'stall', stall: 'moto', label: '修車', x: 15.5 * T, y: 13 * T + 10, r: 26, ix: 15.5 * T, iy: 10 * T + 4 });
+  const nb = { x: 23, y: 17, w: 6, h: 5, wall: '#ffe0ec', roof: '#e5607f', trim: '#b53c5a', awning: true };
+  drawBld(g, nb); solid(s, nb.x, nb.y, nb.w, nb.h); R(g, '#fff', 24 * T + 4, 19 * T + 2, 4 * T - 8, 9); R(g, '#e5607f', 24 * T + 7, 19 * T + 4, 4, 5); R(g, '#c9b6f5', 24 * T + 14, 19 * T + 4, 4, 5); R(g, '#ffd45c', 24 * T + 21, 19 * T + 4, 4, 5); R(g, '#9bd8a0', 24 * T + 28, 19 * T + 4, 4, 5); R(g, '#7ec8f0', 24 * T + 35, 19 * T + 4, 4, 5);
+  s.labels.push({ t: 'Slaycure 美甲', x: 26 * T, y: 19 * T + 6, size: 11 });
+  s.IT.push({ id: 'nails', label: '美甲店', x: 26 * T, y: 22 * T + 6, r: 24, ix: 26 * T, iy: 19 * T }); }
+function drawBooth(g, x, y) {
+  R(g, 'rgba(60,40,80,.2)', x + 2, y + 2 * T - 1, 2 * T, 4); R(g, '#3b2f4a', x - 1, y - 9, 2 * T + 2, 2 * T + 9); R(g, '#c9b6f5', x, y - 8, 2 * T, 2 * T + 7); R(g, '#ff8fb1', x, y - 8, 2 * T, 7); R(g, '#fff', x + 3, y - 6, 2 * T - 6, 3);
   R(g, '#e5607f', x + 4, y + 2, 13, 2 * T - 3); for (let k = 0; k < 4; k++) R(g, '#c94a6a', x + 5 + k * 3, y + 3, 1, 2 * T - 5); R(g, '#3b2f4a', x + 20, y + 4, 9, 7); R(g, '#7ec8f0', x + 21, y + 5, 7, 5); R(g, '#ffd45c', x + 22, y + 15, 5, 3);
-  solid(s, 1, 15, 2, 2); s.labels.push({ t: '拍貼機', x: 2 * T, y: 14 * T + 6, size: 10 });
-  s.IT.push({ id: 'photobooth', label: '拍貼', x: 2 * T, y: 17 * T + 6, r: 22, ix: 2 * T, iy: 14 * T }); }
+}
+drawBooth(rArc.g, 10 * T, 5 * T); solid(rArc, 10, 5, 2, 2); rArc.IT.push({ id: 'photobooth', label: '拍貼', x: 11 * T, y: 7 * T + 10, r: 22, ix: 11 * T, iy: 4 * T });
+campus.dyn.push({ y: 17 * T + 15, f: g => drawBooth(g, 19 * T, 16 * T) }); solid(campus, 19, 16, 2, 2); campus.labels.push({ t: '拍貼機', x: 20 * T, y: 15 * T + 6, size: 10 }); campus.IT.push({ id: 'photobooth', label: '拍貼', x: 20 * T, y: 18 * T + 6, r: 22, ix: 20 * T, iy: 15 * T });
 rCafe2.IT.push({ id: 'datecafe', label: '靠窗的雙人座', x: 10 * T, y: 7 * T + 12, r: 20, ix: 10 * T, iy: 5 * T });
 function nearest() {
   let best = null, bd = 1e9;
@@ -2852,7 +2866,7 @@ const PSY = [
   { n: '社群比較', sync: 1, at: ['campus', 9.5, 19.8], how: '長椅縫裡的便利貼', d: '在社群上看到的多半是別人的精華片段，拿來跟自己的日常比，很容易覺得自己很失敗，這叫「向上比較」。調查發現台灣青少年平均每天花 4.2 小時在社群媒體，七成對自己的身材不滿意。', h: '別人的限動是剪過的，你的生活是一鏡到底。這樣比本來就不公平。' },
   { n: '計畫謬誤', at: ['campus', 10.5, 11.6], how: '公佈欄角落的便利貼', d: '估計一件事要花多久時，人常常低估，就算過去每次都拖到最後也一樣。心理學家 Kahneman 和 Tversky 提出這個概念。把大工作拆小，參考自己過去實際花掉的時間，會估得比較準。', h: '報告沒在你以為的時間寫完，不代表你很糟，只是大腦本來就很樂觀。' },
   { n: '旁觀者效應', sync: 1, at: ['campus', 40.5, 11.6], how: '便利商店門口的便利貼', d: '在場的人越多，每個人越不會出手，因為責任被分散了，大家都以為別人會處理。兒福聯盟 2025 年調查：39.4% 的國高中生看到同學被霸凌時什麼都不做。', h: '下次覺得「應該有人會處理吧」的時候，那個人可以是你。' },
-  { n: '習得無助', sync: 1, at: ['street', 6.5, 10.7], how: '深夜路燈下的便利貼', d: '心理學家 Seligman 發現，反覆經歷「怎麼做都沒用」，人會漸漸放棄嘗試，即使後來情況改變了。打破它的方法是累積小小的成功經驗。', h: '今天就做一件很小、一定做得到的事。洗一個杯子也算。' },
+  { n: '習得無助', sync: 1, at: ['street', 2.5, 15.2], how: '深夜路燈下的便利貼', d: '心理學家 Seligman 發現，反覆經歷「怎麼做都沒用」，人會漸漸放棄嘗試，即使後來情況改變了。打破它的方法是累積小小的成功經驗。', h: '今天就做一件很小、一定做得到的事。洗一個杯子也算。' },
   { n: '負增強與逃避', sync: 1, at: ['street', 12.5, 11.7], how: '深夜路燈下的便利貼', d: '逃開讓人焦慮的場合，焦慮會立刻下降。大腦因此學到「逃避有用」，下一次反而更焦慮。這就是為什麼很多焦慮會越躲越大。', h: '不用一次面對全部。先打開那封信就好，回信明天再說。' },
   { n: '聚光燈效應', at: ['street', 17.5, 18.7], how: '深夜路燈下的便利貼', d: '人常高估別人注意自己的程度。心理學家 Gilovich 的實驗裡，穿著尷尬 T 恤的學生以為一半的人會注意到，實際上只有大約四分之一。', h: '你昨天講錯的那句話，其他人大概已經忘了。你也可以忘了。' },
   { n: '詐騙心理', sync: 1, at: ['street', 28.5, 23.7], how: '路燈下被風吹來的便利貼', d: '詐騙集團利用的是人性：貪心（保證獲利）、恐懼（你的帳戶涉案）、急迫（現在不處理就來不及）和權威（假冒警察、檢察官）。警政署統計 2025 年全年詐騙約 16.2 萬件、財損約 893 億元，假投資是財損最大的類型。有疑慮就打 165 反詐騙專線。', h: '覺得「一定要現在處理」的時候，先停下來喝口水，打給一個信任的人。' },
