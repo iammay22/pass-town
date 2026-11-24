@@ -4,6 +4,16 @@
 
 線上玩：https://iammay22.github.io/pass-town/
 
+## 樹洞留言牆的後端
+
+用 Supabase。第一次要做三件事：
+
+1. 在 Supabase 後台的 SQL Editor 執行 `supabase/schema.sql`
+2. Authentication → Sign In / Providers 打開 Anonymous sign-ins
+3. 把 Project Settings → API Keys 裡的 anon（publishable）key 貼到 `index.html` 的 `SB_KEY`
+
+沒填 key 的時候，留言牆是示範版。
+
 ## 怎麼玩
 
 - 手機、平板請橫著拿：左手搖桿走路，右手 A 鍵互動
@@ -18,6 +28,7 @@
 
 ## 更新紀錄
 
+- v5：成就與頭頂稱號、學生證和成績單圖卡、心理學小卡（同步人生岔路口）、帳本與每日房租、隨機事件、30,900 生存挑戰、樹洞留言牆（Supabase）、操場 PK 和單槓、校外咖啡廳／機車行／租屋看板／公車站、英檢分級（中高級、多益、雅思、托福）、電腦按鍵說明
 - v4：第二章考試中心英檢；每日任務標出地點，地圖和建築上有綠色「日」字
 - v3：改名及格鎮，新增五個場景、小遊戲、每日任務、小地圖、電腦按鍵；修好平板走路抖動和路人卡住
 - v2：可以進房間、任務 NPC、主線支線、社團多選、宿舍裝潢、手冊
