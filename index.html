@@ -358,7 +358,7 @@ const BLD = [
   { id: 'a_dorm', name: '學生宿舍', scene: 'abroad', x: 20, y: 2, w: 8, h: 6, wall: '#c97a5a', roof: '#5c3a2e', trim: '#3f2a22' },
   { id: 'a_mart', name: '超市', scene: 'abroad', x: 30, y: 2, w: 6, h: 6, wall: '#e9efe0', roof: '#3f8a5a', trim: '#2b6b42', awning: true },
   { id: 'a_pub', name: '學生酒吧', scene: 'abroad', x: 37, y: 2, w: 6, h: 6, wall: '#b07c5a', roof: '#3b2f4a', trim: '#2b2338' },
-  { id: 'health', name: '健康中心', scene: 'playground', x: 31, y: 6, w: 6, h: 5, wall: '#e8f4f8', roof: '#e5607f', trim: '#b53c5a' },
+  { id: 'health', name: '健康中心', scene: 'playground', x: 30, y: 1, w: 6, h: 5, wall: '#e8f4f8', roof: '#e5607f', trim: '#b53c5a' },
   { id: 'ktv', name: '星光 KTV', scene: 'city', x: 30, y: 2, w: 6, h: 6, wall: '#c9b6f5', roof: '#3b2f4a', trim: '#2b2338' },
   { id: 'cinema', name: '及格影城', scene: 'city', x: 37, y: 2, w: 6, h: 6, wall: '#ffe0a8', roof: '#c8102e', trim: '#8a0b20' },
   { id: 'arcade', name: '夾娃娃機店', scene: 'street', x: 23, y: 17, w: 6, h: 5, wall: '#ffd1de', roof: '#3ba3d8', trim: '#2578a6', awning: true },
@@ -815,7 +815,7 @@ const aAir = mkScene('a_airport', '國外機場 · 楓葉國際機場', 20, 10, 
   R(mc, '#ffd45c', 18 * T - 6, 5 * T, 12, 10); R(mc, '#3b2f4a', 18 * T - 4, 5 * T + 3, 8, 2); s.labels.push({ t: '登機門 B7', x: 15 * T, y: 3 * T + 8, size: 9 }, { t: '機場巴士', x: 18 * T, y: 4 * T + 8, size: 9 });
   s.spots.push({ x: 4, y: 5, dir: 'down', stay: [6, 12] }, { x: 9, y: 6, dir: 'left', stay: [5, 10] });
 })();
-(() => { const b = BLD.find(b => b.id === 'health'); drawBld(pgd.g, b); solid(pgd, b.x, b.y, b.w, b.h); pgd.labels.push({ t: '健康中心', x: (b.x + 3) * T, y: (b.y + 2) * T + 6, size: 11 }); R(pgd.g, '#fff', 33 * T + 10, 6 * T + 6, 12, 4); R(pgd.g, '#fff', 33 * T + 14, 6 * T + 2, 4, 12); })();
+(() => { const b = BLD.find(b => b.id === 'health'); drawBld(pgd.g, b); solid(pgd, b.x, b.y, b.w, b.h); pgd.labels.push({ t: '健康中心', x: (b.x + 3) * T, y: (b.y + 2) * T + 6, size: 11 }); R(pgd.g, '#fff', (b.x + 2) * T + 10, b.y * T + 8, 12, 4); R(pgd.g, '#fff', (b.x + 2) * T + 14, b.y * T + 4, 4, 12); })();
 (() => { ['ktv', 'cinema'].forEach(id => { const b = BLD.find(x => x.id === id); city.labels.push({ t: b.name, x: (b.x + 3) * T, y: (b.y + 2) * T + 6, size: 11 }); }); street.labels.push({ t: '夾娃娃機店', x: 26 * T, y: 19 * T + 6, size: 10 }); })();
 (() => { const b = BLD.find(x => x.id === 'arcade'); drawBld(street.g, b); solid(street, b.x, b.y, b.w, b.h); })();
 const rHealth = mkRoom('health', '健康中心', '#f3fbfd', '#e6f1f5', '#dcebf0');
@@ -1850,7 +1850,7 @@ street.IT.push({ id: 'bench', label: '坐下', x: 9 * T, y: 20 * T + 14, ix: 9 *
 function nearest() {
   let best = null, bd = 1e9;
   for (const it of cur.IT) { if (it.hide && it.hide()) continue; const d = Math.hypot(P.x - it.x, P.y - it.y); if (d < it.r && d < bd) { best = it; bd = d; } }
-  for (const r of Object.values(remotes)) { if (r.s !== myS()) continue; const d = Math.hypot(P.x - r.x, P.y - r.y); if (d < 24 && d < bd) { best = { id: 'real', r, label: '揮手', ix: r.x, iy: r.y - 32 }; bd = d; } }
+  for (const r of Object.values(remotes)) { if (r.s !== myS()) continue; const d = Math.hypot(P.x - r.x, P.y - r.y); if (d < 24 && d < bd) { best = { id: 'real', r, label: '打招呼', ix: r.x, iy: r.y - 32 }; bd = d; } }
   for (const e of cur.ents) { if (e.kind === 'deco' || e.hidden || e.temp) continue; const d = Math.hypot(P.x - e.x, P.y - e.y); if (d < 24 && d < bd) { best = { id: 'ent', ent: e, label: e.kind === 'player' ? '揮手' : e.kind === 'quest' ? '對話' : '聊聊', ix: e.x, iy: e.y - 32 }; bd = d; } }
   return best;
 }
@@ -2424,7 +2424,7 @@ function interact() {
   if (!started || locked()) return;
   const it = nearest(); if (!it) return;
   if (it.id === 'ent') { const e = it.ent; if (e.kind === 'player') return wave(e); if (!e.loop) faceToward(e, P.x, P.y); if (e.wander) e.wait = Math.max(e.wait, 3); return e.talk(); }
-  if (it.id === 'real') return realWave(it.r);
+  if (it.id === 'real') return realChat(it.r);
   if (it.id === 'enter') return goScene(it.to, 7 * T, 8 * T + 12, 'up');
   if (it.id === 'stall') return stall(it.stall);
   const f = { board, bench, study, clubboard: clubBoard, shop, decor, bed: bedView, mydesk: deskView, class: classFlow, examseat: examSeat, wall: openWall, psy: () => pickPsy(it.k), pk: pkGame, bar: barGame,
@@ -2650,6 +2650,7 @@ const ACH = [
   { id: 'ielts', n: '雅思 6.0', d: '雅思考到 6.0 以上', t: '留學準備中' },
   { id: 'allexam', n: '考試收集家', d: '四種進階考試都考過一次', t: '考試收集家', h: 1 },
   { id: 'ch3', n: '走到岔路口', d: '完成第三章', t: '岔路口旅人' },
+  { id: 'chatty', n: '打招呼達人', d: '用預設句子跟真人說了五次話', t: '社交蝴蝶' },
   { id: 'threemeals', n: '三餐正常', d: '同一天吃了早餐、午餐和晚餐', t: '養生大學生' },
   { id: 'doctor', n: '去看病了', d: '感冒時去健康中心看病', t: '乖乖吃藥的人' },
   { id: 'counsel', n: '說出來了', d: '去健康中心做了一次心理諮商', t: '願意說的人' },
@@ -3063,6 +3064,7 @@ function joinRoom(room) {
       r.buf.push({ t: ts + r.off, x: p.x, y: p.y }); if (r.buf.length > 16) r.buf.shift();
       Object.assign(r, { id: p.id, s: p.s, pdir: p.d, name: p.n, title: p.t, look: p.l, seen: performance.now() });
     });
+    ch.on('broadcast', { event: 'chat' }, ({ payload: p }) => { if (!p || p.from === sbUid || PRESET.indexOf(p.t) < 0) return; const r = remotes[p.from]; if (r && p.s === myS()) say(r, p.t, 3.2); if (p.to === sbUid) { toast(p.n + '：' + p.t); beep(990, .05); try { navigator.vibrate && navigator.vibrate(60); } catch (e) {} } });
     ch.on('broadcast', { event: 'wave' }, ({ payload: p }) => { if (!p || p.to !== sbUid) return; const r = remotes[p.from]; if (r) say(r, '👋', 2); toast(p.n + ' 跟你揮手'); beep(990, .06); try { navigator.vibrate && navigator.vibrate([70, 50, 70]); } catch (e) {} });
     ch.on('presence', { event: 'sync' }, () => { ch.__keys = Object.keys(ch.presenceState()); hud(); });
     ch.on('presence', { event: 'join' }, () => { ch.__keys = Object.keys(ch.presenceState()); hud(); });
@@ -3112,6 +3114,16 @@ function rtUpdate(dt) {
     if (md > .05) { r.anim = (r.anim || 0) + dt; r.step = Math.floor(r.anim / .15) % 2; if (md > .2) r.dir = Math.abs(mdx) > Math.abs(mdy) ? (mdx > 0 ? 'right' : 'left') : (mdy > 0 ? 'down' : 'up'); }
     else { r.step = 0; r.dir = r.pdir || r.dir; }
   }
+}
+const PRESET = ['嗨！', '一起去夜市嗎？', '要不要一起讀書？', '期末加油！', '借我抄筆記 🙏', '你也在這裡！', '謝謝！', '晚安～'];
+let chatAt = 0;
+function realChat(r) {
+  showModal({ title: '跟 ' + (r.name || '同學') + ' 打招呼', text: '選一句話傳給對方，會出現在你的頭上，同一個地方的人都看得到。', choices: [{ label: '👋 揮手', fn: () => realWave(r) }].concat(PRESET.map(t => ({ label: t, fn: () => sendChat(r, t) })), [{ label: '算了' }]) });
+}
+function sendChat(r, t) {
+  if (Date.now() - chatAt < 2000) return toast('慢一點，對方還在看上一句');
+  chatAt = Date.now(); say(P, t, 3.2); beep(820, .05); st.cnt.chatSent = (st.cnt.chatSent || 0) + 1; if (st.cnt.chatSent >= 5) ach('chatty');
+  try { rt.send({ type: 'broadcast', event: 'chat', payload: { to: r.id, from: sbUid, n: st.name, t, s: myS() } }); } catch (e) {}
 }
 function realWave(r) {
   say(P, '👋', 1.6); beep(780, .05); dHit('wave'); st.cnt.wave++; if (st.cnt.wave >= 10) ach('wave10');
@@ -3566,7 +3578,7 @@ resize(); snapCam();
 document.addEventListener('visibilitychange', () => { if (document.hidden && started) persist(); try { if (actx) { if (document.hidden) actx.suspend(); else actx.resume(); } } catch (e) {} });
 addEventListener('pagehide', () => { if (started) persist(); });
 requestAnimationFrame(loop);
-window.__town = { get st() { return st; }, P, scenes, get cur() { return cur; }, interact, nearest, QN, SIDE, goScene, setMain, cam, get S() { return S; }, get mg() { return mg; }, mgPress, findPath, BLD, quizAnswer, quizElim, examSeat, engPractice, goals, remotes, openWard, payTick, offlinePay, shiftNight, startShift, get shift() { return shift; }, gate, fly, busMenu, holTest, choosePath, busRide, internInterview, exchangeInterview, get rt() { return rt; }, ach, BLD2: BLD, get mapView() { return mapView; }, pickPsy, PSY, randomEvent, dayTick, openCard, openWall, startChallenge, makeCard, EXAMS, takeExam, famStart, famShow, aidBoard, feed, hungerNow, nurseTalk, weighIn, counsel, ktvSing, cineShop, cineWatch, clawGame, taikoGame, roomSwap, furnMenu, editTap, itemAt, get editing() { return editing; }, LOC, tripMenu, destPick, applyDest, DEST, active, marketPhase, stallView, craftStall, moveMenu, startMove, moveStep, endMove, canPlace, bedView, deskView, deskStudy, phoneScroll, nightChat, lecture, roomTick, tzDiff, gainCred, canGrad, reqLeft, classFlow, tripGo, rinkTrip, welcomeParty, lxTable, cityTour, iscBoard, campusNotice, cookBuddy, libCafe, catTalk, pubSync, pubTarget, hourIn, get ep() { return ep; }, epNext, regionOf, get curH() { return curH; }, openShop, closeShop, sbFlip, get SB() { return SB; }, shop, meal, stall, tellerTick, tellerTalk, FAM, mainTarget, sillMenu, growState, awayNote, GROW, navPoint, howTo, bgmPlay, get bgm() { return bgm; }, AU, auToggle, projTalk, ch4Interview, leaveSchool, farewell, gradPhoto, gradCeremony, martShop, tripMenu, triviaNight, callHome, makeCard, repay, loanLeft };
+window.__town = { get st() { return st; }, P, scenes, get cur() { return cur; }, interact, nearest, QN, SIDE, goScene, setMain, cam, get S() { return S; }, get mg() { return mg; }, mgPress, findPath, BLD, quizAnswer, quizElim, examSeat, engPractice, goals, remotes, openWard, payTick, offlinePay, shiftNight, startShift, get shift() { return shift; }, gate, fly, busMenu, holTest, choosePath, busRide, internInterview, exchangeInterview, get rt() { return rt; }, ach, BLD2: BLD, get mapView() { return mapView; }, pickPsy, PSY, randomEvent, dayTick, openCard, openWall, startChallenge, makeCard, EXAMS, takeExam, famStart, famShow, aidBoard, realChat, sendChat, feed, hungerNow, nurseTalk, weighIn, counsel, ktvSing, cineShop, cineWatch, clawGame, taikoGame, roomSwap, furnMenu, editTap, itemAt, get editing() { return editing; }, LOC, tripMenu, destPick, applyDest, DEST, active, marketPhase, stallView, craftStall, moveMenu, startMove, moveStep, endMove, canPlace, bedView, deskView, deskStudy, phoneScroll, nightChat, lecture, roomTick, tzDiff, gainCred, canGrad, reqLeft, classFlow, tripGo, rinkTrip, welcomeParty, lxTable, cityTour, iscBoard, campusNotice, cookBuddy, libCafe, catTalk, pubSync, pubTarget, hourIn, get ep() { return ep; }, epNext, regionOf, get curH() { return curH; }, openShop, closeShop, sbFlip, get SB() { return SB; }, shop, meal, stall, tellerTick, tellerTalk, FAM, mainTarget, sillMenu, growState, awayNote, GROW, navPoint, howTo, bgmPlay, get bgm() { return bgm; }, AU, auToggle, projTalk, ch4Interview, leaveSchool, farewell, gradPhoto, gradCeremony, martShop, tripMenu, triviaNight, callHome, makeCard, repay, loanLeft };
 })();
 </script>
 </body>
