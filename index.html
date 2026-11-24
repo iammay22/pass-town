@@ -65,6 +65,17 @@ button,input{font-family:inherit}
 @keyframes shk{0%,100%{transform:translate(0,0)}20%{transform:translate(-6px,3px)}40%{transform:translate(5px,-4px)}60%{transform:translate(-4px,-2px)}80%{transform:translate(3px,4px)}}
 .ov{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:rgba(43,35,56,.55);padding:10px}
 .ov.on{display:flex}
+#fridgeOv .card{background:#fbfbfd;width:min(94vw,620px)}
+.frBody{background:#e6f5fb;border:3px solid var(--ink);border-radius:8px;padding:8px;box-shadow:inset 0 0 0 3px #fff;position:relative}
+.frBody:after{content:'';position:absolute;right:-9px;top:20%;width:5px;height:60%;background:#c9c3d6;border:2px solid var(--ink);border-radius:3px}
+.frGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.frGrid.bag{grid-template-columns:repeat(6,1fr);background:#e9d3b4;border:3px solid var(--ink);border-radius:8px;padding:6px}
+.frShelf{grid-column:1/-1;height:4px;background:#a9d6ea;border-top:2px solid #fff;margin:1px 0}
+.frSlot{height:48px;border:2px solid var(--ink);background:#fff;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;font:inherit;font-size:11px;line-height:1.1;padding:2px;color:var(--ink);cursor:pointer;box-shadow:2px 2px 0 rgba(59,47,74,.35)}
+.frSlot img{width:22px;height:22px;image-rendering:pixelated}
+.frSlot.empty{background:rgba(255,255,255,.35);border-style:dashed;box-shadow:none;opacity:.55;cursor:default}
+.frHead{display:flex;justify-content:space-between;align-items:center;margin:6px 0 4px;font-size:13px}
+#frMsg{min-height:1.3em;font-size:13px;margin:6px 0 0}
 .card{background:var(--paper);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--ink);border-radius:6px;padding:14px 16px;width:min(92vw,660px);max-height:92vh;overflow:auto}
 .card h1{font-size:30px;letter-spacing:4px}
 .card h2{font-size:17px;margin-bottom:6px}
@@ -256,6 +267,7 @@ button.tab.on{background:var(--gold)}
     <div class="nbbody" id="psyBody" style="font-size:15px;line-height:28px"></div>
   </div>
 </div>
+<div class="ov" id="fridgeOv"><div class="card"><div class="frHead" style="margin-top:0"><h2 style="margin:0">小冰箱</h2><button type="button" id="frClose">關上冰箱</button></div><div class="frHead"><span>冷藏室（點一下拿出來）</span><span id="frCnt"></span></div><div class="frBody"><div class="frGrid" id="frGrid"></div></div><div class="frHead"><span>手上的袋子（點一下放進去）<button type="button" class="pri" id="frAll" style="margin-left:8px;padding:2px 8px;font-size:12px">全部放進去</button></span><span id="frBagCnt"></span></div><div class="frGrid bag" id="frBag"></div><p id="frMsg"></p></div></div>
 <div class="ov" id="wardOv">
   <div class="card" style="position:relative">
     <button class="xbtn" id="wardX" type="button" aria-label="關閉">✕</button>
@@ -409,8 +421,9 @@ function drawChar(g, x, y, dir, step, hair, shirt, pants, o) {
   x = rq(x); y = rq(y); const sk = o && o.skin || '#ffd9bb', sty = o && o.style || 'short';
   const K = '#3b2f4a', wide = sty === 'long' || sty === 'bob';
   R(g, 'rgba(60,40,80,.22)', x - 5, y - 1, 10, 2.5);
-  R(g, pants, x - 3, y - 5, 3, step ? 4 : 5); R(g, pants, x, y - 5, 3, step ? 5 : 4);
-  R(g, '#2b2338', x - 3, y - (step ? 1.5 : 1), 3, 1); R(g, '#2b2338', x, y - (step ? 1 : 1.5), 3, 1);
+  if (o && o.sit) { y -= 5; R(g, pants, x - 3.5, y - 5, 7, 3); R(g, '#2b2338', x - 3, y - 2, 2.5, 1.5); R(g, '#2b2338', x + .5, y - 2, 2.5, 1.5); }
+  else { R(g, pants, x - 3, y - 5, 3, step ? 4 : 5); R(g, pants, x, y - 5, 3, step ? 5 : 4);
+  R(g, '#2b2338', x - 3, y - (step ? 1.5 : 1), 3, 1); R(g, '#2b2338', x, y - (step ? 1 : 1.5), 3, 1); }
   R(g, shirt, x - 4, y - 10, 8, 6); R(g, 'rgba(255,255,255,.3)', x - 4, y - 10, 3, .5); R(g, 'rgba(40,20,60,.2)', x - 4, y - 4.5, 8, .5); R(g, 'rgba(40,20,60,.12)', x - .25, y - 9, .5, 4);
   R(g, sk, x - 5, y - 9 + (step ? 1 : 0), 1, 3); R(g, sk, x + 4, y - 9 + (step ? 0 : 1), 1, 3);
   { const ot = o && o.outer;
@@ -432,7 +445,8 @@ function drawChar(g, x, y, dir, step, hair, shirt, pants, o) {
   if (acc === 'beanie') { R(g, '#e5607f', x - 4.5, y - 18.5, 9, 3); R(g, '#fff', x - 4.5, y - 16, 9, 1); R(g, '#fff', x - 1, y - 20, 2, 1.5); }
   if (acc === 'scarf') { R(g, '#c8102e', x - 4, y - 10.5, 8, 1.5); if (dir !== 'up') R(g, '#c8102e', x + 1.5, y - 9, 1.5, 3.5); }
   if (acc === 'phones') { R(g, '#3b2f4a', x - 4, y - 18, 8, 1); R(g, '#e5607f', x - 5, y - 15, 2, 4); R(g, '#e5607f', x + 3, y - 15, 2, 4); }
-  if (o && o.carry) { const bx = dir === 'left' ? x - 7.5 : x + 4.5, by = y - 7; R(g, 'rgba(60,40,80,.35)', bx - .5, by - .5, 4, 5); R(g, '#fff', bx, by, 3, 4); R(g, '#e5607f', bx, by + 1.5, 3, .8); R(g, 'rgba(60,40,80,.5)', bx + .5, by - 1.5, 2, 1); }
+  if (o && o.carry === 'trash') { const bx = dir === 'left' ? x - 7 : x + 4.5, by = y - 6; R(g, 'rgba(60,40,80,.4)', bx - .5, by - .5, 3.5, 3.5); R(g, '#c9c3d6', bx, by, 2.5, 2.5); R(g, '#fff', bx, by, 1, 1); }
+  else if (o && o.carry) { const bx = dir === 'left' ? x - 7.5 : x + 4.5, by = y - 7; R(g, 'rgba(60,40,80,.35)', bx - .5, by - .5, 4, 5); R(g, '#fff', bx, by, 3, 4); R(g, '#e5607f', bx, by + 1.5, 3, .8); R(g, 'rgba(60,40,80,.5)', bx + .5, by - 1.5, 2, 1); }
   if (acc === 'bag' && dir !== 'down') R(g, '#c97a5a', dir === 'up' ? x - 3 : (dir === 'left' ? x + 2 : x - 5), y - 10, dir === 'up' ? 6 : 3, 5);
 }
 function drawTree(g, tx, ty) {
@@ -441,6 +455,10 @@ function drawTree(g, tx, ty) {
   R(g, '#2b4d36', x - 9.5, y - 18.5, 19, 10); R(g, '#2b4d36', x - 6.5, y - 23.5, 13, 7); R(g, '#2b4d36', x - 5.5, y - 25.5, 10, 4);
   R(g, '#4aa866', x - 9, y - 18, 18, 9); R(g, '#4aa866', x - 6, y - 23, 12, 6); R(g, '#5fbf7a', x - 7, y - 21, 12, 6); R(g, '#5fbf7a', x - 5, y - 25, 9, 3); R(g, '#86d79a', x - 4, y - 23, 4, 2); R(g, '#3d9459', x - 9, y - 11, 18, 2);
   for (let k = 0; k < 7; k++) R(g, k % 2 ? '#86d79a' : '#3d9459', x - 8 + hash(tx, ty, k) * 15, y - 22 + hash(tx, ty, k + 9) * 11, .5, .5);
+}
+function drawTrash(g, x, y) {
+  R(g, 'rgba(60,40,80,.2)', x + 3, y + 13, 11, 3); R(g, '#3b2f4a', x + 3.5, y + 1.5, 9, 13); R(g, '#5fbf7a', x + 4.5, y + 2.5, 7, 11); R(g, '#4aa866', x + 6, y + 4, 1, 8); R(g, '#4aa866', x + 9, y + 4, 1, 8);
+  R(g, '#3b2f4a', x + 2.5, y - .5, 11, 3); R(g, '#86d79a', x + 3.5, y + .5, 9, 1.5); R(g, '#fff', x + 7, y + 6, 2, 2);
 }
 function drawBench(g, b) {
   const x = b.x * T, y = b.y * T;
@@ -457,7 +475,8 @@ function drawBoard(g, b) {
 
 /* ===== 校園 48×30 ===== */
 const campus = mkScene('campus', '校園', 48, 30, false);
-const BENCHES = [{ x: 7, y: 19 }, { x: 15, y: 18 }];
+const BENCHES = [{ x: 7, y: 19 }, { x: 15, y: 18 }, { x: 12, y: 10 }, { x: 34, y: 10 }, { x: 2, y: 18 }];
+const TRASH = { campus: [[6, 19], [17, 18], [14, 10], [33, 10]], street: [[10, 20], [7, 17], [28, 15]], playground: [[33, 12]] };
 const BOARD = { x: 8, y: 10 };
 const isRoadC = (x, y) => (y >= 12 && y <= 15 && x >= 1 && x <= 47) || (x >= 22 && x <= 25 && y >= 8 && y <= 29) || (y >= 22 && y <= 23 && x >= 15 && x <= 46)
   || BLD.some(b => b.scene === 'campus' && b.y < 10 && x >= b.x + b.w / 2 - 1 && x <= b.x + b.w / 2 && y >= b.y + b.h && y <= 11);
@@ -656,6 +675,7 @@ const FURN = {
   guitar(g, x, y) { R(g, 'rgba(60,40,80,.22)', x + 1, y + 28, 15, 3); R(g, '#3b2f4a', x + 6, y - 2, 4, 15); R(g, '#3b2f4a', x + 5, y - 3, 6, 3); R(g, '#8a5a44', x + 7, y - 1, 2, 13); R(g, '#e8e3f2', x + 7, y + 3, 2, 1); R(g, '#e8e3f2', x + 7, y + 7, 2, 1); R(g, '#3b2f4a', x + 2, y + 11, 12, 15); R(g, '#3b2f4a', x + 1, y + 17, 14, 8); R(g, '#e5607f', x + 3, y + 12, 10, 13); R(g, '#e5607f', x + 2, y + 18, 12, 6); R(g, '#ff8fb1', x + 4, y + 13, 3, 3); R(g, '#b53c5a', x + 3, y + 23, 10, 1); R(g, '#3b2f4a', x + 6, y + 16, 4, 4); R(g, '#ffd45c', x + 5, y + 21, 6, 1); R(g, '#3b2f4a', x + 1, y + 25, 14, 4); R(g, '#c9c3d6', x + 2, y + 26, 12, 2); },
   tank(g, x, y) { R(g, 'rgba(60,40,80,.2)', x + 1, y + 13, 14, 3); R(g, '#6f4a3a', x + 1, y + 8, 14, 6); R(g, '#3b2f4a', x + .5, y - 4.5, 15, 13); R(g, '#7ec8f0', x + 1, y - 4, 14, 12); R(g, '#bfe6ff', x + 2, y - 3, 12, 2); R(g, '#ff8b3d', x + 4, y + 1, 3, 2); R(g, '#ffd45c', x + 9, y + 4, 3, 1.5); R(g, '#5fbf7a', x + 12, y, 1, 7); R(g, '#fff', x + 7, y - 1, 1, 1); },
   tankOld(g, x, y, w) { R(g, '#3b2f4a', x - 1, y - 5, w * T + 2, 20); R(g, '#7ec8f0', x, y - 4, w * T, 16); R(g, '#a9defa', x + 2, y - 2, w * T - 4, 4); R(g, '#ff8b3d', x + 6, y + 3, 5, 3); R(g, '#ffd45c', x + 18, y + 5, 4, 3); R(g, '#e5607f', x + 4, y + 10, 24, 2); R(g, '#6f4a3a', x, y + 12, w * T, 4); },
+  mfridge(g, x, y) { R(g, 'rgba(60,40,80,.2)', x + 2, y + 14, 15, 3); R(g, '#3b2f4a', x + .5, y - 15.5, 15, 31); R(g, '#fbfbfd', x + 1.5, y - 14.5, 13, 29); R(g, '#e6e3ee', x + 12.5, y - 14.5, 2, 29); R(g, '#3b2f4a', x + 1.5, y - 5, 13, 1); R(g, '#c9c3d6', x + 10.5, y - 12, 1.5, 5); R(g, '#c9c3d6', x + 10.5, y - 2, 1.5, 8); R(g, '#ff8fb1', x + 3.5, y - 12, 3, 3); R(g, '#ffd45c', x + 4, y + 1, 4, 3); R(g, '#7ec8f0', x + 5, y + 6, 2, 2); R(g, 'rgba(255,255,255,.9)', x + 2.5, y - 13.5, 1, 7); R(g, '#3b2f4a', x + 2, y + 14.5, 2, 1.5); R(g, '#3b2f4a', x + 12, y + 14.5, 2, 1.5); },
   box(g, x, y, w) { R(g, 'rgba(60,40,80,.2)', x + 1, y + 14, w * T, 3); R(g, '#3b2f4a', x - 1, y - 3, w * T + 2, 19); R(g, '#c99a6b', x, y - 2, w * T, 17); R(g, '#8a5a44', x, y + 2, w * T, 2); R(g, '#ffd45c', x + w * T / 2 - 2, y + 5, 4, 4); },
   loft(g, x, y, c, mine) { R(g, 'rgba(60,40,80,.2)', x + 2, y + 2 * T - 1, 2 * T, 3); R(g, '#3b2f4a', x - 1, y - 6, 2 * T + 2, 2 * T + 7); R(g, '#a8745a', x, y - 5, 2 * T, 2 * T + 5);
     R(g, '#fff', x + 3, y - 3, 10, 6); R(g, c, x + 2, y + 3, 2 * T - 4, 9); R(g, 'rgba(255,255,255,.3)', x + 2, y + 3, 2 * T - 4, 2);
@@ -881,7 +901,7 @@ const FSZ = { closet: [2, 1], box: [1, 1], fridge: [1, 1], plant: [1, 1], guitar
 const FNAME = { closet: '衣櫃', box: '裝潢箱', fridge: '小冰箱', plant: '小盆栽', guitar: '吉他架', beanbag: '豆袋椅', tank: '小魚缸', doll: '大熊娃娃', rug: '地毯' };
 const fpos = k => (st && st.dorm.pos && st.dorm.pos[k]) || DEF_POS[k];
 const movables = () => Object.keys(DEF_POS).filter(k => k === 'closet' || k === 'box' || (st && st.dorm.placed.includes(k)));
-const RESERVED = ['1,2', '2,2', '1,3', '2,3', '11,2', '12,2', '11,3', '12,3', '1,6', '2,6', '1,7', '2,7', '11,6', '12,6', '11,7', '12,7', '6,8', '7,8', '6,2', '7,2', '1,4', '2,4'];
+const RESERVED = ['12,8', '1,2', '2,2', '1,3', '2,3', '11,2', '12,2', '11,3', '12,3', '1,6', '2,6', '1,7', '2,7', '11,6', '12,6', '11,7', '12,7', '6,8', '7,8', '6,2', '7,2', '1,4', '2,4'];
 function canPlace(k, x, y) {
   const [w, h] = FSZ[k]; if (x < 1 || y < 2 || x + w > 13 || y + h > 9) return false; if (k === 'rug') return true;
   const mine = new Set(); for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) mine.add((x + i) + ',' + (y + j));
@@ -919,13 +939,14 @@ function buildDorm() {
   FURN.loft(s.g, 1 * T, 6 * T, '#9bd8a0'); solid(s, 1, 6, 2, 2);
   FURN.loft(s.g, 11 * T, 6 * T, '#c9b6f5'); solid(s, 11, 6, 2, 2);
   if (d.placed.includes('lamp')) FURN.lamp(s.g, 1 * T + 20, 3 * T + 4);
-  movables().filter(k => k !== 'rug').sort((a, b) => fpos(a)[1] - fpos(b)[1]).forEach(k => { const [x, y] = fpos(k), [w, h] = FSZ[k]; put(s, k, x, y, w, h, true, k === 'box' ? 1 : undefined); });
+  movables().filter(k => k !== 'rug').sort((a, b) => fpos(a)[1] - fpos(b)[1]).forEach(k => { const [x, y] = fpos(k), [w, h] = FSZ[k]; put(s, k === 'fridge' ? 'mfridge' : k, x, y, w, h, true, k === 'box' ? 1 : undefined); });
+  drawTrash(s.g, 12 * T, 8 * T); solid(s, 12, 8);
   { const [cx0, cy0] = fpos('closet'), [bx0, by0] = fpos('box'), w0 = s.IT.find(i => i.id === 'ward'), d0 = s.IT.find(i => i.id === 'decor');
     { const fz = s.IT.find(i => i.id === 'fridge'), [fx0, fy0] = fpos('fridge'); if (fz && !(st && st.dorm.placed.includes('fridge'))) Object.assign(fz, { x: -999, y: -999, ix: -999, iy: -999 }); else if (fz) Object.assign(fz, { x: (fx0 + .5) * T, y: (fy0 + 1) * T + 12, ix: (fx0 + .5) * T, iy: (fy0 - 1) * T + 4 }); }
     if (w0) Object.assign(w0, { x: (cx0 + 1) * T, y: (cy0 + 1) * T + 12, ix: (cx0 + 1) * T, iy: (cy0 - 1) * T + 6 }); if (d0) Object.assign(d0, { x: (bx0 + .5) * T, y: (by0 + 1) * T + 12, ix: (bx0 + .5) * T, iy: (by0 - 1) * T + 4 }); }
   s.labels = [{ t: '你', x: 2 * T, y: 1 * T + 10, size: 9 }, { t: '阿芸', x: 12 * T, y: 1 * T + 10, size: 9 }, { t: '小晴', x: 2 * T, y: 5 * T + 10, size: 9 }, { t: '佳佳', x: 12 * T, y: 5 * T + 10, size: 9 }];
 }
-rDorm.IT.push({ id: 'fridge', label: '小冰箱', x: 8.5 * T, y: 3 * T + 12, r: 20, ix: 8.5 * T, iy: 1 * T + 4 }, { id: 'ward', label: '衣櫃換裝', x: 10 * T, y: 3 * T + 12, r: 24, ix: 10 * T, iy: 0 * T + 6 }, { id: 'decor', label: '布置角落', x: 4.5 * T, y: 3 * T + 12, r: 22, ix: 4.5 * T, iy: 1 * T }, { id: 'bed', label: '上床', x: 1.3 * T, y: 4 * T + 8, r: 16, ix: 1.5 * T, iy: 1.5 * T });
+rDorm.IT.push({ id: 'trash', label: '丟垃圾', x: 12.5 * T, y: 8 * T + 6, r: 20, ix: 12.5 * T, iy: 7 * T }, { id: 'fridge', label: '小冰箱', x: 8.5 * T, y: 3 * T + 12, r: 20, ix: 8.5 * T, iy: 1 * T + 4 }, { id: 'ward', label: '衣櫃換裝', x: 10 * T, y: 3 * T + 12, r: 24, ix: 10 * T, iy: 0 * T + 6 }, { id: 'decor', label: '布置角落', x: 4.5 * T, y: 3 * T + 12, r: 22, ix: 4.5 * T, iy: 1 * T }, { id: 'bed', label: '上床', x: 1.3 * T, y: 4 * T + 8, r: 16, ix: 1.5 * T, iy: 1.5 * T });
 
 /* ---------- 狀態 ---------- */
 const KEY = 'jige-town-v1', OLDKEY = 'lifefork-town-demo-v2';
@@ -936,7 +957,7 @@ function newState(name) {
     q: { main: 0, side: {}, notified: {}, c: { work: 0, workAt: 0, workAll: 0, waves: [], study: 0, hoop4: 0, eng: 0, examTry: 0, examScore: 0 } },
     daily: { date: '', ids: [], prog: {}, done: {}, bonus: false }, best: { hoop: 0, run: 0, exam: 0, bar: 0, pk: 0 }, met: {}, pos: null,
     scooter: false, visited: { campus: 1 }, look: { style: 'short', hair: '#5a3a2a', skin: '#ffd9bb', shirt: '#ff8fb1', pants: '#4a5d8a', acc: 'none', cap: '#3ba3d8', outer: 'none' }, ch3: { booths: [], hol: '', path: '', prog: 0, tries: 0 }, ach: [], title: '', psy: [], certs: { upper: 0, toeic: 0, ielts: 0, toefl: 0 }, cnt: { wave: 0, sleep: 0, studyFail: 0, coffeeAll: 0, cook: 0, trip: 0, shiftAll: 0 }, day: { d: '', coffee: 0, food: 0 },
-    ledger: { m: '', inc: 0, exp: 0, idle: 0, lines: [] }, rentDay: 0, challenge: false, bank: 0, salaryM: '', uid: '', wall: { lastPost: '', pats: [], coffees: [], mine: [] }, fam: '', famRe: 0, famM: '', aid: { grant: -1, schol: -1 }, cakes: [], bag: [], fridge: [], ch4: { mate: '', job: '', photo: 0 }, loanPaid: 0, set: { arrow: 1 }, grow: {}, hunger: 80, hungerAt: Date.now(), meals: { d: '', b: 0, l: 0, n: 0, x: 0 }, weight: 0, sick: 0, roomCode: '', loc: 0, cred: { total: 0, d: '', today: 0, c: {} }, examDay: '', bike: false };
+    ledger: { m: '', inc: 0, exp: 0, idle: 0, lines: [] }, rentDay: 0, challenge: false, bank: 0, salaryM: '', uid: '', wall: { lastPost: '', pats: [], coffees: [], mine: [] }, fam: '', famRe: 0, famM: '', aid: { grant: -1, schol: -1 }, cakes: [], bag: [], fridge: [], trash: 0, ch4: { mate: '', job: '', photo: 0 }, loanPaid: 0, set: { arrow: 1 }, grow: {}, hunger: 80, hungerAt: Date.now(), meals: { d: '', b: 0, l: 0, n: 0, x: 0 }, weight: 0, sick: 0, roomCode: '', loc: 0, cred: { total: 0, d: '', today: 0, c: {} }, examDay: '', bike: false };
 }
 function fill(def, s) { for (const k in def) { if (s[k] === undefined) s[k] = def[k]; else if (def[k] && typeof def[k] === 'object' && !Array.isArray(def[k]) && typeof s[k] === 'object') fill(def[k], s[k]); } return s; }
 function loadSave() {
@@ -1027,7 +1048,7 @@ const ICON = {
   f_beanbag: ['............', '....uuuu....', '...uuuuuu...', '..uuwuuuuu..', '.uuuuuuuuuu.', '.kuuuuuuuuk.', '.kkuuuuuukk.', '..kkkkkkkk..', '............', '............', '............', '............'],
   f_guitar: ['.....kk.....', '.....dd.....', '.....dd.....', '.....dd.....', '....kkkk....', '...krrrrk...', '..krrkkrrk..', '..krrkkrrk..', '..krrrrrrk..', '...kkkkkk...', '............', '............'],
   f_tank: ['............', '.kkkkkkkkkk.', '.kuuuuuuuuk.', '.kuwuuuuuuk.', '.kuuouuuguk.', '.kuuuuyuguk.', '.kuuuuuuuuk.', '.kkkkkkkkkk.', '.kddddddddk.', '............', '............', '............'],
-  f_fridge: ['...kkkkkk...', '...kwwwwk...', '...kwwwsk...', '...kwwwsk...', '...kkkkkk...', '...kwwwwk...', '...kwwwsk...', '...kwwwsk...', '...kwwwwk...', '...kkkkkk...', '...k....k...', '............'],
+  f_fridge: ['...kkkkkk...', '...kwpwwk...', '...kwwwsk...', '...kwwwsk...', '...kkkkkk...', '...kwwwwk...', '...kwwwsk...', '...kwwwsk...', '...kwwwwk...', '...kkkkkk...', '...k....k...', '............'],
   f_doll: ['..kk....kk..', '..kwk..kwk..', '..kwwwwwwk..', '.kwwkwwkwwk.', '.kwwwwwwwwk.', '.kwwwrrwwwk.', '..kwwwwwwk..', '.kwwwwwwwwk.', '.kwwwwwwwwk.', '..kkkkkkkk..', '............', '............'],
   groc: ['....kkk.....', '...k...k....', '..kkkkkkkk..', '..kbbbbbbk..', '..kbgrgybk..', '..kbggrybk..', '..kbbbbbbk..', '..kbbbbbbk..', '..kbbbbbbk..', '..kkkkkkkk..', '............', '............'],
   milk: ['....kkkk....', '....kuuk....', '...kwwwwk...', '..kwwwwwwk..', '..kwuuuuwk..', '..kwuwwuwk..', '..kwuuuuwk..', '..kwwwwwwk..', '..kwwwwwwk..', '..kkkkkkkk..', '............', '............'],
@@ -1856,8 +1877,20 @@ stat('cafe2', 3, 5.6, PLOOK[2], 'down');
 BLD.forEach(b => { const d = door(b); scenes[b.scene].IT.push({ id: 'enter', to: b.id, label: '進入', x: d.x, y: d.y, ix: d.ix, iy: d.iy, r: 22 }); });
 campus.IT.push({ id: 'board', label: '看公佈欄', x: BOARD.x * T + 16, y: BOARD.y * T + 20, ix: BOARD.x * T + 16, iy: BOARD.y * T - 16, r: 24 });
 campus.IT.push({ id: 'wall', label: '看留言牆', x: 16.5 * T, y: 17 * T + 10, r: 26, ix: 16.5 * T, iy: 15 * T - 6 });
-BENCHES.forEach(b => campus.IT.push({ id: 'bench', label: '坐下', x: b.x * T + 16, y: b.y * T + 14, ix: b.x * T + 16, iy: b.y * T - 8, r: 22 }));
-street.IT.push({ id: 'bench', label: '坐下', x: 9 * T, y: 20 * T + 14, ix: 9 * T, iy: 20 * T - 8, r: 22 });
+const seatIT = (s, b) => s.IT.push({ id: 'bench', bx: b.x, by: b.y, label: '坐下', x: b.x * T + 16, y: b.y * T + 14, ix: b.x * T + 16, iy: b.y * T - 8, r: 22 });
+BENCHES.forEach(b => seatIT(campus, b));
+[{ x: 8, y: 20 }, { x: 5, y: 17 }, { x: 29, y: 15 }].forEach((b, i) => { if (i) { drawBench(street.g, b); solid(street, b.x, b.y, 2, 1); } seatIT(street, b); });
+{ const b = { x: 31, y: 12 }; drawBench(pgd.g, b); solid(pgd, b.x, b.y, 2, 1); seatIT(pgd, b); }
+Object.entries(TRASH).forEach(([id, arr]) => { const s = scenes[id]; arr.forEach(([x, y]) => { if (id === 'campus') s.dyn.push({ y: y * T + 14, f: g => drawTrash(g, x * T, y * T) }); else drawTrash(s.g, x * T, y * T); solid(s, x, y); s.IT.push({ id: 'trash', label: '丟垃圾', x: x * T + 8, y: y * T + 22, r: 20, ix: x * T + 8, iy: y * T - 10 }); }); });
+/* 美甲店、拍貼機（校外） */
+{ const s = street, nb = { x: 12, y: 14, w: 5, h: 4, wall: '#ffe0ec', roof: '#e5607f', trim: '#b53c5a', awning: true };
+  drawBld(s.g, nb); solid(s, nb.x, nb.y, nb.w, nb.h); s.labels.push({ t: 'Slaycure 美甲', x: 14.5 * T, y: 16 * T + 4, size: 11 });
+  s.IT.push({ id: 'nails', label: '美甲店', x: 14.5 * T, y: 18 * T + 6, r: 24, ix: 14.5 * T, iy: 15 * T });
+  const g = s.g, x = 1 * T, y = 15 * T; R(g, 'rgba(60,40,80,.2)', x + 2, y + 2 * T - 1, 2 * T, 4); R(g, '#3b2f4a', x - 1, y - 9, 2 * T + 2, 2 * T + 9); R(g, '#c9b6f5', x, y - 8, 2 * T, 2 * T + 7); R(g, '#ff8fb1', x, y - 8, 2 * T, 7); R(g, '#fff', x + 3, y - 6, 2 * T - 6, 3);
+  R(g, '#e5607f', x + 4, y + 2, 13, 2 * T - 3); for (let k = 0; k < 4; k++) R(g, '#c94a6a', x + 5 + k * 3, y + 3, 1, 2 * T - 5); R(g, '#3b2f4a', x + 20, y + 4, 9, 7); R(g, '#7ec8f0', x + 21, y + 5, 7, 5); R(g, '#ffd45c', x + 22, y + 15, 5, 3);
+  solid(s, 1, 15, 2, 2); s.labels.push({ t: '拍貼機', x: 2 * T, y: 14 * T + 6, size: 10 });
+  s.IT.push({ id: 'photobooth', label: '拍貼', x: 2 * T, y: 17 * T + 6, r: 22, ix: 2 * T, iy: 14 * T }); }
+rCafe2.IT.push({ id: 'datecafe', label: '靠窗的雙人座', x: 10 * T, y: 7 * T + 12, r: 20, ix: 10 * T, iy: 5 * T });
 function nearest() {
   let best = null, bd = 1e9;
   for (const it of cur.IT) { if (it.hide && it.hide()) continue; const d = Math.hypot(P.x - it.x, P.y - it.y); if (d < it.r && d < bd) { best = it; bd = d; } }
@@ -2306,22 +2339,51 @@ function drinkStand() {
 function takeout(it) {
   st.bag = st.bag || [];
   if (st.bag.length >= BAG_MAX) { feed(it.f); hud(); persist(); return it.t + '\n\n（手上的袋子滿了，這份你站在攤位旁邊直接吃掉。）'; }
-  st.bag.push({ n: it.n, f: it.f, t: it.t, drink: it.drink ? 1 : 0 }); persist();
+  st.bag.push({ n: it.n, f: it.f, t: it.t, icon: it.icon || 'bag', drink: it.drink ? 1 : 0 }); persist();
   return '老闆把' + it.n + '裝進塑膠袋，你手上多了一個袋子。\n找張椅子坐下來' + (it.drink ? '喝' : '吃') + (st.dorm.placed.includes('fridge') ? '，或帶回宿舍放冰箱。' : '，或帶回宿舍的書桌吃。');
 }
+const carryOf = () => (st && (st.bag || []).length) ? 'bag' : (st && st.trash > 0) ? 'trash' : false;
+const TRASH_MAX = 4;
+const trashNote = () => '\n手上多了垃圾（' + st.trash + ' 份），記得找垃圾桶丟。';
 function eatMenu(place) {
   const b = st.bag || []; if (!b.length) return false;
-  showModal({ title: place, text: '你打開袋子，裡面有：' + b.map(x => x.n).join('、') + '。\n飽足度現在是 ' + Math.round(hungerNow()) + '。', choices: b.map((x, i) => ({ label: (x.drink ? '喝 ' : '吃 ') + x.n, fn: () => { st.bag.splice(i, 1); feed(x.f); hud(); persist(); ok(place, x.t + '\n\n飽足度 +' + x.f + '。'); } })).concat(b.length > 1 ? [{ label: '全部吃掉', fn: () => { const tot = b.reduce((a, x) => a + x.f, 0), names = b.map(x => x.n).join('、'); st.bag = []; feed(tot); hud(); persist(); ok(place, '你把' + names + '全部吃完了，撐到要靠著椅背休息。\n\n飽足度 +' + tot + '。'); } }] : [], [{ label: '先不吃' }]) });
+  if ((st.trash || 0) >= TRASH_MAX) { ok(place, '你手上已經抓著 ' + st.trash + ' 份垃圾，拿不下了。\n先去丟垃圾再坐下來吃。垃圾桶是綠色的，校園、校外、操場和宿舍都有。'); return true; }
+  showModal({ title: place, text: '你打開袋子，裡面有：' + b.map(x => x.n).join('、') + '。\n飽足度現在是 ' + Math.round(hungerNow()) + '。', choices: b.map((x, i) => ({ label: (x.drink ? '喝 ' : '吃 ') + x.n, fn: () => { st.bag.splice(i, 1); feed(x.f); st.trash = (st.trash || 0) + 1; hud(); persist(); ok(place, x.t + '\n\n飽足度 +' + x.f + '。' + trashNote()); } })).concat(b.length > 1 ? [{ label: '全部吃掉', fn: () => { const tot = b.reduce((a, x) => a + x.f, 0), names = b.map(x => x.n).join('、'); st.trash = (st.trash || 0) + b.length; st.bag = []; feed(tot); hud(); persist(); ok(place, '你把' + names + '全部吃完了，撐到要靠著椅背休息。\n\n飽足度 +' + tot + '。' + trashNote()); } }] : [], [{ label: '先不吃' }]) });
   return true;
+}
+function trashCan() {
+  if (!(st.trash > 0)) return ok('垃圾桶', pick(['垃圾桶裡有一杯沒喝完的珍奶，吸管還插著。', '旁邊貼著「資源回收請分類」，下面有人用奇異筆補了一句：「謝謝你」。', '你手上沒有垃圾。你看了一眼，決定不要再看第二眼。']));
+  const n = st.trash; st.trash = 0; st.cnt.trash = (st.cnt.trash || 0) + n; beep(520, .05); setTimeout(() => beep(390, .06), 90);
+  if (st.cnt.trash >= 10) ach('tidy'); persist();
+  ok('丟垃圾', '你把 ' + n + ' 份垃圾丟掉了，杯子跟塑膠袋分開丟進回收那一格。' + (cur.id === 'dorm' ? '\n阿芸從床上探頭：「謝謝你沒有丟在桌上。」' : ''));
 }
 function fridgeMenu() {
   if (!st.dorm.placed.includes('fridge')) return ok('宿舍', '房間裡還沒有冰箱。點箱子打開家具型錄，小冰箱 $4,000。');
-  st.bag = st.bag || []; st.fridge = st.fridge || [];
-  const f = st.fridge, b = st.bag, ch = [];
-  if (b.length) ch.push({ label: '把袋子裡的都放進去', fn: () => { const n = Math.min(FRIDGE_MAX - f.length, b.length); if (n <= 0) return ok('小冰箱', '冰箱塞滿了，門關不起來。', fridgeMenu); st.fridge = f.concat(b.splice(0, n)); persist(); ok('小冰箱', '放進去了' + (b.length ? '，還有 ' + b.length + ' 樣塞不下，只好拿在手上。' : '。冰箱門上貼著一張紙條：「寫名字！不然會被吃掉。—佳佳」'), fridgeMenu); } });
-  f.slice(0, 8).forEach((x, i) => ch.push({ label: '拿出 ' + x.n, fn: () => { if (st.bag.length >= BAG_MAX) return ok('小冰箱', '手上拿不下了。', fridgeMenu); st.bag.push(f.splice(i, 1)[0]); persist(); fridgeMenu(); } }));
-  ch.push({ label: '關上冰箱' });
-  showModal({ title: '小冰箱', text: '冰箱裡：' + (f.length ? f.map(x => x.n).join('、') : '空的，只有一瓶不知道是誰的養樂多') + '\n你手上：' + (b.length ? b.map(x => x.n).join('、') : '沒有東西') + '\n\n最多放 ' + FRIDGE_MAX + ' 樣。拿出來以後到書桌坐下來吃。', choices: ch });
+  st.bag = st.bag || []; st.fridge = st.fridge || []; modalOpen = true; $('#frMsg').textContent = ''; frRender(); $('#fridgeOv').classList.add('on'); beep(300, .05, 'triangle');
+}
+function frRender() {
+  const f = st.fridge, b = st.bag, slot = (x, i, where) => x ? '<button type="button" class="frSlot" data-w="' + where + '" data-i="' + i + '"><img alt="" src="' + iconUrl(x.icon || 'bag') + '">' + esc(x.n) + '</button>' : '<div class="frSlot empty"></div>';
+  let g = ''; for (let i = 0; i < FRIDGE_MAX; i++) { if (i === 5) g += '<div class="frShelf"></div>'; g += slot(f[i], i, 'f'); }
+  $('#frGrid').innerHTML = g; let h = ''; for (let i = 0; i < BAG_MAX; i++) h += slot(b[i], i, 'b'); $('#frBag').innerHTML = h;
+  $('#frCnt').textContent = f.length + ' / ' + FRIDGE_MAX; $('#frBagCnt').textContent = b.length + ' / ' + BAG_MAX; $('#frAll').style.display = b.length ? '' : 'none';
+}
+function frMove(where, i) {
+  const f = st.fridge, b = st.bag;
+  if (where === 'f') { if (b.length >= BAG_MAX) return $('#frMsg').textContent = '手上的袋子滿了，拿不下。'; const x = f.splice(i, 1)[0]; b.push(x); $('#frMsg').textContent = '拿出了' + x.n + '。到書桌坐下來吃吧。'; }
+  else { if (f.length >= FRIDGE_MAX) return $('#frMsg').textContent = '冰箱塞滿了，門會關不起來。'; const x = b.splice(i, 1)[0]; f.push(x); $('#frMsg').textContent = '把' + x.n + '放進去了。' + (f.length === 1 ? '冰箱門上貼著佳佳的紙條：「寫名字！不然會被吃掉。」' : ''); }
+  beep(600, .04); persist(); frRender();
+}
+$('#fridgeOv').addEventListener('click', e => { const t = e.target.closest('.frSlot[data-w]'); if (t) frMove(t.dataset.w, +t.dataset.i); });
+$('#frAll').onclick = () => { const n = Math.min(FRIDGE_MAX - st.fridge.length, st.bag.length); if (n <= 0) return $('#frMsg').textContent = '冰箱塞滿了。'; st.fridge = st.fridge.concat(st.bag.splice(0, n)); $('#frMsg').textContent = '放進去了 ' + n + ' 樣。'; persist(); frRender(); };
+$('#frClose').onclick = () => { $('#fridgeOv').classList.remove('on'); modalOpen = false; beep(220, .05, 'triangle'); };
+const LINKS = {
+  photo: { url: 'https://iammay22.github.io/PHOTO-MATIC/', title: '拍貼機 PHOTO-MATIC', text: '粉紅色的拍貼機，布簾上貼著「四格一組，可以錄成影片」。\n裡面的螢幕在閃：PHOTO-MATIC。', go: '進去拍一組', ach: 'photobooth' },
+  nails: { url: 'https://iammay22.github.io/slaycure/', title: 'Slaycure 美甲', text: '店裡飄著淡淡的指甲油味道。美甲師抬頭：「想做什麼樣的？可以自己挑顏色跟款式。」', go: '坐下來挑款式', ach: 'nails' },
+  situ: { url: 'https://iammay22.github.io/situationship/', title: '靠窗的雙人座', text: '隔壁桌的兩個人聊了一個小時，還是沒說清楚他們現在算什麼。\n你攪著咖啡，突然想到自己手機裡那個已讀不回的人。', go: '打開《戀愛沒那麼簡單》', ach: 'situ' }
+};
+function outLink(k) {
+  const L = LINKS[k];
+  showModal({ title: L.title, text: L.text + '\n\n（會開一個新分頁，及格鎮的進度會保留。畫面是直的話就把手機轉直，玩完再轉回來。）', choices: [{ label: L.go, fn: () => { ach(L.ach); persist(); try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {} try { window.open(L.url, '_blank', 'noopener'); } catch (e) {} } }, { label: '下次再說' }] });
 }
 function stall(id) {
   if (id === 'tea') return drinkStand();
@@ -2404,7 +2466,8 @@ async function board() {
   const top = rows.slice(0, 10).map(line).join('\n') + (rank > 10 ? '\n⋯\n' + rank + '. ' + st.name + '　' + fmt(me) + '　← 你' : '');
   ok('公佈欄 · 存款排行', (live ? '同屆存款排行（全校，每分鐘更新）\n' : '最近一週在路上遇過的同學\n') + top + (rows.length < 2 ? '\n\n還沒遇到其他人。去夜市或操場這種人多的地方走走，遇到的人會被記在這裡。' : '') + '\n\n存款是戶頭加定存。你目前第 ' + rank + ' 名。\n角落貼著另一張紙：「本週期中考週，全校的咖啡因存量正在下降。」');
 }
-function bench() {
+function bench(it) {
+  if (it && it.bx !== undefined) { P.x = (it.bx + 1) * T; P.y = (it.by + 1) * T + 3; P.dir = 'down'; P.sit = true; snapCam(); }
   if (cur.id === 'campus' && sideSt('card') === 1 && !st.inv.card) { st.inv.card = 1; chkReady(); return ok('長椅', '你坐下來，椅縫裡夾著一張借書證。照片上是館員伯伯年輕的時候。\n\n找到借書證了。'); }
   if ((st.bag || []).length) return eatMenu('長椅');
   if (cur.id === 'street') return ok('長椅', '你坐在夜市旁邊的長椅上。路過的每個人手上都拿著吃的，只有你沒有。');
@@ -2479,6 +2542,7 @@ function wave(b) {
   setTimeout(() => { say(b, pick(['嗨!', '午安', '你也在這裡', '我超累', '報告寫完了嗎']), 2); beep(990, .05); chkReady(); }, 700);
 }
 function goScene(id, sx, sy, dir) {
+  P.sit = false;
   if (st && st.visited) st.visited[id] = 1;
   if (busy) return; busy = true; $('#fade').style.opacity = 1; beep(440, .06);
   setTimeout(() => {
@@ -2493,7 +2557,7 @@ function interact() {
   if (it.id === 'real') return realChat(it.r);
   if (it.id === 'enter') return goScene(it.to, 7 * T, 8 * T + 12, 'up');
   if (it.id === 'stall') return stall(it.stall);
-  const f = { board, bench, fridge: fridgeMenu, study, clubboard: clubBoard, shop, decor, bed: bedView, mydesk: deskView, class: classFlow, examseat: examSeat, wall: openWall, psy: () => pickPsy(it.k), pk: pkGame, bar: barGame,
+  const f = { board, bench: () => bench(it), trash: trashCan, nails: () => outLink('nails'), photobooth: () => outLink('photo'), datecafe: () => outLink('situ'), fridge: fridgeMenu, study, clubboard: clubBoard, shop, decor, bed: bedView, mydesk: deskView, class: classFlow, examseat: examSeat, wall: openWall, psy: () => pickPsy(it.k), pk: pkGame, bar: barGame,
     water: () => ok('飲水機', pick(['你喝了一大口水。免費的東西最好喝，這是大學教你的第一件事。', '飲水機的水有點溫。你決定不要想太多。', '旁邊貼著「請勿直接對嘴」，你看了一下四周，乖乖拿出水壺。'])),
     gs: () => openGroupGame('分組報告總是遇到雷隊友？在《分組求生記》裡，看你能不能撐到上台那天。'),
     bus: () => busMenu('street'), busback: () => busMenu('city'), busair: () => busMenu('airport'), gate, flyback: () => showModal({ title: '機場巴士', text: '往楓葉國際機場的巴士，車資 $45。要回台灣得先到機場。', choices: [{ label: '上車 $45', fn: () => { if (st.money < 45) return ok('機場巴士', '錢不夠。'); spend(45, '機場巴士'); goScene('a_airport', 17 * T, 7 * T, 'left'); } }, { label: '不搭了' }] }),
@@ -2659,7 +2723,7 @@ function render(t) {
   oc.save(); oc.translate(-cam.x, -cam.y); oc.drawImage(s.map, 0, 0, s.w * T, s.h * T);
   const list = s.dyn.slice();
   s.ents.forEach(e => !e.hidden && list.push({ y: e.y, f: g => drawChar(g, e.x, e.y, e.dir, e.step, e.look[0], e.look[1], e.look[2]) }));
-  list.push({ y: P.y, f: g => { const L = Object.assign({}, st.look, { carry: (st.bag || []).length > 0 }); drawChar(g, P.x, P.y, P.dir, P.step, L.hair || '#5a3a2a', L.shirt || '#ff8fb1', L.pants || '#4a5d8a', L); } });
+  list.push({ y: P.y, f: g => { const L = Object.assign({}, st.look, { carry: carryOf(), sit: P.sit }); drawChar(g, P.x, P.y, P.dir, P.step, L.hair || '#5a3a2a', L.shirt || '#ff8fb1', L.pants || '#4a5d8a', L); } });
   Object.values(remotes).forEach(r => { if (r.s === myS() && r.look) list.push({ y: r.y, f: g => drawChar(g, r.x, r.y, r.dir || 'down', r.step || 0, r.look.hair, r.look.shirt, r.look.pants, r.look) }); });
   list.sort((a, b) => a.y - b.y).forEach(o => o.f(oc)); drawEditMarks(oc); oc.restore();
   if (s.id === 'dorm' && sleepTime()) { oc.fillStyle = 'rgba(12,14,46,.5)'; oc.fillRect(0, 0, VW, VH); }
@@ -2716,6 +2780,10 @@ const ACH = [
   { id: 'ielts', n: '雅思 6.0', d: '雅思考到 6.0 以上', t: '留學準備中' },
   { id: 'allexam', n: '考試收集家', d: '四種進階考試都考過一次', t: '考試收集家', h: 1 },
   { id: 'ch3', n: '走到岔路口', d: '完成第三章', t: '岔路口旅人' },
+  { id: 'tidy', n: '垃圾不落地', d: '丟了十份垃圾', t: '環保小尖兵' },
+  { id: 'photobooth', n: '拍一張', d: '在校外的拍貼機拍貼', t: '拍貼常客' },
+  { id: 'nails', n: '指尖沙龍', d: '在校外的美甲店做指甲', t: '手很美的人' },
+  { id: 'situ', n: '我們算什麼', d: '在轉角咖啡廳的雙人座想起某個人', t: '曖昧研究生', h: 1 },
   { id: 'chatty', n: '打招呼達人', d: '用預設句子跟真人說了五次話', t: '社交蝴蝶' },
   { id: 'threemeals', n: '三餐正常', d: '同一天吃了早餐、午餐和晚餐', t: '養生大學生' },
   { id: 'doctor', n: '去看病了', d: '感冒時去健康中心看病', t: '乖乖吃藥的人' },
@@ -3163,7 +3231,7 @@ function rtSend(force) {
   const key = cur.id + ',' + Math.round(P.x) + ',' + Math.round(P.y) + ',' + P.dir;
   if (!force && (key === rtKey ? now - rtLastSend < 2500 : now - rtLastSend < 200)) return;
   rtKey = key; rtLastSend = now;
-  try { rt.send({ type: 'broadcast', event: 'pos', payload: { id: sbUid, ts: Date.now(), s: myS(), x: Math.round(P.x), y: Math.round(P.y), d: P.dir, m: P.step ? 1 : 0, n: st.name, t: titleOf(), l: Object.assign({}, st.look, { carry: (st.bag || []).length > 0 }), mo: Math.round(st.money + (st.bank || 0)) } }); } catch (e) {}
+  try { rt.send({ type: 'broadcast', event: 'pos', payload: { id: sbUid, ts: Date.now(), s: myS(), x: Math.round(P.x), y: Math.round(P.y), d: P.dir, m: P.step ? 1 : 0, n: st.name, t: titleOf(), l: Object.assign({}, st.look, { carry: carryOf(), sit: !!P.sit }), mo: Math.round(st.money + (st.bank || 0)) } }); } catch (e) {}
 }
 function rtUpdate(dt) {
   const now = performance.now();
@@ -3567,6 +3635,7 @@ function loop(now) {
     const k = Math.min(1, mag) / mag, sp = 60 * dt * (st && st.bike && regionOf(cur.id) === 'abroad' && !cur.indoor ? 1.6 : 1);
     move(P, vx * k * sp, 0); move(P, 0, vy * k * sp);
     P.dir = Math.abs(vx) > Math.abs(vy) ? (vx > 0 ? 'right' : 'left') : (vy > 0 ? 'down' : 'up'); P.anim += dt; P.step = Math.floor(P.anim / .15) % 2;
+    P.sit = false;
   } else P.step = 0;
   Object.values(scenes).forEach(s => s.ents.forEach(e => updateEnt(e, dt)));
   mgTick(dt);
@@ -3713,7 +3782,7 @@ resize(); snapCam();
 document.addEventListener('visibilitychange', () => { if (document.hidden && started) persist(); try { if (actx) { if (document.hidden) actx.suspend(); else actx.resume(); } } catch (e) {} });
 addEventListener('pagehide', () => { if (started) persist(); });
 requestAnimationFrame(loop);
-window.__town = { get st() { return st; }, P, scenes, get cur() { return cur; }, interact, nearest, QN, SIDE, goScene, setMain, cam, get S() { return S; }, get mg() { return mg; }, mgPress, findPath, BLD, quizAnswer, quizElim, examSeat, engPractice, goals, remotes, openWard, payTick, offlinePay, shiftNight, startShift, get shift() { return shift; }, gate, fly, busMenu, holTest, choosePath, busRide, internInterview, exchangeInterview, get rt() { return rt; }, ach, BLD2: BLD, get mapView() { return mapView; }, pickPsy, PSY, randomEvent, dayTick, openCard, openWall, startChallenge, makeCard, EXAMS, takeExam, famStart, famShow, aidBoard, realChat, sendChat, feed, hungerNow, nurseTalk, weighIn, counsel, ktvSing, cineShop, cineWatch, clawGame, taikoGame, roomSwap, furnMenu, editTap, itemAt, get editing() { return editing; }, LOC, tripMenu, destPick, applyDest, DEST, active, marketPhase, stallView, craftStall, moveMenu, startMove, moveStep, endMove, canPlace, bedView, deskView, deskStudy, phoneScroll, nightChat, lecture, roomTick, tzDiff, gainCred, canGrad, reqLeft, classFlow, tripGo, rinkTrip, welcomeParty, lxTable, cityTour, iscBoard, campusNotice, cookBuddy, libCafe, catTalk, pubSync, pubTarget, hourIn, get ep() { return ep; }, epNext, regionOf, get curH() { return curH; }, openShop, closeShop, sbFlip, get SB() { return SB; }, shop, meal, stall, tellerTick, tellerTalk, FAM, mainTarget, sillMenu, growState, awayNote, GROW, navPoint, howTo, bgmPlay, get bgm() { return bgm; }, AU, auToggle, projTalk, ch4Interview, leaveSchool, farewell, gradPhoto, gradCeremony, martShop, tripMenu, triviaNight, callHome, makeCard, repay, loanLeft, drinkStand, takeout, eatMenu, fridgeMenu, bench, board, robbery, get alarmOn() { return alarmOn; }, replyPrompt, set lastMsg(v) { lastMsg = v; }, buildDorm, DRINKS, nextCustomer, NIGHT };
+window.__town = { get st() { return st; }, P, scenes, get cur() { return cur; }, interact, nearest, QN, SIDE, goScene, setMain, cam, get S() { return S; }, get mg() { return mg; }, mgPress, findPath, BLD, quizAnswer, quizElim, examSeat, engPractice, goals, remotes, openWard, payTick, offlinePay, shiftNight, startShift, get shift() { return shift; }, gate, fly, busMenu, holTest, choosePath, busRide, internInterview, exchangeInterview, get rt() { return rt; }, ach, BLD2: BLD, get mapView() { return mapView; }, pickPsy, PSY, randomEvent, dayTick, openCard, openWall, startChallenge, makeCard, EXAMS, takeExam, famStart, famShow, aidBoard, realChat, sendChat, feed, hungerNow, nurseTalk, weighIn, counsel, ktvSing, cineShop, cineWatch, clawGame, taikoGame, roomSwap, furnMenu, editTap, itemAt, get editing() { return editing; }, LOC, tripMenu, destPick, applyDest, DEST, active, marketPhase, stallView, craftStall, moveMenu, startMove, moveStep, endMove, canPlace, bedView, deskView, deskStudy, phoneScroll, nightChat, lecture, roomTick, tzDiff, gainCred, canGrad, reqLeft, classFlow, tripGo, rinkTrip, welcomeParty, lxTable, cityTour, iscBoard, campusNotice, cookBuddy, libCafe, catTalk, pubSync, pubTarget, hourIn, get ep() { return ep; }, epNext, regionOf, get curH() { return curH; }, openShop, closeShop, sbFlip, get SB() { return SB; }, shop, meal, stall, tellerTick, tellerTalk, FAM, mainTarget, sillMenu, growState, awayNote, GROW, navPoint, howTo, bgmPlay, get bgm() { return bgm; }, AU, auToggle, projTalk, ch4Interview, leaveSchool, farewell, gradPhoto, gradCeremony, martShop, tripMenu, triviaNight, callHome, makeCard, repay, loanLeft, drinkStand, takeout, eatMenu, fridgeMenu, trashCan, outLink, snapCam, bench, board, robbery, get alarmOn() { return alarmOn; }, replyPrompt, set lastMsg(v) { lastMsg = v; }, buildDorm, DRINKS, nextCustomer, NIGHT };
 })();
 </script>
 </body>
