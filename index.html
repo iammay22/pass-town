@@ -2042,11 +2042,11 @@ const SIDE = {
   hoop: { n: '籃球隊缺一個人', who: '操場的阿哲', desc: '一場投籃投進 4 球', ready: () => st.q.c.hoop4 > 0, prog: () => st.q.c.hoop4 ? '做到了' : '還沒做到', reward: '$400、知識 +10' }
 };
 /* ---------- 數據後台（Google 試算表 + Apps Script） ---------- */
-const TRACK_URL = ''; // 部署 Apps Script 後把網址貼在這裡；留空就不送資料
+const TRACK_URL = 'https://script.google.com/macros/s/AKfycbyVvveW_fW8eLuq89gujX-5-HMjvOQQDhOjC-7eLLin0-AttjNw2dJ3f1IhRNAvVtG0/exec'; // Apps Script 部署網址；留空就不送資料
 const PID = (() => { try { let v = localStorage.getItem('pass-town-pid'); if (!v) { v = Math.random().toString(36).slice(2, 10); localStorage.setItem('pass-town-pid', v); } return v; } catch (e) { return 'anon'; } })();
 const SRC = (() => { try { const q = new URLSearchParams(location.search).get('utm_source'); if (q) return q; const r = document.referrer ? new URL(document.referrer).hostname : ''; return r && r !== location.hostname ? r : ''; } catch (e) { return ''; } })();
 function track(ev, value = '', detail = '') {
-  if (!TRACK_URL || location.protocol === 'file:') return;
+  if (!TRACK_URL || !/github\.io$/.test(location.hostname)) return;
   const body = JSON.stringify({ pid: PID, event: ev, value: String(value), detail: String(detail), device: matchMedia('(pointer:coarse)').matches ? 'mobile' : 'desktop', source: SRC });
   try { if (navigator.sendBeacon) navigator.sendBeacon(TRACK_URL, body); else fetch(TRACK_URL, { method: 'POST', mode: 'no-cors', body }); } catch (e) {}
 }
