@@ -1009,7 +1009,7 @@ function famShow() {
   showModal({ title: '抽家庭背景：' + f.n, text: f.d + '\n\n主線、每日任務和打工薪水大家都一樣。30,900 生存挑戰期間不算家裡的錢，起點是平等的。' + (st.famRe ? '' : '\n\n不喜歡的話可以重抽一次。'), choices: [{ label: '就這個了', fn: famAccept }].concat(st.famRe ? [] : [{ label: '重抽一次', fn: () => { st.famRe = 1; st.fam = pick(Object.keys(FAM).filter(k => k !== st.fam)); persist(); beep(784, .06); famShow(); } }]) });
 }
 function famAccept() {
-  const f = FAM[st.fam]; st.famM = monthKey();
+  const f = FAM[st.fam]; st.famM = monthKey(); track('family', f.n);
   if (f.m && !st.challenge) earn(f.m, '家裡給的生活費');
   logLine('家庭背景：' + f.n); hud(); persist(); if (!st.met.howto) setTimeout(howTo, 500);
   if (st.fam === 'loan') toast('記得去學務處的公告欄申請助學金');
@@ -1243,7 +1243,7 @@ function tzDiff() { let x = Math.round(hourIn(D().tz) - hourIn(TZ.home)); x = ((
 const diffText = () => { const x = tzDiff(); return x === 0 ? '跟台灣同一個時間' : x < 0 ? '比台灣慢 ' + (-x) + ' 小時' : '比台灣快 ' + x + ' 小時'; };
 function applyDest() { const d = D(); abroad.name = '交換學校 · ' + d.school; scenes.a_airport.name = d.city + '國際機場'; scenes.a_pub.name = '學生酒吧 · ' + d.pub; if (QN.cashier) QN.cashier.name = d.clerk; }
 function destPick(cb) {
-  showModal({ title: '選擇交換學校', text: '交換計畫有六間姊妹校。差別是時區、語言和城市，每個州或省的時區也不一樣。\n選好以後，之後的班機都會飛去那裡，下次買票可以換。', choices: Object.entries(DEST).map(([k, d]) => ({ label: d.country + ' · ' + d.city + '（' + d.zone + '，' + LANG_N[d.lang] + '）', fn: () => { st.dest = k; applyDest(); persist(); toast('交換學校：' + d.school + '（' + d.city + '，' + diffText() + '）'); cb && cb(); } })).concat([{ label: '再想想' }]) });
+  showModal({ title: '選擇交換學校', text: '交換計畫有六間姊妹校。差別是時區、語言和城市，每個州或省的時區也不一樣。\n選好以後，之後的班機都會飛去那裡，下次買票可以換。', choices: Object.entries(DEST).map(([k, d]) => ({ label: d.country + ' · ' + d.city + '（' + d.zone + '，' + LANG_N[d.lang] + '）', fn: () => { st.dest = k; applyDest(); persist(); track('abroad', d.city); toast('交換學校：' + d.school + '（' + d.city + '，' + diffText() + '）'); cb && cb(); } })).concat([{ label: '再想想' }]) });
 }
 function hourIn(tz) {
   try { const p = new Intl.DateTimeFormat('en-US', { timeZone: tz, hour: 'numeric', minute: 'numeric', hour12: false }).formatToParts(new Date()); return (+p.find(x => x.type === 'hour').value % 24) + (+p.find(x => x.type === 'minute').value) / 60; }
@@ -1502,6 +1502,7 @@ const AWAY = [
 ];
 function awayNote(min, fake) {
   if (!st || min < 20) return;
+  if (!fake && !awayNote.sent) { awayNote.sent = 1; track('return', Math.round(min)); }
   if (locked()) return setTimeout(() => awayNote(min, fake), 900);
   const pool = shuffle(AWAY).slice(0, 3), lines = pool.map(([w, t]) => '・' + w + t);
   const g = []; if (st.grow) GROW_IDS.forEach(id => { const s0 = growState(id); if (s0 === 'ready') g.push('・窗台上的' + GROW[id].n + '好了，要回來收。'); if (s0 === 'spoiled') g.push(id === 'pudding' ? '・冰箱裡的布丁不見了。' : '・窗台上的' + GROW[id].n + '放太久了。'); });
@@ -1552,7 +1553,7 @@ function farewell() {
 }
 const SUPPORT_URL = 'https://portaly.cc/may22/support';
 function gradPhoto() {
-  const m = st.q.main, ch = [{ label: '投一枚硬幣許願（贊助作者）', fn: () => { ach('wish'); persist(); try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {} try { window.open(SUPPORT_URL, '_blank', 'noopener'); } catch (e) {} } }];
+  const m = st.q.main, ch = [{ label: '投一枚硬幣許願（贊助作者）', fn: () => { ach('wish'); persist(); track('link', '贊助'); try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {} try { window.open(SUPPORT_URL, '_blank', 'noopener'); } catch (e) {} } }];
   if (m >= 21) ch.unshift({ label: '拍畢業照', fn: gradPhotoTake });
   ch.push({ label: '離開' });
   showModal({ title: '噴水池', text: (m >= 21 ? '噴水池前面已經有人在排隊拍畢業照了。' : pick(['每年六月，這裡會擠滿穿學士服的人。', '有人在噴水池旁邊練習拋帽子，帽子掉進水裡了。'])) + '\n池底躺著很多銅板。池邊立著一塊小木牌：「投一枚硬幣，支持做這座小鎮的人。— may22」\n\n（會開一個新分頁到贊助頁，及格鎮的進度會保留。）', choices: ch });
@@ -1560,7 +1561,7 @@ function gradPhoto() {
 function gradPhotoTake() {
   const m = st.q.main;
   const url = makeCard('photo'); $('#cardImg').src = url; $('#cardDl').href = url; $('#cardDl').download = 'pass-town-graduation.png'; $('#cardT').textContent = '畢業照';
-  $('#cardOv').classList.add('on'); modalOpen = true; st.ch4.photo = 1;
+  $('#cardOv').classList.add('on'); modalOpen = true; st.ch4.photo = 1; track('card', '畢業照');
   if (m === 21) { logLine('拍了畢業照'); setMain(22); toast('最後一步：回學務處參加畢業典禮'); }
 }
 function gradCeremony() {
@@ -1715,7 +1716,7 @@ function drawTeller(g) {
 }
 function tellerTalk() {
   st.met.teller = 1; ach('fortune');
-  const go = () => { st.met.fortune = (st.met.fortune || 0) + 1; persist(); try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {} try { window.open('https://iammay22.github.io/pinch-of-fate/', '_blank', 'noopener'); } catch (e) {} };
+  const go = () => { st.met.fortune = (st.met.fortune || 0) + 1; persist(); track('link', '掐指一算'); try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {} try { window.open('https://iammay22.github.io/pinch-of-fate/', '_blank', 'noopener'); } catch (e) {} };
   showModal({ title: '神秘占卜師', text: pick(['斗篷底下傳來一個聲音：「同學，你走路的樣子，像是有事情想問。」', '「我只在校園角落待一下子，下次你不一定找得到我。」', '「小六壬只要掐手指就能算。要不要試試看？」']) + '\n\n水晶球裡好像有東西在轉。\n（「去算一卦」會開新分頁到《掐指一算》，及格鎮的進度會保留。）', choices: [
     { label: '去算一卦', fn: go },
     { label: '先聽他隨口說一句', fn: () => { const [n, t] = pick(LIU); ok('神秘占卜師', '他掐了掐手指，停在「' + n + '」。\n「' + t + '」\n\n說完他就低頭看水晶球，不理你了。'); } },
@@ -2040,7 +2041,17 @@ const SIDE = {
   card: { n: '不見的借書證', who: '圖書館館員伯伯', desc: '去校園長椅找借書證', ready: () => st.inv.card > 0, prog: () => st.inv.card > 0 ? '已找到' : '還沒找到', reward: '知識 +15' },
   hoop: { n: '籃球隊缺一個人', who: '操場的阿哲', desc: '一場投籃投進 4 球', ready: () => st.q.c.hoop4 > 0, prog: () => st.q.c.hoop4 ? '做到了' : '還沒做到', reward: '$400、知識 +10' }
 };
-function setMain(n) { st.q.main = n; if (n === 6) ach('ch1'); if (n === 11) ach('ch2'); if (n === 17) ach('ch3'); if (n === 23) ach('graduate'); if (n < MAIN.length) toast('主線更新：' + mainText(n)); hud(); persist(); }
+/* ---------- 數據後台（Google 試算表 + Apps Script） ---------- */
+const TRACK_URL = ''; // 部署 Apps Script 後把網址貼在這裡；留空就不送資料
+const PID = (() => { try { let v = localStorage.getItem('pass-town-pid'); if (!v) { v = Math.random().toString(36).slice(2, 10); localStorage.setItem('pass-town-pid', v); } return v; } catch (e) { return 'anon'; } })();
+const SRC = (() => { try { const q = new URLSearchParams(location.search).get('utm_source'); if (q) return q; const r = document.referrer ? new URL(document.referrer).hostname : ''; return r && r !== location.hostname ? r : ''; } catch (e) { return ''; } })();
+function track(ev, value = '', detail = '') {
+  if (!TRACK_URL || location.protocol === 'file:') return;
+  const body = JSON.stringify({ pid: PID, event: ev, value: String(value), detail: String(detail), device: matchMedia('(pointer:coarse)').matches ? 'mobile' : 'desktop', source: SRC });
+  try { if (navigator.sendBeacon) navigator.sendBeacon(TRACK_URL, body); else fetch(TRACK_URL, { method: 'POST', mode: 'no-cors', body }); } catch (e) {}
+}
+const CH_END = { 6: 1, 11: 2, 17: 3, 23: 4 };
+function setMain(n) { if (CH_END[n] && st.q.main < n) track('chapter', CH_END[n]); if (n === 23 && st.q.main < 23) track('graduate'); st.q.main = n; if (n === 6) ach('ch1'); if (n === 11) ach('ch2'); if (n === 17) ach('ch3'); if (n === 23) ach('graduate'); if (n < MAIN.length) toast('主線更新：' + mainText(n)); hud(); persist(); }
 function chkReady() { for (const id in SIDE) if (sideSt(id) === 1 && SIDE[id].ready() && !st.q.notified[id]) { st.q.notified[id] = 1; toast('支線可以回報了：' + SIDE[id].n); } hud(); }
 function acceptSide(id) { st.q.side[id] = 1; if (id === 'store') st.q.c.workAt = st.q.c.work; if (id === 'wave') st.q.c.waves = []; if (id === 'hoop') st.q.c.hoop4 = 0; toast('接下支線：' + SIDE[id].n); chkReady(); persist(); }
 function finishSide(id) {
@@ -2222,7 +2233,7 @@ function cafeShot(tray) {
   txt(tray.map(x => x.n).join(' · '), 110, 1180, 32, '#3b2f4a', 700);
   txt('#及格鎮 #下午茶 #先讓手機吃', 110, 1236, 30, '#e5607f', 700); txt('@' + st.name, W - 110, 1236, 30, '#8b8198', 700, 'right');
   const url = c.toDataURL('image/png'); $('#cardImg').src = url; $('#cardDl').href = url; $('#cardDl').download = 'pass-town-cafe.png'; $('#cardT').textContent = '打卡照';
-  $('#cardOv').classList.add('on'); modalOpen = true; ach('cafeshot'); st.cnt.cafeshot = (st.cnt.cafeshot || 0) + 1; persist(); beep(1200, .03); setTimeout(() => beep(1500, .05), 60);
+  $('#cardOv').classList.add('on'); modalOpen = true; track('card', '打卡照'); ach('cafeshot'); st.cnt.cafeshot = (st.cnt.cafeshot || 0) + 1; persist(); beep(1200, .03); setTimeout(() => beep(1500, .05), 60);
 }
 QN.barista.talk = () => {
   const tray = [];
@@ -2342,7 +2353,7 @@ function credText() {
   return '總學分 ' + C.total + ' / ' + CRED_NEED + '（每天最多 ' + CRED_DAY + ' 學分）\n' + (req.length ? '必修：\n' + req.map(c => '・' + c + '　' + Math.min(CRED_REQ, C.c[c] || 0) + ' / ' + CRED_REQ + ((C.c[c] || 0) >= CRED_REQ ? ' ✓' : '')).join('\n') : '還沒選課程方向，先去學務處找陳老師。');
 }
 function openGroupGame(text, alt, after) {
-  const go = () => { if (after) setTimeout(after, 300); try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {} try { window.open('https://iammay22.github.io/group-survival/', '_blank', 'noopener'); } catch (e) {} dHit('class'); ch3Prog('class'); };
+  const go = () => { track('link', '分組求生記'); if (after) setTimeout(after, 300); try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {} try { window.open('https://iammay22.github.io/group-survival/', '_blank', 'noopener'); } catch (e) {} dHit('class'); ch3Prog('class'); };
   showModal({ title: '《分組求生記》', text: text + '\n\n📱 這個遊戲是直式的。開啟後請把手機轉成直的玩，玩完再轉回橫的回到及格鎮。\n（會開一個新分頁，及格鎮的進度會保留。）', choices: [{ label: '我知道了，去玩', fn: go }].concat(alt ? [{ label: '在這裡快速分組', fn: alt }] : []).concat([{ label: '下次' }]) });
 }
 function quickGroup() { const f = CLASS_GROUP; f(); }
@@ -2450,7 +2461,8 @@ const LINKS = {
 };
 function outLink(k) {
   const L = LINKS[k];
-  showModal({ title: L.title, text: L.text + '\n\n（會開一個新分頁，及格鎮的進度會保留。畫面是直的話就把手機轉直，玩完再轉回來。）', choices: [{ label: L.go, fn: () => { ach(L.ach); persist(); try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {} try { window.open(L.url, '_blank', 'noopener'); } catch (e) {} } }, { label: '下次再說' }] });
+  const LN = { photo: '拍貼機', nails: '美甲店', situ: '戀愛沒那麼簡單' };
+  showModal({ title: L.title, text: L.text + '\n\n（會開一個新分頁，及格鎮的進度會保留。畫面是直的話就把手機轉直，玩完再轉回來。）', choices: [{ label: L.go, fn: () => { ach(L.ach); persist(); track('link', LN[k]); try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {} try { window.open(L.url, '_blank', 'noopener'); } catch (e) {} } }, { label: '下次再說' }] });
 }
 function stall(id) {
   if (id === 'tea') return drinkStand();
@@ -3130,7 +3142,7 @@ function openCard(kind) {
   if (kind === 'id' && st.q.main < 6 && st.money < 10000) return ok('學生證', '完成第一章，或存到 $10,000，學務處才會發學生證給你。');
   if (kind === 'tr' && st.q.main < 11) return ok('成績單', '完成第二章以後才能印成績單。');
   const url = makeCard(kind); $('#cardImg').src = url; $('#cardDl').href = url; $('#cardDl').download = 'pass-town-' + (kind === 'id' ? 'id' : 'transcript') + '.png';
-  $('#cardT').textContent = kind === 'id' ? '及格鎮學生證' : '畢業成績單'; closeBook(); $('#cardOv').classList.add('on'); modalOpen = true;
+  $('#cardT').textContent = kind === 'id' ? '及格鎮學生證' : '畢業成績單'; track('card', kind === 'id' ? '學生證' : '成績單'); closeBook(); $('#cardOv').classList.add('on'); modalOpen = true;
 }
 $('#cardClose').onclick = () => { $('#cardOv').classList.remove('on'); modalOpen = false; };
 
@@ -3419,7 +3431,7 @@ function holResult(sc) {
 function choosePath() {
   showModal({ title: '輔導老師', text: '大二了，接下來想往哪裡走？\n每條路都有門檻。還沒達到也沒關係，我會告訴你差什麼。' + (st.ch3.hol ? '\n你的興趣代碼是 ' + st.ch3.hol + '。' : ''), choices: Object.entries(PATHS).map(([id, p]) => ({ label: p.n, fn: () => {
     if (!p.need()) return ok('輔導老師', '想走' + p.n + '的話：\n' + p.needF() + '\n\n準備好了再來找我，或先選別條路。', choosePath);
-    dialog('輔導老師', ['好，' + p.n + '。', '接下來要做的事：' + p.task + '。', '選了也不代表不能改。很多人的路都是走一走才轉彎的。'], [{ label: '就這條', fn: () => { st.ch3.path = id; st.ch3.prog = 0; logLine('第三章選擇：' + p.n); setMain(15); } }, { label: '再想想', fn: choosePath }]);
+    dialog('輔導老師', ['好，' + p.n + '。', '接下來要做的事：' + p.task + '。', '選了也不代表不能改。很多人的路都是走一走才轉彎的。'], [{ label: '就這條', fn: () => { st.ch3.path = id; st.ch3.prog = 0; track('path', p.n); logLine('第三章選擇：' + p.n); setMain(15); } }, { label: '再想想', fn: choosePath }]);
   } })).concat([{ label: '還沒想好' }]) });
 }
 function counselorTalk() {
@@ -3503,6 +3515,7 @@ function queueGuy(slot, fromDoor) {
   if (fromDoor) c.route = [[7 * T, 8 * T + 12], [sx, sy]]; return c;
 }
 function startShift(kind) {
+  track('shift', kind === 'night' ? '大夜班' : '早班');
   const K = SHIFTS[kind], all = K.evs(), evs = all.slice(0, 1).concat(shuffle(all.slice(1)).slice(0, 3));
   if (kind === 'night' && !evs.some(e => e[3] === 'robbery') && Math.random() < .3) evs[3] = all.find(e => e[3] === 'robbery');
   evs.sort((a, b) => { const h = t => { const v = parseFloat(t.replace(':', '.')); return kind === 'night' && v < 12 ? v + 24 : v; }; return h(a[0]) - h(b[0]); });
@@ -3579,7 +3592,7 @@ function robbery(c) {
   };
   const finish = right => {
     score += right; const good = score >= 5 ? 2 : score >= 3 ? 1 : 0; shift.good += good;
-    if (safe && score >= 5) ach('calm');
+    if (safe && score >= 5) ach('calm'); track('robbery', score, safe ? '安全' : '有受傷');
     const msg = (right === 3 ? '你把特徵說得很清楚。警察說：「這樣很快就能找到人。」' : right >= 1 ? '有些細節你記不太清楚了。警察說沒關係，監視器會拍到。' : '你一個都想不起來。人在害怕的時候本來就會這樣。') + '\n\n天快亮的時候店長趕到了。' + (safe ? '他看了你一眼：「錢再賺就有，你沒事最重要。」' : '他看到你的手臂，臉色很難看：「遇到搶劫不要反抗，也不要追。人比錢重要。」') + (saw ? '\n（你一開始就偷偷記下他的樣子，這幫了很多忙。）' : '');
     ok(good === 2 ? '處理得很好' : good ? '撐過去了' : '嚇壞了', msg, () => { shift.i++; setTimeout(nextCustomer, 2600); });
   };
@@ -3864,9 +3877,10 @@ $('#startBtn').addEventListener('click', () => {
   if (matchMedia('(pointer:coarse)').matches && fsOk() && !standalone()) goFull(true);
   const n = $('#nameIn').value.trim().slice(0, 6); if (!n) { $('#nameIn').focus(); toast('先取個名字吧'); return; }
   if (hasBad(n)) { $('#nameIn').focus(); toast('這個名字其他同學會看到，換一個吧'); return; }
-  st = newState(n); st.fresh = true; begin();
+  st = newState(n); st.fresh = true; track('start'); begin();
 });
 $('#nameIn').addEventListener('keydown', e => { if (e.key === 'Enter') $('#startBtn').click(); });
+track('visit', (() => { try { return localStorage.getItem('jige-town-v1') ? '老玩家' : '新玩家'; } catch (e) { return ''; } })());
 cur = campus; st = newState('');
 resize(); snapCam();
 document.addEventListener('visibilitychange', () => { if (document.hidden && started) persist(); try { if (actx) { if (document.hidden) actx.suspend(); else actx.resume(); } } catch (e) {} });
