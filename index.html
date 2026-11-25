@@ -2499,7 +2499,21 @@ async function boardPush(force) {
   if (!await sbInit()) return;
   try { const r = await sb.rpc('set_money', { p_name: st.name, p_title: titleOf(), p_money: myWorth() }); if (r.error) { if (/set_money|function|schema|exist/i.test(r.error.message || '')) boardOk = false; } else boardOk = true; } catch (e) {}
 }
-async function board() {
+function placeName(sid) {
+  const b = String(sid || '').split('#')[0], o = OUT.find(x => x[0] === b);
+  const n = b === 'dorm' ? '宿舍' : o ? o[1] : (scenes[b] && (scenes[b].name || scenes[b].title)) || '某個角落';
+  return (regionOf(b) === 'abroad' ? '國外・' : '') + n;
+}
+function board() {
+  showModal({ title: '公佈欄', text: '公佈欄上貼滿了東西。左邊是一張手寫的存款排行，右邊有一塊白板，上面寫著「現在在學校的人」，旁邊吊著一支快沒水的白板筆。', choices: [{ label: '看誰在線上', fn: boardOnline }, { label: '看存款排行', fn: boardRank }, { label: '離開' }] });
+}
+function boardOnline() {
+  const now = performance.now(), list = Object.values(remotes).filter(r => r.name && now - (r.seen || 0) < 15000);
+  const me = st.name + (titleOf() ? '・' + titleOf() : '') + '　在 ' + placeName(myS()) + '　← 你';
+  const lines = list.sort((a, b) => placeName(a.s).localeCompare(placeName(b.s))).slice(0, 20).map(r => r.name + (r.title ? '・' + r.title : '') + '　在 ' + placeName(r.s));
+  ok('現在在線上（' + (list.length + 1) + ' 人）', (lines.length ? lines.join('\n') + '\n' + me : me + '\n\n白板上只有你的名字。其他人可能在睡覺，或在期中考。') + (list.length > 20 ? '\n⋯還有 ' + (list.length - 20) + ' 人' : '') + (SB_KEY && !sbUid ? '\n\n（目前沒連上線，看不到其他人。）' : '') + '\n\n想打招呼的話，走到他旁邊點他就行。', board);
+}
+async function boardRank() {
   showModal({ title: '公佈欄 · 存款排行', text: '你湊近公佈欄，上面貼著一張手寫的排行榜⋯⋯', choices: [{ label: '先不看' }] });
   let rows = null, live = false, rank = 0; const me = myWorth(), myId = sbUid || 'me';
   if (SB_KEY && boardOk !== false && await sbInit()) {
@@ -2513,7 +2527,7 @@ async function board() {
   if (!$('#modal').classList.contains('on') || $('#mt').textContent !== '公佈欄 · 存款排行') return;
   const line = (r, i) => (i + 1) + '. ' + r.n + (r.t ? '・' + r.t : '') + '　' + fmt(r.m) + (r.id === myId ? '　← 你' : '');
   const top = rows.slice(0, 10).map(line).join('\n') + (rank > 10 ? '\n⋯\n' + rank + '. ' + st.name + '　' + fmt(me) + '　← 你' : '');
-  ok('公佈欄 · 存款排行', (live ? '同屆存款排行（全校，每分鐘更新）\n' : '最近一週在路上遇過的同學\n') + top + (rows.length < 2 ? '\n\n還沒遇到其他人。去夜市或操場這種人多的地方走走，遇到的人會被記在這裡。' : '') + '\n\n存款是戶頭加定存。你目前第 ' + rank + ' 名。\n角落貼著另一張紙：「本週期中考週，全校的咖啡因存量正在下降。」');
+  ok('公佈欄 · 存款排行', (live ? '同屆存款排行（全校，每分鐘更新）\n' : '最近一週在路上遇過的同學\n') + top + (rows.length < 2 ? '\n\n還沒遇到其他人。去夜市或操場這種人多的地方走走，遇到的人會被記在這裡。' : '') + '\n\n存款是戶頭加定存。你目前第 ' + rank + ' 名。\n角落貼著另一張紙：「本週期中考週，全校的咖啡因存量正在下降。」', board);
 }
 function bench(it) {
   if (it && it.bx !== undefined) { P.x = (it.bx + 1) * T; P.y = (it.by + 1) * T + 3; P.dir = 'down'; P.sit = true; snapCam(); }
@@ -3833,7 +3847,7 @@ resize(); snapCam();
 document.addEventListener('visibilitychange', () => { if (document.hidden && started) persist(); try { if (actx) { if (document.hidden) actx.suspend(); else actx.resume(); } } catch (e) {} });
 addEventListener('pagehide', () => { if (started) persist(); });
 requestAnimationFrame(loop);
-window.__town = { get st() { return st; }, P, scenes, get cur() { return cur; }, interact, nearest, QN, SIDE, goScene, setMain, cam, get S() { return S; }, get mg() { return mg; }, mgPress, findPath, BLD, quizAnswer, quizElim, examSeat, engPractice, goals, remotes, openWard, payTick, offlinePay, shiftNight, startShift, get shift() { return shift; }, gate, fly, busMenu, holTest, choosePath, busRide, internInterview, exchangeInterview, get rt() { return rt; }, ach, BLD2: BLD, get mapView() { return mapView; }, pickPsy, PSY, randomEvent, dayTick, openCard, openWall, startChallenge, makeCard, EXAMS, takeExam, famStart, famShow, aidBoard, realChat, sendChat, feed, hungerNow, nurseTalk, weighIn, counsel, ktvSing, cineShop, cineWatch, clawGame, taikoGame, roomSwap, furnMenu, editTap, itemAt, get editing() { return editing; }, LOC, tripMenu, destPick, applyDest, DEST, active, marketPhase, stallView, craftStall, moveMenu, startMove, moveStep, endMove, canPlace, bedView, deskView, deskStudy, phoneScroll, nightChat, lecture, roomTick, tzDiff, gainCred, canGrad, reqLeft, classFlow, tripGo, rinkTrip, welcomeParty, lxTable, cityTour, iscBoard, campusNotice, cookBuddy, libCafe, catTalk, pubSync, pubTarget, hourIn, get ep() { return ep; }, epNext, regionOf, get curH() { return curH; }, openShop, closeShop, sbFlip, get SB() { return SB; }, shop, meal, stall, tellerTick, tellerTalk, FAM, mainTarget, sillMenu, growState, awayNote, GROW, navPoint, howTo, bgmPlay, get bgm() { return bgm; }, AU, auToggle, projTalk, ch4Interview, leaveSchool, farewell, gradPhoto, gradCeremony, martShop, tripMenu, triviaNight, callHome, makeCard, repay, loanLeft, drinkStand, takeout, eatMenu, fridgeMenu, trashCan, outLink, snapCam, bench, board, robbery, get alarmOn() { return alarmOn; }, replyPrompt, set lastMsg(v) { lastMsg = v; }, buildDorm, DRINKS, nextCustomer, NIGHT };
+window.__town = { get st() { return st; }, P, scenes, get cur() { return cur; }, interact, nearest, QN, SIDE, goScene, setMain, cam, get S() { return S; }, get mg() { return mg; }, mgPress, findPath, BLD, quizAnswer, quizElim, examSeat, engPractice, goals, remotes, openWard, payTick, offlinePay, shiftNight, startShift, get shift() { return shift; }, gate, fly, busMenu, holTest, choosePath, busRide, internInterview, exchangeInterview, get rt() { return rt; }, ach, BLD2: BLD, get mapView() { return mapView; }, pickPsy, PSY, randomEvent, dayTick, openCard, openWall, startChallenge, makeCard, EXAMS, takeExam, famStart, famShow, aidBoard, realChat, sendChat, feed, hungerNow, nurseTalk, weighIn, counsel, ktvSing, cineShop, cineWatch, clawGame, taikoGame, roomSwap, furnMenu, editTap, itemAt, get editing() { return editing; }, LOC, tripMenu, destPick, applyDest, DEST, active, marketPhase, stallView, craftStall, moveMenu, startMove, moveStep, endMove, canPlace, bedView, deskView, deskStudy, phoneScroll, nightChat, lecture, roomTick, tzDiff, gainCred, canGrad, reqLeft, classFlow, tripGo, rinkTrip, welcomeParty, lxTable, cityTour, iscBoard, campusNotice, cookBuddy, libCafe, catTalk, pubSync, pubTarget, hourIn, get ep() { return ep; }, epNext, regionOf, get curH() { return curH; }, openShop, closeShop, sbFlip, get SB() { return SB; }, shop, meal, stall, tellerTick, tellerTalk, FAM, mainTarget, sillMenu, growState, awayNote, GROW, navPoint, howTo, bgmPlay, get bgm() { return bgm; }, AU, auToggle, projTalk, ch4Interview, leaveSchool, farewell, gradPhoto, gradCeremony, martShop, tripMenu, triviaNight, callHome, makeCard, repay, loanLeft, remotes, boardOnline, drinkStand, takeout, eatMenu, fridgeMenu, trashCan, outLink, snapCam, bench, board, robbery, get alarmOn() { return alarmOn; }, replyPrompt, set lastMsg(v) { lastMsg = v; }, buildDorm, DRINKS, nextCustomer, NIGHT };
 })();
 </script>
 </body>
