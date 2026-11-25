@@ -511,7 +511,7 @@ const TREE_C = [[1,4],[2,7],[9,4],[10,9],[19,5],[20,9],[27,4],[28,9],[35,5],[36,
   R(mc, '#e8e3f2', fx + 12, fy + 8, 8, 10); R(mc, '#fff', fx + 14, fy + 4, 4, 6);
   s.dyn = TREE_C.map(t => ({ y: t[1] * T + 15, f: g => drawTree(g, t[0], t[1]) }));
   BENCHES.forEach(b => s.dyn.push({ y: b.y * T + 15, f: g => drawBench(g, b) }));
-  s.IT.push({ id: 'gradphoto', label: '拍照', x: 24 * T, y: 15 * T + 14, r: 22, ix: 24 * T, iy: 12 * T + 6 });
+  s.IT.push({ id: 'gradphoto', label: '噴水池', x: 24 * T, y: 15 * T + 14, r: 22, ix: 24 * T, iy: 12 * T + 6 });
   s.dyn.push({ y: BOARD.y * T + 15, f: g => drawBoard(g, BOARD) });
   s.dyn.push({ get y() { return QN.teller ? QN.teller.y + 1 : 0; }, f: g => drawTeller(g) });
   BENCHES.forEach(b => s.spots.push({ x: b.x, y: b.y + 1, dir: 'up', stay: [8, 16] }));
@@ -1538,9 +1538,15 @@ function farewell() {
     { label: '在床板下面寫一句話', fn: () => fw('你在床板下面用簽字筆寫：「及格就好。」阿芸看了說，這句話很像你。') }]);
   function fw(t) { ach('farewell'); logLine('搬離宿舍'); ok('四人房', t + '\n\n小晴、佳佳和阿芸各留了一句話：\n「下次一起去夜市。」\n「記得回訊息。」\n「你的床位以後是別人的了，但這邊還是你的角落。」\n\n下一步：到校園噴水池前拍畢業照。'); setMain(21); }
 }
+const SUPPORT_URL = 'https://portaly.cc/may22/support';
 function gradPhoto() {
+  const m = st.q.main, ch = [{ label: '投一枚硬幣許願（贊助作者）', fn: () => { ach('wish'); persist(); try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {} try { window.open(SUPPORT_URL, '_blank', 'noopener'); } catch (e) {} } }];
+  if (m >= 21) ch.unshift({ label: '拍畢業照', fn: gradPhotoTake });
+  ch.push({ label: '離開' });
+  showModal({ title: '噴水池', text: (m >= 21 ? '噴水池前面已經有人在排隊拍畢業照了。' : pick(['每年六月，這裡會擠滿穿學士服的人。', '有人在噴水池旁邊練習拋帽子，帽子掉進水裡了。'])) + '\n池底躺著很多銅板。池邊立著一塊小木牌：「投一枚硬幣，支持做這座小鎮的人。— may22」\n\n（會開一個新分頁到贊助頁，及格鎮的進度會保留。）', choices: ch });
+}
+function gradPhotoTake() {
   const m = st.q.main;
-  if (m < 21) return ok('噴水池', pick(['每年六月，這裡會擠滿穿學士服的人。', '有人在噴水池旁邊練習拋帽子，帽子掉進水裡了。']));
   const url = makeCard('photo'); $('#cardImg').src = url; $('#cardDl').href = url; $('#cardDl').download = 'pass-town-graduation.png'; $('#cardT').textContent = '畢業照';
   $('#cardOv').classList.add('on'); modalOpen = true; st.ch4.photo = 1;
   if (m === 21) { logLine('拍了畢業照'); setMain(22); toast('最後一步：回學務處參加畢業典禮'); }
@@ -2844,6 +2850,7 @@ const ACH = [
   { id: 'ielts', n: '雅思 6.0', d: '雅思考到 6.0 以上', t: '留學準備中' },
   { id: 'allexam', n: '考試收集家', d: '四種進階考試都考過一次', t: '考試收集家', h: 1 },
   { id: 'ch3', n: '走到岔路口', d: '完成第三章', t: '岔路口旅人' },
+  { id: 'wish', n: '許願池', d: '在噴水池投硬幣許願', t: '小鎮贊助人', h: 1 },
   { id: 'cafeshot', n: '先讓手機吃', d: '在轉角咖啡廳拍一張打卡照', t: '網美預備軍' },
   { id: 'tidy', n: '垃圾不落地', d: '丟了十份垃圾', t: '環保小尖兵' },
   { id: 'photobooth', n: '拍一張', d: '在校外的拍貼機拍貼', t: '拍貼常客' },
