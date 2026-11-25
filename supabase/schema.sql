@@ -40,7 +40,7 @@ create policy "anyone can read notes" on public.notes for select using (true);
 -- 3. 髒話過濾（跟遊戲裡的清單一樣）
 create or replace function public.clean_text(t text) returns text
 language sql immutable as $$
-  select regexp_replace(t, '(幹你|幹爆|靠北|靠杯|白癡|白痴|智障|去死|媽的|三小|雞掰|機掰|操你|北七|垃圾人)', '＊＊', 'g')
+  select regexp_replace(t, '(幹你|幹妳|幹爆|幹拎|幹林|靠北|靠杯|靠腰|白癡|白痴|智障|腦殘|低能|去死|媽的|他媽|你媽|尼瑪|三小|雞掰|機掰|雞巴|機巴|操你|肏|北七|垃圾人|賤人|賤貨|婊|破麻|廢物|屁眼|陰道|陰莖|做愛|強姦|支那|黑鬼|死gay|ㄍㄋㄋ|ㄎㄅ|ㄐㄅ|fuck|fuk|shit|bitch|cunt|dick|pussy|asshole|nigga|nigger|retard|porn|whore|slut|rape)', '＊＊', 'gi')
 $$;
 
 -- 4. 貼便利貼：每個人每天（台灣時間）一張

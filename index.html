@@ -2506,7 +2506,7 @@ const SEEN_KEY = 'jige-seen';
 const seen = (() => { try { return JSON.parse(localStorage.getItem(SEEN_KEY) || '{}'); } catch (e) { return {}; } })();
 function seenNote(p) {
   if (typeof p.mo !== 'number' || !p.n) return; const o = seen[p.id]; if (o && o.m === p.mo && Date.now() - o.at < 60000) return;
-  seen[p.id] = { n: p.n, t: p.t || '', m: p.mo, at: Date.now() };
+  seen[p.id] = { n: safeName(p.n), t: p.t || '', m: p.mo, at: Date.now() };
   const ks = Object.keys(seen); if (ks.length > 80) ks.sort((a, b) => seen[a].at - seen[b].at).slice(0, ks.length - 80).forEach(k => delete seen[k]);
   try { localStorage.setItem(SEEN_KEY, JSON.stringify(seen)); } catch (e) {}
 }
@@ -2535,7 +2535,7 @@ async function boardRank() {
   let rows = null, live = false, rank = 0; const me = myWorth(), myId = sbUid || 'me';
   if (SB_KEY && boardOk !== false && await sbInit()) {
     await boardPush(true);
-    try { const r = await sb.from('money_board').select('uid,name,title,money').order('money', { ascending: false }).limit(10); if (!r.error) { rows = r.data.map(x => ({ id: x.uid, n: x.name, t: x.title, m: x.money })); live = true; } } catch (e) {}
+    try { const r = await sb.from('money_board').select('uid,name,title,money').order('money', { ascending: false }).limit(10); if (!r.error) { rows = r.data.map(x => ({ id: x.uid, n: safeName(x.name), t: x.title, m: x.money })); live = true; } } catch (e) {}
     if (live) try { const c = await sb.from('money_board').select('uid', { count: 'exact', head: true }).gt('money', me); if (!c.error) rank = c.count + 1; } catch (e) {}
   }
   if (!rows) { const wk = Date.now() - 7 * 864e5; rows = Object.entries(seen).filter(([, v]) => v.at > wk).map(([id, v]) => ({ id, n: v.n, t: v.t, m: v.m })); }
@@ -2867,7 +2867,7 @@ const ACH = [
   { id: 'photobooth', n: '拍一張', d: '在校外的拍貼機拍貼', t: '拍貼常客' },
   { id: 'nails', n: '指尖沙龍', d: '在校外的美甲店做指甲', t: '手很美的人' },
   { id: 'situ', n: '我們算什麼', d: '在轉角咖啡廳的雙人座想起某個人', t: '曖昧研究生', h: 1 },
-  { id: 'chatty', n: '打招呼達人', d: '用預設句子跟真人說了五次話', t: '社交蝴蝶' },
+  { id: 'chatty', n: '打招呼達人', d: '用預設句子跟真人說了五次話', t: '話匣子' },
   { id: 'threemeals', n: '三餐正常', d: '同一天吃了早餐、午餐和晚餐', t: '養生大學生' },
   { id: 'doctor', n: '去看病了', d: '感冒時去健康中心看病', t: '乖乖吃藥的人' },
   { id: 'counsel', n: '說出來了', d: '去健康中心做了一次心理諮商', t: '願意說的人' },
@@ -2878,7 +2878,7 @@ const ACH = [
   { id: 'roommate', n: '換宿成功', d: '搬去和朋友同一間寢室', t: '真人室友' },
   { id: 'earlybird', n: '早起的鳥', d: '早上 6 到 8 點參加晨跑團', t: '早起的鳥' },
   { id: 'postcard', n: '一張明信片', d: '在文創市集買插畫明信片', t: '收藏家', h: 1 },
-  { id: 'scroll', n: '滑到天亮', d: '半夜躺在床上一直滑手機', t: '夜貓子', h: 1 },
+  { id: 'scroll', n: '滑到天亮', d: '半夜躺在床上一直滑手機', t: '藍光守夜人', h: 1 },
   { id: 'nighttalk', n: '宿舍夜聊', d: '熄燈後跟室友聊了三次天', t: '夜聊主持人' },
   { id: 'perfecttrip', n: '完美的旅行', d: '週末旅行每件事都處理得很好', t: '旅行達人', h: 1 },
   { id: 'party', n: '迎新派對', d: '參加交換學校的迎新派對', t: '派對新人' },
@@ -2894,7 +2894,7 @@ const ACH = [
   { id: 'offer', n: '拿到 offer', d: '通過畢業前的面試', t: '準社會人' },
   { id: 'debtfree', n: '學貸還清', d: '把四年的學貸全部還完', t: '無債一身輕' },
   { id: 'farewell', n: '四人房解散', d: '跟室友道別、搬離宿舍', t: '前室友', h: 1 },
-  { id: 'chef', n: '留學生料理人', d: '在交換宿舍自己煮了三次飯', t: '宿舍廚神', h: 1 },
+  { id: 'chef', n: '留學生料理人', d: '在交換宿舍自己煮了三次飯', t: '異鄉小廚師', h: 1 },
   { id: 'traveler', n: '週末旅人', d: '交換期間搭火車去旅行', t: '背包客' },
   { id: 'goose', n: '被鵝追過', d: '在楓葉大學的湖邊被加拿大雁追', t: '鵝的手下敗將', h: 1 },
   { id: 'trivia', n: '問答之夜冠軍', d: '在學生酒吧的問答之夜拿第一', t: '冷知識之王', h: 1 },
@@ -3150,8 +3150,11 @@ async function sbInit() {
   return sb;
 }
 const WALL_URL = SB_KEY;
-const BAD = ['幹你', '幹爆', '靠北', '靠杯', '白癡', '白痴', '智障', '去死', '媽的', '三小', '雞掰', '機掰', '操你', '北七', '垃圾人'];
-const clean = t => BAD.reduce((a, w) => a.split(w).join('＊'.repeat(w.length)), String(t).slice(0, 40));
+const BAD = ['幹你', '幹妳', '幹爆', '幹拎', '幹林', '靠北', '靠杯', '靠腰', '白癡', '白痴', '智障', '腦殘', '低能', '去死', '媽的', '他媽', '你媽', '尼瑪', '三小', '雞掰', '機掰', '雞巴', '機巴', '操你', '肏', '北七', '垃圾人', '賤人', '賤貨', '婊', '破麻', '廢物', '屁眼', '陰道', '陰莖', '做愛', '強姦', '支那', '黑鬼', '死gay', 'ㄍㄋㄋ', 'ㄎㄅ', 'ㄐㄅ', 'fuck', 'fuk', 'shit', 'bitch', 'cunt', 'dick', 'pussy', 'asshole', 'nigga', 'nigger', 'retard', 'porn', 'whore', 'slut', 'rape'];
+const normT = t => String(t || '').toLowerCase().replace(/[\s.\-_*~!@#$%^&()+=,，。、！？…·・'"`|\\/\[\]{}<>:;]/g, '');
+const hasBad = t => { const n = normT(t); return BAD.some(w => n.includes(w)); };
+const clean = t => { let o = String(t).slice(0, 40); BAD.forEach(w => { o = o.replace(new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), m => '＊'.repeat(m.length)); }); return hasBad(o) ? '（這張被風吹走了）' : o; };
+const safeName = n => !n ? '同學' : hasBad(n) ? '同學' : String(n).slice(0, 12);
 const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const DEMO_NOTES = [['小安', '咖啡因依賴者', '明天早八微積分救命'], ['肉鬆', '雷隊友倖存者', '剛投了十封履歷已讀不回'], ['林林', '', '學餐今天的滷肉飯是隱藏版好吃'], ['阿凱', '死線壓線王', '報告組員又消失了，我先哭'], ['小魚', '夜貓子', '今天終於準時起床，給自己拍拍'], ['路過的學長', '', '大一的你們，社團不用加四個']];
 let wallNotes = [];
@@ -3174,7 +3177,7 @@ async function claimCoffee() {
 }
 function renderWall() {
   $('#wallMode').textContent = wallLive() ? '每天可以貼一張。請不要寫別人的真名或個資。按「拍拍」安慰一下，或花 $35 請他喝杯咖啡。' : '示範版：其他人的便利貼是假的，你貼的只存在這台裝置。等填好 Supabase 的金鑰就會變成真的多人留言牆。';
-  $('#wallList').innerHTML = wallNotes.map(n => '<div class="pnote">' + esc(clean(n.text)) + '<small>' + esc(n.name) + (n.title ? '・' + esc(n.title) : '') + '</small><div class="row"><button type="button" data-p="' + esc(n.id) + '">拍拍 ' + (n.pats + (st.wall.pats.includes(n.id) && !WALL_URL ? 1 : 0)) + '</button>' + (n.uid !== st.uid ? '<button type="button" data-c="' + esc(n.id) + '">請喝咖啡 $35</button>' : '<button type="button" disabled>咖啡 ' + (n.coffees || 0) + ' 杯</button>') + '</div></div>').join('') || '<p>還沒有人貼。</p>';
+  $('#wallList').innerHTML = wallNotes.map(n => '<div class="pnote">' + esc(clean(n.text)) + '<small>' + esc(safeName(n.name)) + (n.title ? '・' + esc(n.title) : '') + '</small><div class="row"><button type="button" data-p="' + esc(n.id) + '">拍拍 ' + (n.pats + (st.wall.pats.includes(n.id) && !WALL_URL ? 1 : 0)) + '</button>' + (n.uid !== st.uid ? '<button type="button" data-c="' + esc(n.id) + '">請喝咖啡 $35</button>' : '<button type="button" disabled>咖啡 ' + (n.coffees || 0) + ' 杯</button>') + '</div></div>').join('') || '<p>還沒有人貼。</p>';
   $('#wallList').querySelectorAll('[data-p]').forEach(b => b.onclick = () => wallPat(b.dataset.p));
   $('#wallList').querySelectorAll('[data-c]').forEach(b => b.onclick = () => wallCoffee(b.dataset.c));
   $('#wallPost').textContent = st.wall[postKey()] === today() ? '今天貼過了' : '貼上';
@@ -3279,10 +3282,10 @@ function joinRoom(room) {
       if (!r || r.s !== p.s) r = remotes[p.id] = Object.assign(r || {}, { x: p.x, y: p.y, buf: [], off: undefined, bubble: null });
       const ts = p.ts || now, off = now - ts; r.off = r.off === undefined ? off : Math.min(r.off + 1, off);
       r.buf.push({ t: ts + r.off, x: p.x, y: p.y }); if (r.buf.length > 16) r.buf.shift();
-      Object.assign(r, { id: p.id, s: p.s, pdir: p.d, name: p.n, title: p.t, look: p.l, seen: performance.now() }); seenNote(p);
+      Object.assign(r, { id: p.id, s: p.s, pdir: p.d, name: safeName(p.n), title: p.t, look: p.l, seen: performance.now() }); seenNote(p);
     });
-    ch.on('broadcast', { event: 'chat' }, ({ payload: p }) => { if (!p || p.from === sbUid || PRESET.indexOf(p.t) < 0) return; const r = remotes[p.from]; if (r && p.s === myS()) say(r, p.t, 3.2); if (p.to === sbUid) { lastMsg = { from: p.from, n: p.n, t: p.t, at: Date.now() }; beep(990, .05); try { navigator.vibrate && navigator.vibrate(60); } catch (e) {} if (!locked()) replyPrompt(r || { id: p.from, name: p.n }); else toast(p.n + '：' + p.t + '（等一下走過去點他就能回）'); } });
-    ch.on('broadcast', { event: 'wave' }, ({ payload: p }) => { if (!p || p.to !== sbUid) return; const r = remotes[p.from]; if (r) say(r, '👋', 2); toast(p.n + ' 跟你揮手'); beep(990, .06); try { navigator.vibrate && navigator.vibrate([70, 50, 70]); } catch (e) {} });
+    ch.on('broadcast', { event: 'chat' }, ({ payload: p }) => { if (!p || p.from === sbUid || PRESET.indexOf(p.t) < 0) return; const r = remotes[p.from]; if (r && p.s === myS()) say(r, p.t, 3.2); if (p.to === sbUid) { lastMsg = { from: p.from, n: safeName(p.n), t: p.t, at: Date.now() }; beep(990, .05); try { navigator.vibrate && navigator.vibrate(60); } catch (e) {} if (!locked()) replyPrompt(r || { id: p.from, name: safeName(p.n) }); else toast(safeName(p.n) + '：' + p.t + '（等一下走過去點他就能回）'); } });
+    ch.on('broadcast', { event: 'wave' }, ({ payload: p }) => { if (!p || p.to !== sbUid) return; const r = remotes[p.from]; if (r) say(r, '👋', 2); toast(safeName(p.n) + ' 跟你揮手'); beep(990, .06); try { navigator.vibrate && navigator.vibrate([70, 50, 70]); } catch (e) {} });
     ch.on('presence', { event: 'sync' }, () => { ch.__keys = Object.keys(ch.presenceState()); hud(); });
     ch.on('presence', { event: 'join' }, () => { ch.__keys = Object.keys(ch.presenceState()); hud(); });
     ch.on('presence', { event: 'leave' }, ({ key }) => { delete remotes[key]; ch.__keys = Object.keys(ch.presenceState()); hud(); });
@@ -3860,6 +3863,7 @@ if (saved) { $('#titleNew').style.display = 'none'; $('#titleBack').style.displa
 $('#startBtn').addEventListener('click', () => {
   if (matchMedia('(pointer:coarse)').matches && fsOk() && !standalone()) goFull(true);
   const n = $('#nameIn').value.trim().slice(0, 6); if (!n) { $('#nameIn').focus(); toast('先取個名字吧'); return; }
+  if (hasBad(n)) { $('#nameIn').focus(); toast('這個名字其他同學會看到，換一個吧'); return; }
   st = newState(n); st.fresh = true; begin();
 });
 $('#nameIn').addEventListener('keydown', e => { if (e.key === 'Enter') $('#startBtn').click(); });
