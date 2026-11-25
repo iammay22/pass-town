@@ -379,7 +379,7 @@ const BLD = [
   { id: 'health', name: '健康中心', scene: 'playground', x: 30, y: 1, w: 6, h: 5, wall: '#e8f4f8', roof: '#e5607f', trim: '#b53c5a' },
   { id: 'ktv', name: '星光 KTV', scene: 'city', x: 30, y: 2, w: 6, h: 6, wall: '#c9b6f5', roof: '#3b2f4a', trim: '#2b2338' },
   { id: 'cinema', name: '及格影城', scene: 'city', x: 37, y: 2, w: 6, h: 6, wall: '#ffe0a8', roof: '#c8102e', trim: '#8a0b20' },
-  { id: 'arcade', name: '夾娃娃機店', scene: 'street', x: 4, y: 10, w: 7, h: 5, wall: '#ffd1de', roof: '#3ba3d8', trim: '#2578a6', awning: true },
+  { id: 'arcade', name: '夾娃娃機店', scene: 'street', x: 12, y: 10, w: 6, h: 5, wall: '#ffd1de', roof: '#3ba3d8', trim: '#2578a6', awning: true },
   { id: 'cafe2', name: '轉角咖啡廳', scene: 'street', x: 23, y: 10, w: 8, h: 5, wall: '#f0dcc4', roof: '#6f4a3a', trim: '#4a2f24', awning: true }
 ];
 const door = b => ({ x: (b.x + b.w / 2) * T, y: (b.y + b.h) * T + 6, ix: (b.x + b.w / 2) * T, iy: (b.y + b.h - 2) * T - 6 });
@@ -578,7 +578,7 @@ const HOOP = { x: 25, y: 4 }, STARTLINE = { x: 11, y: 19 };
 /* ===== 校外 T 字路口 32×26 ===== */
 const street = mkScene('street', '校外', 32, 26, false);
 const STALLS = [{ id: 'chicken', n: '雞排', x: 1, y: 3, c: '#e5607f' }, { id: 'tea', n: '手搖飲', x: 5, y: 3, c: '#c9a24b' }, { id: 'ring', n: '套圈圈', x: 10, y: 3, c: '#3ba3d8' }, { id: 'corn', n: '烤玉米', x: 14, y: 3, c: '#6aa84f' }];
-const LAMPS = [[12, 10], [17, 17], [29, 23], [2, 14]];
+const LAMPS = [[10, 10], [17, 17], [29, 23], [2, 14]];
 function drawStall(g, st0) {
   const x = st0.x * T, y = st0.y * T;
   R(g, 'rgba(0,0,0,.25)', x + 2, y + 3 * T - 1, 4 * T, 4);
@@ -842,7 +842,7 @@ const aAir = mkScene('a_airport', '國外機場 · 楓葉國際機場', 20, 10, 
   s.spots.push({ x: 4, y: 5, dir: 'down', stay: [6, 12] }, { x: 9, y: 6, dir: 'left', stay: [5, 10] });
 })();
 (() => { const b = BLD.find(b => b.id === 'health'); drawBld(pgd.g, b); solid(pgd, b.x, b.y, b.w, b.h); pgd.labels.push({ t: '健康中心', x: (b.x + 3) * T, y: (b.y + 2) * T + 6, size: 11 }); R(pgd.g, '#fff', (b.x + 2) * T + 10, b.y * T + 8, 12, 4); R(pgd.g, '#fff', (b.x + 2) * T + 14, b.y * T + 4, 4, 12); })();
-(() => { ['ktv', 'cinema'].forEach(id => { const b = BLD.find(x => x.id === id); city.labels.push({ t: b.name, x: (b.x + 3) * T, y: (b.y + 2) * T + 6, size: 11 }); }); street.labels.push({ t: '夾娃娃機店', x: 7.5 * T, y: 12 * T + 6, size: 10 }); })();
+(() => { ['ktv', 'cinema'].forEach(id => { const b = BLD.find(x => x.id === id); city.labels.push({ t: b.name, x: (b.x + 3) * T, y: (b.y + 2) * T + 6, size: 11 }); }); street.labels.push({ t: '夾娃娃機店', x: 15 * T, y: 12 * T + 6, size: 10 }); })();
 (() => { const b = BLD.find(x => x.id === 'arcade'); drawBld(street.g, b); solid(street, b.x, b.y, b.w, b.h); })();
 const rHealth = mkRoom('health', '健康中心', '#f3fbfd', '#e6f1f5', '#dcebf0');
 put(rHealth, 'counter', 3, 3, 6, 1); put(rHealth, 'bed', 11, 5, 2, 2, true, '#ffffff'); put(rHealth, 'plant', 1, 6, 1, 1);
@@ -875,7 +875,7 @@ rALib.dyn.push({ get y() { return catPos()[1]; }, f: g => drawCat(g) });
 rALib.IT.push({ id: 'a_cat', label: '黑貓', x: 0, y: 0, r: 20, ix: 0, iy: 0, cat: 1 });
 rAPub.IT.push({ id: 'a_umb', label: '撿起來', x: 10 * T, y: 7 * T + 8, r: 18, ix: 10 * T, iy: 5.5 * T, hide: () => !st || st.met.umbrella });
 rAPub.dyn.push({ y: 7 * T, f: g => { if (!st || st.met.umbrella) return; const x = 10 * T - 6, y = 7 * T + 4; R(g, '#3ba3d8', x, y, 12, 2); R(g, '#2578a6', x + 11, y - 1, 1, 4); R(g, '#3b2f4a', x + 11, y + 2, 2, 1); } });
-rALib.IT.push({ id: 'a_study', label: '讀英文', x: 3.5 * T, y: 8 * T + 6, r: 26, ix: 3.5 * T, iy: 5 * T }, { id: 'a_study', label: '讀英文', x: 10.5 * T, y: 8 * T + 6, r: 26, ix: 10.5 * T, iy: 5 * T });
+rALib.IT.push({ id: 'a_class', label: '上課：英文授課', x: 3.5 * T, y: 8 * T + 6, r: 26, ix: 3.5 * T, iy: 5 * T }, { id: 'a_study', label: '讀英文', x: 10.5 * T, y: 8 * T + 6, r: 26, ix: 10.5 * T, iy: 5 * T });
 const rAIsc = mkRoom('a_isc', '國際學生中心', '#e4ecf5', '#d3dce8', '#cbd5e2');
 rAIsc.IT.push({ id: 'a_lx', label: '語言交換桌', x: 3.5 * T, y: 7 * T + 12, r: 26, ix: 3.5 * T, iy: 5 * T }, { id: 'a_lost', label: '失物招領', x: 10.5 * T, y: 7 * T + 12, r: 26, ix: 10.5 * T, iy: 5 * T });
 put(rAIsc, 'counter', 4, 3, 6, 1); put(rAIsc, 'table', 2, 6, 3, 1); put(rAIsc, 'table', 9, 6, 3, 1); put(rAIsc, 'plant', 12, 2, 1, 1);
@@ -1886,14 +1886,14 @@ Object.entries(TRASH).forEach(([id, arr]) => { const s = scenes[id]; arr.forEach
 { const s = street, g = s.g;
   drawBoard(g, { x: 1, y: 10 }); R(g, '#ff8b3d', 1 * T + 2, 10 * T - 11, 2 * T - 4, 4); solid(s, 1, 10, 2, 1); s.labels.push({ t: '租屋看板', x: 2 * T, y: 9 * T + 2, size: 10 });
   s.IT.push({ id: 'stall', stall: 'rent', label: '看看', x: 2 * T, y: 11 * T + 8, r: 22, ix: 2 * T, iy: 9 * T });
-  const mx = 13 * T, my = 10 * T, mw = 5 * T;
+  const mx = 4 * T, my = 10 * T, mw = 5 * T;
   R(g, 'rgba(0,0,0,.25)', mx + 2, my + 3 * T - 1, mw, 4); R(g, '#3b2f4a', mx - 1, my - 6, mw + 2, 3 * T + 6); R(g, '#4a4458', mx, my, mw, 3 * T - 1);
   for (let i = 0; i < mw + 4; i += 4) R(g, (i / 4) % 2 ? '#a8b4c8' : '#8e9ab0', mx - 2 + i, my - 8, 4, 10); R(g, '#3b2f4a', mx - 2, my + 1, mw + 4, 1.5);
   R(g, '#ffd45c', mx + 6, my + 4, 3 * T - 4, 7); R(g, '#3b2f4a', mx + 8, my + 6, 3 * T - 8, 1); R(g, '#3b2f4a', mx + 8, my + 8, 2 * T, 1);
   R(g, '#6b6b78', mx + 4, my + 14, 3, 2 * T); R(g, '#6b6b78', mx + mw - 7, my + 14, 3, 2 * T); for (let k = 0; k < 4; k++) R(g, '#8a8a99', mx + 10 + k * 7, my + 16, 4, 6); R(g, '#c9a24b', mx + 40, my + 17, 10, 2);
   [[mx + 10, '#e5607f'], [mx + 34, '#7ec8f0'], [mx + 58, '#9bd8a0']].forEach(([px, c]) => { const py = my + 2 * T + 2; R(g, '#3b2f4a', px + 1, py + 11, 4, 4); R(g, '#3b2f4a', px + 10, py + 11, 4, 4); R(g, c, px + 2, py + 4, 11, 7); R(g, '#3b2f4a', px + 11, py, 2, 5); R(g, '#fff', px + 3, py + 5, 3, 1); });
-  solid(s, 13, 10, 5, 3); s.labels.push({ t: '機車行', x: 15.5 * T, y: 10 * T - 4, size: 11 });
-  s.IT.push({ id: 'stall', stall: 'moto', label: '修車', x: 15.5 * T, y: 13 * T + 10, r: 26, ix: 15.5 * T, iy: 10 * T + 4 });
+  solid(s, 4, 10, 5, 3); s.labels.push({ t: '機車行', x: 6.5 * T, y: 10 * T - 4, size: 11 });
+  s.IT.push({ id: 'stall', stall: 'moto', label: '修車', x: 6.5 * T, y: 13 * T + 10, r: 26, ix: 6.5 * T, iy: 10 * T + 4 });
   const nb = { x: 23, y: 17, w: 6, h: 5, wall: '#ffe0ec', roof: '#e5607f', trim: '#b53c5a', awning: true };
   drawBld(g, nb); solid(s, nb.x, nb.y, nb.w, nb.h); R(g, '#fff', 24 * T + 4, 19 * T + 2, 4 * T - 8, 9); R(g, '#e5607f', 24 * T + 7, 19 * T + 4, 4, 5); R(g, '#c9b6f5', 24 * T + 14, 19 * T + 4, 4, 5); R(g, '#ffd45c', 24 * T + 21, 19 * T + 4, 4, 5); R(g, '#9bd8a0', 24 * T + 28, 19 * T + 4, 4, 5); R(g, '#7ec8f0', 24 * T + 35, 19 * T + 4, 4, 5);
   s.labels.push({ t: 'Slaycure 美甲', x: 26 * T, y: 19 * T + 6, size: 11 });
@@ -2300,9 +2300,10 @@ const CLASS_GROUP = () => { dHit('class'); ch3Prog('class'); const r = Math.rand
       else if (r < .7) { st.exp += 8; ach('carry'); ok('分組報告', '最後你一個人做完了簡報、講稿和參考資料。教授說這組做得很好，組員們都點頭，好像有參與一樣。知識 +8。'); }
       else { st.exp += 6; ok('分組報告', '這次的組員很好，大家都準時交了自己的部分。你們還約了下次一起吃飯，這種事很少發生。知識 +6。'); }
       persist(); };
+const CLOSED = { ktv: '星光 KTV', cinema: '及格影城' };
 function classFlow() {
   const path = st.ch3.path && st.q.main >= 15 ? REQ_PATH[st.ch3.path] : null, req = reqList();
-  const list = (path && path !== REQ_PATH.exchange ? [path] : []).concat(COURSES);
+  const list = (path ? [path] : []).concat(COURSES);
   const C = st.cred, t = today(), left = C.d === t ? CRED_DAY - C.today : CRED_DAY;
   showModal({ title: '教學大樓 · 選一堂課', text: '每堂課 2 學分，今天還能拿 ' + Math.max(0, left) + ' 學分。\n' + credText(), choices: list.map(c => ({ label: c + (req.includes(c) ? '（必修 ' + Math.min(CRED_REQ, C.c[c] || 0) + '/' + CRED_REQ + '）' : ''), fn: () => { gainCred(c); classIn(c); } })).concat([{ label: '先不上' }]) });
 }
@@ -2317,9 +2318,10 @@ const LECT = {
   '通識：電影與社會': [{ t: '貝克德爾測驗：電影裡有沒有兩個有名字的女性角色，彼此聊男人以外的事。', q: '貝克德爾測驗在檢視電影的什麼？', a: ['女性角色的呈現', '票房高低', '特效技術', '片長'] }, { t: '蒙太奇是把不同的鏡頭剪在一起，產生新的意義，例如表現時間快速流逝。', q: '把不同鏡頭剪接、產生新意義的手法叫？', a: ['蒙太奇', '長鏡頭', '特寫', '空鏡'] }, { t: '台灣新電影在 1980 年代出現，代表導演有侯孝賢和楊德昌，用寫實的方式拍日常生活。', q: '下面哪一位是台灣新電影的代表導演？', a: ['楊德昌', '李安', '魏德聖', '周星馳'] }],
   '新系專業必修': [{ t: '做研究要先有研究問題，再找文獻，最後才決定用什麼方法。', q: '做研究的第一步通常是？', a: ['提出研究問題', '先選統計軟體', '先寫結論', '先做簡報'] }, { t: '用了別人的文字或想法卻沒有標示來源，就是抄襲。', q: '引用別人的句子時要？', a: ['標示出處', '改幾個字就好', '不用管', '放在附錄就好'] }],
   '雙主修專業必修': [{ t: '跨領域的好處是能把兩個系的方法放在一起看問題，但要先把兩邊的基本功打好。', q: '雙主修最重要的是？', a: ['兩邊的基本功都要紮實', '只修好過的課', '選同一個時段的課', '只讀主系的書'] }, { t: '時間管理的四象限：重要又緊急的先做，重要不緊急的要排進行事曆。', q: '「重要但不緊急」的事應該？', a: ['排進行事曆，固定時間做', '永遠不做', '等它變緊急再做', '交給別人'] }],
+  '交換學校英文授課': [{ t: 'Prof. Morgan 說：「In this class, there are no wrong questions.」這堂課要你每週在課堂上至少發言一次，發言也算分數。', q: '這堂英文授課的發言規定是？', a: ['每週至少發言一次，有算分', '不能在課堂上發問', '只能用中文發言', '發言不算分'] }, { t: '學術寫作要附上引用來源。直接用別人的句子要加引號，換句話說也要註明出處，不然就算抄襲。', q: '把別人的想法換句話說寫進報告，需要註明出處嗎？', a: ['需要，一樣要註明', '不用，換句話說就是自己的', '只有直接引用才要', '老師沒說就不用'] }, { t: 'Office hours 是老師固定在辦公室等學生的時間，有問題可以直接去，不用預約，也不是只有成績不好的人才能去。', q: 'Office hours 是什麼？', a: ['老師固定讓學生來問問題的時間', '只有被當的人才要去', '要提前一個月預約', '老師的午休時間'] }],
   '實習課程': [{ t: '職場溝通：回信要先講結論，再補充細節。', q: '回主管的信，最好的寫法是？', a: ['先講結論再補細節', '先寫三段寒暄', '只回「收到」', '用很多表情符號'] }, { t: '簽約前要看清楚工時和薪資。勞基法規定，每天的正常工時不能超過 8 小時。', q: '勞基法規定每日正常工時最多幾小時？', a: ['8 小時', '10 小時', '6 小時', '12 小時'] }]
 };
-const PROF = { '微積分': '數學系的林教授', '程式設計': '資工系的陳助教', '大學國文': '中文系的張老師', '普通心理學': '心理系的黃教授', '經濟學原理': '經濟系的吳教授', '會計學': '會計系的許老師', '通識：生活中的統計': '統計所的李教授', '通識：電影與社會': '電影研究所的周老師', '新系專業必修': '新系的系主任', '雙主修專業必修': '雙主修的導師', '實習課程': '業界來的講師' };
+const PROF = { '交換學校英文授課': '交換學校的 Prof. Morgan', '微積分': '數學系的林教授', '程式設計': '資工系的陳助教', '大學國文': '中文系的張老師', '普通心理學': '心理系的黃教授', '經濟學原理': '經濟系的吳教授', '會計學': '會計系的許老師', '通識：生活中的統計': '統計所的李教授', '通識：電影與社會': '電影研究所的周老師', '新系專業必修': '新系的系主任', '雙主修專業必修': '雙主修的導師', '實習課程': '業界來的講師' };
 function lecture(c) {
   const L = shuffle((LECT[c] || LECT['通識：生活中的統計']).slice()).slice(0, 2);
   dialog('教室 · ' + c, [(PROF[c] || '王教授') + '走上講台，打開投影片。', L[0].t, L[1] ? L[1].t : '下課前，老師說要隨堂小考。'], [{ label: '隨堂小考', fn: () => quizGame({ title: c + ' · 隨堂小考', desc: '剛剛上課講的內容', time: 25, elim: 0, qs: L.map(x => { const o = shuffle(x.a.slice()); return { q: x.q, opts: o, ans: o.indexOf(x.a[0]) }; }),
@@ -2569,14 +2571,15 @@ function interact() {
   const it = nearest(); if (!it) return;
   if (it.id === 'ent') { const e = it.ent; if (e.kind === 'player') return wave(e); if (!e.loop) faceToward(e, P.x, P.y); if (e.wander) e.wait = Math.max(e.wait, 3); return e.talk(); }
   if (it.id === 'real') return realChat(it.r);
-  if (it.id === 'enter') return goScene(it.to, 7 * T, 8 * T + 12, 'up');
+  if (it.id === 'enter') { if (CLOSED[it.to]) return ok(CLOSED[it.to], '門口拉起了黃色膠帶，玻璃門上貼著一張紙：「裝潢中，敬請期待。」\n裡面傳來電鑽的聲音。'); return goScene(it.to, 7 * T, 8 * T + 12, 'up'); }
   if (it.id === 'stall') return stall(it.stall);
   const f = { board, bench: () => bench(it), trash: trashCan, nails: () => outLink('nails'), photobooth: () => outLink('photo'), datecafe: () => outLink('situ'), fridge: fridgeMenu, study, clubboard: clubBoard, shop, decor, bed: bedView, mydesk: deskView, class: classFlow, examseat: examSeat, wall: openWall, psy: () => pickPsy(it.k), pk: pkGame, bar: barGame,
     water: () => ok('飲水機', pick(['你喝了一大口水。免費的東西最好喝，這是大學教你的第一件事。', '飲水機的水有點溫。你決定不要想太多。', '旁邊貼著「請勿直接對嘴」，你看了一下四周，乖乖拿出水壺。'])),
     gs: () => openGroupGame('分組報告總是遇到雷隊友？在《分組求生記》裡，看你能不能撐到上台那天。'),
     bus: () => busMenu('street'), busback: () => busMenu('city'), busair: () => busMenu('airport'), gate, flyback: () => showModal({ title: '機場巴士', text: '往楓葉國際機場的巴士，車資 $45。要回台灣得先到機場。', choices: [{ label: '上車 $45', fn: () => { if (st.money < 45) return ok('機場巴士', '錢不夠。'); spend(45, '機場巴士'); goScene('a_airport', 17 * T, 7 * T, 'left'); } }, { label: '不搭了' }] }),
     offboard: aidBoard,
-    a_study: () => { const cc = st.ch3.path === 'exchange' ? REQ_PATH.exchange : '國外選修'; gainCred(cc); quizGame({ title: '在國外圖書館讀英文', desc: '三題學術單字，每題 20 秒。', qs: vocabFrom(ACAD, 3), time: 20, elim: 0, end: c => { st.exp += 4 * c + 2; dHit('study'); ok('楓葉大學圖書館', ['你盯著英文課本，覺得每個字都認識，合起來就不認識了。', '有一題對了，旁邊的學生借你一支螢光筆。', '兩題都對，你開始有一點習慣這裡的空氣了。', '全對。你覺得自己可以在這裡活下去。'][c] + '知識 +' + (4 * c + 2) + '。'); persist(); } }); },
+    a_class: () => { if (st.ch3.path !== 'exchange' || st.q.main < 15) return ok('楓葉大學 · 英文授課', '這是交換生的英文授課教室。你不是這學期的交換生，只能坐在後面旁聽。'); gainCred(REQ_PATH.exchange); classIn(REQ_PATH.exchange); },
+    a_study: () => { gainCred('國外選修'); quizGame({ title: '在國外圖書館讀英文', desc: '三題學術單字，每題 20 秒。', qs: vocabFrom(ACAD, 3), time: 20, elim: 0, end: c => { st.exp += 4 * c + 2; dHit('study'); ok('楓葉大學圖書館', ['你盯著英文課本，覺得每個字都認識，合起來就不認識了。', '有一題對了，旁邊的學生借你一支螢光筆。', '兩題都對，你開始有一點習慣這裡的空氣了。', '全對。你覺得自己可以在這裡活下去。'][c] + '知識 +' + (4 * c + 2) + '。'); persist(); } }); },
     a_board: iscBoard,
     a_map: () => ok('世界地圖', '地圖上插滿了大頭針，每根代表一個交換生的家。\n你找到台灣，那裡已經插了三根。你插上第四根。'),
     a_desk: () => showModal({ title: '交換宿舍 · 書桌', text: '桌上有一疊明信片、一台筆電，和一張還沒寫完的報告大綱。', choices: [
@@ -2867,7 +2870,7 @@ const PSY = [
   { n: '計畫謬誤', at: ['campus', 10.5, 11.6], how: '公佈欄角落的便利貼', d: '估計一件事要花多久時，人常常低估，就算過去每次都拖到最後也一樣。心理學家 Kahneman 和 Tversky 提出這個概念。把大工作拆小，參考自己過去實際花掉的時間，會估得比較準。', h: '報告沒在你以為的時間寫完，不代表你很糟，只是大腦本來就很樂觀。' },
   { n: '旁觀者效應', sync: 1, at: ['campus', 40.5, 11.6], how: '便利商店門口的便利貼', d: '在場的人越多，每個人越不會出手，因為責任被分散了，大家都以為別人會處理。兒福聯盟 2025 年調查：39.4% 的國高中生看到同學被霸凌時什麼都不做。', h: '下次覺得「應該有人會處理吧」的時候，那個人可以是你。' },
   { n: '習得無助', sync: 1, at: ['street', 2.5, 15.2], how: '深夜路燈下的便利貼', d: '心理學家 Seligman 發現，反覆經歷「怎麼做都沒用」，人會漸漸放棄嘗試，即使後來情況改變了。打破它的方法是累積小小的成功經驗。', h: '今天就做一件很小、一定做得到的事。洗一個杯子也算。' },
-  { n: '負增強與逃避', sync: 1, at: ['street', 12.5, 11.7], how: '深夜路燈下的便利貼', d: '逃開讓人焦慮的場合，焦慮會立刻下降。大腦因此學到「逃避有用」，下一次反而更焦慮。這就是為什麼很多焦慮會越躲越大。', h: '不用一次面對全部。先打開那封信就好，回信明天再說。' },
+  { n: '負增強與逃避', sync: 1, at: ['street', 10.5, 11.6], how: '深夜路燈下的便利貼', d: '逃開讓人焦慮的場合，焦慮會立刻下降。大腦因此學到「逃避有用」，下一次反而更焦慮。這就是為什麼很多焦慮會越躲越大。', h: '不用一次面對全部。先打開那封信就好，回信明天再說。' },
   { n: '聚光燈效應', at: ['street', 17.5, 18.7], how: '深夜路燈下的便利貼', d: '人常高估別人注意自己的程度。心理學家 Gilovich 的實驗裡，穿著尷尬 T 恤的學生以為一半的人會注意到，實際上只有大約四分之一。', h: '你昨天講錯的那句話，其他人大概已經忘了。你也可以忘了。' },
   { n: '詐騙心理', sync: 1, at: ['street', 28.5, 23.7], how: '路燈下被風吹來的便利貼', d: '詐騙集團利用的是人性：貪心（保證獲利）、恐懼（你的帳戶涉案）、急迫（現在不處理就來不及）和權威（假冒警察、檢察官）。警政署統計 2025 年全年詐騙約 16.2 萬件、財損約 893 億元，假投資是財損最大的類型。有疑慮就打 165 反詐騙專線。', h: '覺得「一定要現在處理」的時候，先停下來喝口水，打給一個信任的人。' },
   { n: '成長型思維', sync: 1, at: ['cafe2', 2.2, 3.6], how: '咖啡廳書架上的小卡片', d: '心理學家 Dweck 的研究：相信能力可以透過努力和方法改變的人，面對失敗時比較會調整策略再試，而不是認定「我就是不行」。', h: '「我還不會」跟「我不會」差一個字，但差很多。' },
