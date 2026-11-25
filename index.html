@@ -476,7 +476,7 @@ function drawBoard(g, b) {
 /* ===== 校園 48×30 ===== */
 const campus = mkScene('campus', '校園', 48, 30, false);
 const BENCHES = [{ x: 7, y: 19 }, { x: 15, y: 18 }, { x: 12, y: 10 }, { x: 34, y: 10 }, { x: 2, y: 18 }];
-const TRASH = { campus: [[6, 19], [17, 18], [14, 10], [33, 10]], street: [[10, 20], [7, 17], [28, 15]], playground: [[33, 12]] };
+const TRASH = { campus: [[6, 19], [17, 18], [11, 10], [36, 10]], street: [[10, 20], [7, 17], [28, 15]], playground: [[33, 12]] };
 const BOARD = { x: 8, y: 10 };
 const isRoadC = (x, y) => (y >= 12 && y <= 15 && x >= 1 && x <= 47) || (x >= 22 && x <= 25 && y >= 8 && y <= 29) || (y >= 22 && y <= 23 && x >= 15 && x <= 46)
   || BLD.some(b => b.scene === 'campus' && b.y < 10 && x >= b.x + b.w / 2 - 1 && x <= b.x + b.w / 2 && y >= b.y + b.h && y <= 11);
@@ -2174,10 +2174,43 @@ QN.sofia.talk = () => showModal({ title: '交換生 Sofia', text: 'Hola! I\'m fr
   { label: '教她說「我要一杯珍奶，半糖少冰」', fn: () => { st.exp += 5; ok('交換生 Sofia', '她認真抄在筆記本上，說回西班牙要開一間手搖店。\n「半糖少冰」她念成了「半糖少兵」，你決定不糾正她。\n\n知識 +5。'); } },
   { label: '教她說「及格就好」', fn: () => { st.exp += 4; ok('交換生 Sofia', '她問這是什麼意思。你解釋了五分鐘，她說：「Ah, like a life philosophy!」\n（啊，像一種人生哲學！）\n\n知識 +4。'); } }] });
 QN.prof2.talk = talkPool('Prof. Brown', ['In my class, asking questions is part of your grade. Silence is not golden here.\n（在我的課上，發問算成績。在這裡沉默不是金。）', 'Your essay should have your own argument. I want to know what YOU think.\n（你的報告要有自己的論點，我想知道你怎麼想。）', 'Office hours are on Tuesday. Students who come usually do better. Just saying.\n（我星期二有 office hour。會來的學生通常成績比較好，只是說說。）', 'Welcome! Exchange students always bring the most interesting questions.\n（歡迎！交換學生總是帶來最有趣的問題。）']);
+function cafeSit(tray) {
+  const names = tray.map(x => x.n).join('、');
+  showModal({ title: '靠窗的位子', text: '你端著' + names + '，找了靠窗的位子坐下。\n陽光剛好斜斜地照在桌上，杯子旁邊有一小塊亮亮的光。', choices: [{ label: '先拍一張打卡照', fn: () => cafeShot(tray) }, { label: '直接開動' }] });
+}
+function cafeShot(tray) {
+  const W = 1080, H = 1350, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'); g.imageSmoothingEnabled = false;
+  const txt = (t, x, y, size, col = '#3b2f4a', w = 800, al = 'left') => { g.font = `${w} ${size}px ${FONT}`; g.fillStyle = col; g.textAlign = al; g.fillText(t, x, y); };
+  g.fillStyle = '#2b2338'; g.fillRect(0, 0, W, H); g.fillStyle = '#fffaf3'; g.fillRect(48, 48, W - 96, H - 96);
+  const px = 92, py = 92, pw = W - 184, ph = 930;
+  g.fillStyle = '#c99a6b'; g.fillRect(px, py, pw, ph);
+  for (let y = py; y < py + ph; y += 116) { g.fillStyle = '#b5845a'; g.fillRect(px, y, pw, 6); for (let x = px + ((y / 116) % 2 ? 140 : 380); x < px + pw; x += 520) g.fillRect(x, y, 6, Math.min(116, py + ph - y)); }
+  g.fillStyle = 'rgba(255,248,220,.22)'; for (let i = 0; i < 5; i++) { g.save(); g.beginPath(); g.moveTo(px + 420 + i * 120, py); g.lineTo(px + 520 + i * 120, py); g.lineTo(px + 120 + i * 120, py + ph); g.lineTo(px + 20 + i * 120, py + ph); g.closePath(); g.clip(); g.fillRect(px, py, pw, ph); g.restore(); }
+  const n = tray.length, cols = n <= 2 ? n : 3, rows = Math.ceil(n / cols), cw = pw / cols, chh = ph / rows, sc = Math.floor(Math.min(cw, chh) * .62 / 12);
+  const drink = i => ['hot', 'latte', 'coffee', 'tea', 'soda'].includes(i);
+  tray.forEach((it, k) => {
+    const col = k % cols, row = Math.floor(k / cols), offs = (row === rows - 1) ? (cols - (n - row * cols)) * cw / 2 : 0;
+    const cx = px + offs + col * cw + cw / 2, cy = py + row * chh + chh / 2 + (k % 2 ? 18 : -10), r = sc * 8;
+    g.fillStyle = 'rgba(60,40,30,.25)'; g.beginPath(); g.ellipse(cx + 12, cy + 16, r, r * .92, 0, 0, 7); g.fill();
+    g.fillStyle = '#3b2f4a'; g.beginPath(); g.ellipse(cx, cy, r + 6, r * .92 + 6, 0, 0, 7); g.fill();
+    g.fillStyle = drink(it.icon) ? '#f3ecf7' : '#ffffff'; g.beginPath(); g.ellipse(cx, cy, r, r * .92, 0, 0, 7); g.fill();
+    g.strokeStyle = '#e6e0ee'; g.lineWidth = sc; g.beginPath(); g.ellipse(cx, cy, r * .78, r * .72, 0, 0, 7); g.stroke();
+    const rowsI = ICON[it.icon] || ICON.bag; rowsI.forEach((rr, y) => [...rr].forEach((ch, x) => { if (IPAL[ch]) { g.fillStyle = IPAL[ch]; g.fillRect(Math.round(cx - 6 * sc + x * sc), Math.round(cy - 6.5 * sc + y * sc), sc, sc); } }));
+    if (!drink(it.icon)) { g.fillStyle = '#c9c3d6'; g.fillRect(cx + r * .62, cy - r * .2, sc * .8, r * .9); g.fillRect(cx + r * .58, cy - r * .32, sc * 2.4, sc * 1.4); }
+  });
+  g.fillStyle = '#ff8fb1'; g.save(); g.translate(px + pw - 120, py + 90); g.rotate(.18); g.fillRect(-90, -34, 180, 68); txt('今日份', 0, 14, 40, '#fff', 800, 'center'); g.restore();
+  const d = new Date(), pad = v => String(v).padStart(2, '0');
+  txt('轉角咖啡廳', 110, 1120, 64); txt(d.getFullYear() + '.' + pad(d.getMonth() + 1) + '.' + pad(d.getDate()) + '  ' + pad(d.getHours()) + ':' + pad(d.getMinutes()), W - 110, 1120, 34, '#8b8198', 700, 'right');
+  txt(tray.map(x => x.n).join(' · '), 110, 1180, 32, '#3b2f4a', 700);
+  txt('#及格鎮 #下午茶 #先讓手機吃', 110, 1236, 30, '#e5607f', 700); txt('@' + st.name, W - 110, 1236, 30, '#8b8198', 700, 'right');
+  const url = c.toDataURL('image/png'); $('#cardImg').src = url; $('#cardDl').href = url; $('#cardDl').download = 'pass-town-cafe.png'; $('#cardT').textContent = '打卡照';
+  $('#cardOv').classList.add('on'); modalOpen = true; ach('cafeshot'); st.cnt.cafeshot = (st.cnt.cafeshot || 0) + 1; persist(); beep(1200, .03); setTimeout(() => beep(1500, .05), 60);
+}
 QN.barista.talk = () => {
-  const cup = t => () => { drinkCoffee(); return t; };
-  const cake = (id, t) => () => { feed(40); if (!st.cakes.includes(id)) st.cakes.push(id); if (st.cakes.length >= 5) ach('cakeall'); return t + '\n吃了甜的，接下來三分鐘讀書比較讀得進去。'; };
-  openShop({ teaHalf: 1, title: '轉角咖啡廳 · 菜單', led: '轉角咖啡廳', poor: '咖啡師看了看你的錢包，推薦你去喝飲水機。', intro: '咖啡師：「今天的手沖是衣索比亞，聞起來像莓果。蛋糕是早上剛烤的。」', items: [
+  const tray = [];
+  const cup = t => function () { drinkCoffee(); tray.push({ icon: this.icon, n: this.n }); return t; };
+  const cake = (id, t) => function () { tray.push({ icon: this.icon, n: this.n }); feed(40); if (!st.cakes.includes(id)) st.cakes.push(id); if (st.cakes.length >= 5) ach('cakeall'); return t + '\n吃了甜的，接下來三分鐘讀書比較讀得進去。'; };
+  openShop({ onClose: () => { if (tray.length) cafeSit(tray); }, teaHalf: 1, title: '轉角咖啡廳 · 菜單', led: '轉角咖啡廳', poor: '咖啡師看了看你的錢包，推薦你去喝飲水機。', intro: '咖啡師：「今天的手沖是衣索比亞，聞起來像莓果。蛋糕是早上剛烤的。」', items: [
     { icon: 'hot', n: '手沖咖啡', p: 150, d: '衣索比亞，莓果味', buy: cup('你喝了一口，真的有莓果味。你決定以後跟別人說你喝得出產區。') },
     { icon: 'latte', n: '冰拿鐵', p: 120, d: '拉花看運氣', buy: cup('拉花是一隻歪掉的天鵝。咖啡師說那是貓。') },
     { icon: 'basque', n: '巴斯克乳酪蛋糕', p: 140, d: '表面烤焦是故意的', buy: cake('basque', '外面焦焦的，裡面軟到快流下來。你想跟咖啡師要食譜，又覺得不太好意思。') },
@@ -2797,6 +2830,7 @@ const ACH = [
   { id: 'ielts', n: '雅思 6.0', d: '雅思考到 6.0 以上', t: '留學準備中' },
   { id: 'allexam', n: '考試收集家', d: '四種進階考試都考過一次', t: '考試收集家', h: 1 },
   { id: 'ch3', n: '走到岔路口', d: '完成第三章', t: '岔路口旅人' },
+  { id: 'cafeshot', n: '先讓手機吃', d: '在轉角咖啡廳拍一張打卡照', t: '網美預備軍' },
   { id: 'tidy', n: '垃圾不落地', d: '丟了十份垃圾', t: '環保小尖兵' },
   { id: 'photobooth', n: '拍一張', d: '在校外的拍貼機拍貼', t: '拍貼常客' },
   { id: 'nails', n: '指尖沙龍', d: '在校外的美甲店做指甲', t: '手很美的人' },
