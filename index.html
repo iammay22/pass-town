@@ -967,7 +967,7 @@ function newState(name) {
     q: { main: 0, side: {}, notified: {}, c: { work: 0, workAt: 0, workAll: 0, waves: [], study: 0, hoop4: 0, eng: 0, examTry: 0, examScore: 0 } },
     daily: { date: '', ids: [], prog: {}, done: {}, bonus: false }, best: { hoop: 0, run: 0, exam: 0, bar: 0, pk: 0 }, met: {}, pos: null,
     scooter: false, visited: { campus: 1 }, look: { style: 'short', hair: '#5a3a2a', skin: '#ffd9bb', shirt: '#ff8fb1', pants: '#4a5d8a', acc: 'none', cap: '#3ba3d8', outer: 'none' }, ch3: { booths: [], hol: '', path: '', prog: 0, tries: 0 }, ach: [], title: '', psy: [], certs: { upper: 0, toeic: 0, ielts: 0, toefl: 0 }, cnt: { wave: 0, sleep: 0, studyFail: 0, coffeeAll: 0, cook: 0, trip: 0, shiftAll: 0 }, day: { d: '', coffee: 0, food: 0 },
-    ledger: { m: '', inc: 0, exp: 0, idle: 0, lines: [] }, rentDay: 0, challenge: false, bank: 0, salaryM: '', uid: '', wall: { lastPost: '', pats: [], coffees: [], mine: [] }, fam: '', famRe: 0, famM: '', aid: { grant: -1, schol: -1 }, cakes: [], bag: [], fridge: [], trash: 0, arcs: {}, arc: null, cat: null, seat: 0, pickAt: 0, ch4: { mate: '', job: '', photo: 0 }, loanPaid: 0, set: { arrow: 1 }, grow: {}, hunger: 80, hungerAt: Date.now(), meals: { d: '', b: 0, l: 0, n: 0, x: 0 }, weight: 0, sick: 0, roomCode: '', loc: 0, cred: { total: 0, d: '', today: 0, c: {} }, examDay: '', bike: false };
+    ledger: { m: '', inc: 0, exp: 0, idle: 0, lines: [] }, rentDay: 0, challenge: false, bank: 0, salaryM: '', uid: '', wall: { lastPost: '', pats: [], coffees: [], mine: [] }, fam: '', famRe: 0, famM: '', aid: { grant: -1, schol: -1 }, cakes: [], bag: [], fridge: [], trash: 0, farm: {}, arcs: {}, arc: null, cat: null, seat: 0, pickAt: 0, ch4: { mate: '', job: '', photo: 0 }, loanPaid: 0, set: { arrow: 1 }, grow: {}, hunger: 80, hungerAt: Date.now(), meals: { d: '', b: 0, l: 0, n: 0, x: 0 }, weight: 0, sick: 0, roomCode: '', loc: 0, cred: { total: 0, d: '', today: 0, c: {} }, examDay: '', bike: false };
 }
 function fill(def, s) { for (const k in def) { if (s[k] === undefined) s[k] = def[k]; else if (def[k] && typeof def[k] === 'object' && !Array.isArray(def[k]) && typeof s[k] === 'object') fill(def[k], s[k]); } return s; }
 function loadSave() {
@@ -2053,6 +2053,41 @@ function seatMenu() {
   showModal({ title: '預約自習座位', text: '自習區的座位可以用學生證預約。\n書包放著，人先去忙別的，回來的時候會發現自己讀了不少。\n每小時知識 +6，最多算 8 小時，關掉遊戲也會繼續算。', choices: [
     { label: '預約一個靠窗的位子', fn: () => { st.seat = Date.now(); persist(); ok('自習區', '你把書包放在靠窗的位子，桌上貼了一張「有人」的便利貼。\n去忙吧，回來再收。'); } }, { label: '先不用' }] });
 }
+/* ---------- 校園左下角：社團小菜園、鞦韆 ---------- */
+const CROPS = { cab: { n: '小白菜', seed: 15, ready: 4 * H, sell: 60, f: 25, icon: 'groc', t: '小白菜燙一下加醬油，你吃出了自己種的味道。' }, tom: { n: '小番茄', seed: 25, ready: 6 * H, sell: 100, f: 15, icon: 'berry', drink: 0, t: '小番茄一顆一顆丟進嘴裡，酸的比甜的多，但你很得意。' }, pot: { n: '地瓜', seed: 30, ready: 8 * H, sell: 140, f: 40, icon: 'potato', t: '地瓜拿去宿舍的電鍋蒸，整層樓都聞得到。' } };
+const PLOTS = [7, 9, 11];
+const plotOf = i => (st.farm || {})[i];
+const plotState = i => { const p = plotOf(i); if (!p) return 'empty'; return Date.now() - p.at >= CROPS[p.c].ready ? 'ready' : 'grow'; };
+const plotLeft = i => { const p = plotOf(i), m = Math.max(1, Math.ceil((p.at + CROPS[p.c].ready - Date.now()) / 60000)); return (m >= 60 ? Math.floor(m / 60) + ' 小時 ' : '') + (m % 60) + ' 分鐘'; };
+function drawPlot(g, i) {
+  const x = PLOTS[i] * T, y = 26 * T; R(g, '#6f4a3a', x, y + 2, 16, 12); R(g, '#8a5a40', x + 1, y + 3, 14, 10); for (let k = 0; k < 3; k++) R(g, '#5a3a2a', x + 2, y + 5 + k * 3, 12, 1);
+  if (!st) return; const p = plotOf(i); if (!p) return; const c = p.c, pr = Math.min(1, (Date.now() - p.at) / CROPS[c].ready), h = 2 + Math.round(pr * 6);
+  for (let k = 0; k < 3; k++) { const px = x + 3 + k * 4; R(g, '#5aa84f', px, y + 11 - h, 2, h); if (pr >= 1) R(g, c === 'tom' ? '#e5404f' : c === 'pot' ? '#a8507a' : '#9bd86a', px - 1, y + 11 - h, 4, 3); }
+  if (p.w) R(g, 'rgba(126,200,240,.45)', x + 1, y + 12, 14, 2);
+}
+PLOTS.forEach((px, i) => { campus.dyn.push({ y: 26 * T + 12, f: g => drawPlot(g, i) }); campus.IT.push({ id: 'plot', plot: i, get label() { return !st ? '菜園' : { empty: '種菜', grow: '看看菜', ready: '收成' }[plotState(i)]; }, x: px * T + 8, y: 27 * T + 6, r: 14, ix: px * T + 8, iy: 25 * T + 4 }); });
+campus.labels.push({ t: '社團小菜園', x: 9.5 * T, y: 25 * T + 6 });
+function plotMenu(i) {
+  st.farm = st.farm || {}; const s = plotState(i), p = plotOf(i);
+  if (s === 'empty') return showModal({ title: '社團小菜園', text: '園藝社借出來的一小格菜圃，旁邊插著牌子：「誰種的誰收，請不要偷拔。」\n種子在旁邊的鐵盒裡，投錢自取。種下去以後關掉遊戲也會繼續長。', choices: Object.entries(CROPS).map(([k, c]) => ({ label: c.n + ' $' + c.seed + '（' + c.ready / H + ' 小時）', fn: () => { if (st.money < c.seed) return ok('社團小菜園', '鐵盒旁邊寫著「誠實商店」。你摸摸口袋，決定誠實地離開。'); spend(c.seed, c.n + '種子'); st.farm[i] = { c: k, at: Date.now(), w: 0 }; beep(660, .05); persist(); ok('社團小菜園', '你把' + c.n + '的種子埋進土裡，用手拍平。\n記得來澆水，澆過的長得比較快。'); } })).concat([{ label: '先不種' }]) });
+  const c = CROPS[p.c];
+  if (s === 'grow') return showModal({ title: '社團小菜園 · ' + c.n, text: c.n + '還要 ' + plotLeft(i) + '才能收。' + (p.w ? '\n今天已經澆過水了，土是濕的。' : '\n土有點乾。'), choices: [p.w ? { label: '蹲著看它長' , fn: () => ok('社團小菜園', pick(['你盯著葉子看了一分鐘，它沒有變大，但你覺得有。', '一隻瓢蟲爬上葉子，你決定讓牠住下來。', '隔壁格的主人在菜旁邊插了一個寫著「加油」的冰棒棍。'])) } : { label: '澆水（少等 30 分鐘）', fn: () => { p.w = 1; p.at -= 30 * 60000; st.exp += 1; beep(523, .05); persist(); ok('社團小菜園', '你用旁邊的水桶澆了水，土的顏色變深了。\n\n少等 30 分鐘，知識 +1。'); } }, { label: '好' }] });
+  showModal({ title: '收成 · ' + c.n, text: c.n + '長好了！你把它們拔起來，手上都是土。', choices: [
+    { label: '帶走自己吃', fn: () => { delete st.farm[i]; st.cnt.farm = (st.cnt.farm || 0) + 1; if (st.cnt.farm >= 3) ach('farmer'); persist(); ok('收成', takeout({ n: '自己種的' + c.n, icon: c.icon, f: c.f, t: c.t })); } },
+    { label: '賣給學生餐廳的阿姨 $' + c.sell, fn: () => { delete st.farm[i]; st.cnt.farm = (st.cnt.farm || 0) + 1; if (st.cnt.farm >= 3) ach('farmer'); earn(c.sell, '賣' + c.n + '給學生餐廳'); persist(); ok('收成', '打菜阿姨收下' + c.n + '，說明天的午餐會用到。\n\n' + fmt(c.sell) + '。'); } }] });
+}
+/* 鞦韆 */
+const SWING = { x: 7, y: 22 }; let swingUntil = 0;
+campus.dyn.push({ y: (SWING.y + 1) * T + 4, f: g => { const x = SWING.x * T, y = SWING.y * T, a = Date.now() < swingUntil ? Math.sin(Date.now() / 260) * 5 : 0;
+  R(g, 'rgba(60,40,80,.2)', x, y + 15, 32, 3); R(g, '#3b2f4a', x + 1, y - 14, 3, 30); R(g, '#3b2f4a', x + 28, y - 14, 3, 30); R(g, '#e5607f', x, y - 16, 32, 4);
+  R(g, '#8a8a99', x + 10 + a / 2, y - 12, 1, 18); R(g, '#8a8a99', x + 21 + a / 2, y - 12, 1, 18); R(g, '#c99a6b', x + 8 + a, y + 6, 16, 3); } });
+solid(campus, SWING.x, SWING.y, 1, 1); solid(campus, SWING.x + 1, SWING.y, 1, 1);
+campus.IT.push({ id: 'swing', label: '盪鞦韆', x: (SWING.x + 1) * T, y: (SWING.y + 1) * T + 10, r: 22, ix: (SWING.x + 1) * T, iy: SWING.y * T - 22 });
+function swingRide() {
+  swingUntil = Date.now() + 5000; beep(440, .05); st.cnt.swing = (st.cnt.swing || 0) + 1; const night = inTime(20, 28);
+  if (night) ach('swing'); st.exp += 1; persist();
+  ok('鞦韆', (night ? pick(['晚上的校園很安靜，鞦韆的鐵鍊聲變得很大。你盪到最高的時候，看到宿舍有一半的燈還亮著。', '你在鞦韆上盪了很久。路過的警衛看了你一眼，沒說什麼，大概也盪過。']) : pick(['你盪到最高，腳尖差點碰到樹枝。旁邊的小學生用很佩服的眼神看你。', '鞦韆有點矮，你的膝蓋卡在前面。不過風吹過來的時候，你覺得又回到國小。', '你一邊盪一邊想期末考，盪到第三下就不想了。'])) + '\n\n知識 +1。');
+}
 /* 校外：租屋看板、機車行、美甲店；拍貼機在夾娃娃機店和校園 */
 { const s = street, g = s.g;
   drawBoard(g, { x: 1, y: 10 }); R(g, '#ff8b3d', 1 * T + 2, 10 * T - 11, 2 * T - 4, 4); solid(s, 1, 10, 2, 1); s.labels.push({ t: '租屋看板', x: 2 * T, y: 9 * T + 2, size: 10 });
@@ -2818,7 +2853,7 @@ function interact() {
   if (it.id === 'stall') return stall(it.stall);
   if (it.id === 'arc') return arcRun();
   if (it.id === 'pick') return pickUp();
-  const f = { ccat: ccatTalk, bowl: bowlMenu, vend: vending, board, bench: () => bench(it), trash: trashCan, nails: () => outLink('nails'), photobooth: () => outLink('photo'), datecafe: () => outLink('situ'), fridge: fridgeMenu, study, clubboard: clubBoard, shop, decor, bed: bedView, mydesk: deskView, class: classFlow, examseat: examSeat, wall: openWall, psy: () => pickPsy(it.k), pk: pkGame, bar: barGame,
+  const f = { plot: () => plotMenu(it.plot), swing: swingRide, ccat: ccatTalk, bowl: bowlMenu, vend: vending, board, bench: () => bench(it), trash: trashCan, nails: () => outLink('nails'), photobooth: () => outLink('photo'), datecafe: () => outLink('situ'), fridge: fridgeMenu, study, clubboard: clubBoard, shop, decor, bed: bedView, mydesk: deskView, class: classFlow, examseat: examSeat, wall: openWall, psy: () => pickPsy(it.k), pk: pkGame, bar: barGame,
     water: () => ok('飲水機', pick(['你喝了一大口水。免費的東西最好喝，這是大學教你的第一件事。', '飲水機的水有點溫。你決定不要想太多。', '旁邊貼著「請勿直接對嘴」，你看了一下四周，乖乖拿出水壺。'])),
     gs: () => openGroupGame('分組報告總是遇到雷隊友？在《分組求生記》裡，看你能不能撐到上台那天。'),
     bus: () => busMenu('street'), busback: () => busMenu('city'), busair: () => busMenu('airport'), gate, flyback: () => showModal({ title: '機場巴士', text: '往楓葉國際機場的巴士，車資 $45。要回台灣得先到機場。', choices: [{ label: '上車 $45', fn: () => { if (st.money < 45) return ok('機場巴士', '錢不夠。'); spend(45, '機場巴士'); goScene('a_airport', 17 * T, 7 * T, 'left'); } }, { label: '不搭了' }] }),
@@ -3074,6 +3109,8 @@ const ACH = [
   { id: 'ccat', n: '學分認得你', d: '跟校園的橘貓學分混熟', t: '學分的乾爹乾媽' },
   { id: 'picker', n: '眼睛很利', d: '在校園撿到十樣東西', t: '路邊的尋寶人', h: 1 },
   { id: 'seat8', n: '佔位專家', d: '在圖書館預約座位，放滿八小時', t: '書包代讀員', h: 1 },
+  { id: 'farmer', n: '校園小農', d: '在社團小菜園收成三次', t: '校園小農' },
+  { id: 'swing', n: '深夜的鞦韆', d: '晚上八點以後去盪鞦韆', t: '鞦韆上的人', h: 1 },
   { id: 'cat', n: 'Dewey 的朋友', d: '跟圖書館的黑貓變成朋友', t: '貓的僕人', h: 1 },
   { id: 'green', n: '窗台農夫', d: '在宿舍窗台收成五次', t: '窗台農夫' },
   { id: 'pudding', n: '布丁被吃了', d: '冰箱的布丁放太久，被室友吃掉', t: '寬宏大量的室友', h: 1 },
