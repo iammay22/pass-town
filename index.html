@@ -277,7 +277,7 @@ button.tab.on{background:var(--gold)}
     <div class="nbbody" id="psyBody" style="font-size:15px;line-height:28px"></div>
   </div>
 </div>
-<div class="ov" id="fridgeOv"><div class="card"><button class="xbtn" id="frClose" type="button" aria-label="關上冰箱">✕</button><div class="frHead" style="margin-top:0"><h2 style="margin:0">小冰箱</h2></div><div class="frHead"><span>冷藏室（點一下拿出來）</span><span id="frCnt"></span></div><div class="frBody"><div class="frGrid" id="frGrid"></div></div><div class="frHead"><span>手上的袋子（點一下放進去）<button type="button" class="pri" id="frAll" style="margin-left:8px;padding:2px 8px;font-size:12px">全部放進去</button></span><span id="frBagCnt"></span></div><div class="frGrid bag" id="frBag"></div><p id="frMsg"></p></div></div>
+<div class="ov" id="fridgeOv"><div class="card"><div class="frHead" style="margin-top:0"><h2 style="margin:0">小冰箱</h2><button type="button" id="frClose">關上冰箱</button></div><div class="frHead"><span>冷藏室（點一下拿出來）</span><span id="frCnt"></span></div><div class="frBody"><div class="frGrid" id="frGrid"></div></div><div class="frHead"><span>手上的袋子（點一下放進去）<button type="button" class="pri" id="frAll" style="margin-left:8px;padding:2px 8px;font-size:12px">全部放進去</button></span><span id="frBagCnt"></span></div><div class="frGrid bag" id="frBag"></div><p id="frMsg"></p></div></div>
 <div class="ov" id="wardOv">
   <div class="card" style="position:relative">
     <button class="xbtn" id="wardX" type="button" aria-label="關閉">✕</button>
@@ -312,7 +312,6 @@ button.tab.on{background:var(--gold)}
 </div>
 <div class="ov" id="wallOv">
   <div class="card">
-    <button class="xbtn" type="button" aria-label="關閉" onclick="document.getElementById('wallClose').click()">✕</button>
     <h2>樹洞留言牆</h2>
     <p class="note" style="margin:0" id="wallMode"></p>
     <div class="row" style="margin-top:6px"><input id="wallIn" maxlength="40" placeholder="今天想說什麼？最多 40 字，一天一張" style="flex:1;margin:0"><button class="pri" id="wallPost" type="button">貼上</button></div>
@@ -964,11 +963,11 @@ const KEY = 'jige-town-v1', OLDKEY = 'lifefork-town-demo-v2';
 let st = null, started = false;
 function newState(name) {
   return { name, money: 0, exp: 0, track: null, clubs: [], lib: 0, log: [], lastSeen: Date.now(), storeAt: 0, fedUntil: 0,
-    inv: { coffee: 0, bag: 0, card: 0, past: 0, gift: 0 }, dorm: { wall: 0, floor: 0, wallOwn: [0], floorOwn: [0], own: [], placed: [] },
+    inv: { coffee: 0, bag: 0, card: 0, past: 0, gift: 0, catfood: 0 }, dorm: { wall: 0, floor: 0, wallOwn: [0], floorOwn: [0], own: [], placed: [] },
     q: { main: 0, side: {}, notified: {}, c: { work: 0, workAt: 0, workAll: 0, waves: [], study: 0, hoop4: 0, eng: 0, examTry: 0, examScore: 0 } },
     daily: { date: '', ids: [], prog: {}, done: {}, bonus: false }, best: { hoop: 0, run: 0, exam: 0, bar: 0, pk: 0 }, met: {}, pos: null,
     scooter: false, visited: { campus: 1 }, look: { style: 'short', hair: '#5a3a2a', skin: '#ffd9bb', shirt: '#ff8fb1', pants: '#4a5d8a', acc: 'none', cap: '#3ba3d8', outer: 'none' }, ch3: { booths: [], hol: '', path: '', prog: 0, tries: 0 }, ach: [], title: '', psy: [], certs: { upper: 0, toeic: 0, ielts: 0, toefl: 0 }, cnt: { wave: 0, sleep: 0, studyFail: 0, coffeeAll: 0, cook: 0, trip: 0, shiftAll: 0 }, day: { d: '', coffee: 0, food: 0 },
-    ledger: { m: '', inc: 0, exp: 0, idle: 0, lines: [] }, rentDay: 0, challenge: false, bank: 0, salaryM: '', uid: '', wall: { lastPost: '', pats: [], coffees: [], mine: [] }, fam: '', famRe: 0, famM: '', aid: { grant: -1, schol: -1 }, cakes: [], bag: [], fridge: [], trash: 0, ch4: { mate: '', job: '', photo: 0 }, loanPaid: 0, set: { arrow: 1 }, grow: {}, hunger: 80, hungerAt: Date.now(), meals: { d: '', b: 0, l: 0, n: 0, x: 0 }, weight: 0, sick: 0, roomCode: '', loc: 0, cred: { total: 0, d: '', today: 0, c: {} }, examDay: '', bike: false };
+    ledger: { m: '', inc: 0, exp: 0, idle: 0, lines: [] }, rentDay: 0, challenge: false, bank: 0, salaryM: '', uid: '', wall: { lastPost: '', pats: [], coffees: [], mine: [] }, fam: '', famRe: 0, famM: '', aid: { grant: -1, schol: -1 }, cakes: [], bag: [], fridge: [], trash: 0, arcs: {}, arc: null, cat: null, seat: 0, pickAt: 0, ch4: { mate: '', job: '', photo: 0 }, loanPaid: 0, set: { arrow: 1 }, grow: {}, hunger: 80, hungerAt: Date.now(), meals: { d: '', b: 0, l: 0, n: 0, x: 0 }, weight: 0, sick: 0, roomCode: '', loc: 0, cred: { total: 0, d: '', today: 0, c: {} }, examDay: '', bike: false };
 }
 function fill(def, s) { for (const k in def) { if (s[k] === undefined) s[k] = def[k]; else if (def[k] && typeof def[k] === 'object' && !Array.isArray(def[k]) && typeof s[k] === 'object') fill(def[k], s[k]); } return s; }
 function loadSave() {
@@ -1572,6 +1571,7 @@ function gradCeremony() {
 /* ---------- 新手引導 ---------- */
 const EXIT_POS = { campus: { street: [47 * T + 4, 13.5 * T], playground: [24 * T, 29 * T + 4] }, street: { campus: [0.6 * T, 8 * T + 6] }, playground: { campus: [15 * T, 0.6 * T] } };
 function mainTarget() {
+  if (arcOn()) return arcTarget();
   const m = st.q.main;
   const npc = { 0: 'chen', 1: 'yun', 2: 'xun', 3: 'lib', 5: 'chen', 6: 'desk', 8: 'xun', 9: 'proctor', 10: 'chen', 13: 'counselor', 14: 'counselor', 16: 'chen', 17: 'prof', 18: 'counselor', 19: 'chen', 20: 'yun', 22: 'chen' }[m];
   if (npc && QN[npc]) return { scene: QN[npc].scene, x: QN[npc].x, y: QN[npc].y - 6 };
@@ -1901,6 +1901,158 @@ BENCHES.forEach(b => seatIT(campus, b));
 [{ x: 8, y: 20 }, { x: 5, y: 17 }, { x: 29, y: 15 }].forEach((b, i) => { if (i) { drawBench(street.g, b); solid(street, b.x, b.y, 2, 1); } seatIT(street, b); });
 { const b = { x: 31, y: 12 }; drawBench(pgd.g, b); solid(pgd, b.x, b.y, 2, 1); seatIT(pgd, b); }
 Object.entries(TRASH).forEach(([id, arr]) => { const s = scenes[id]; arr.forEach(([x, y]) => { if (id === 'campus') s.dyn.push({ y: y * T + 14, f: g => drawTrash(g, x * T, y * T) }); else drawTrash(s.g, x * T, y * T); solid(s, x, y); s.IT.push({ id: 'trash', label: '丟垃圾', x: x * T + 8, y: y * T + 22, r: 20, ix: x * T + 8, iy: y * T - 10 }); }); });
+/* ---------- 年級之間的劇情：大一下、大二下、大三下 ---------- */
+const ARC_AT = { 6: 'yun', 11: 'club', 17: 'home' };
+const arcOn = () => !!(st && st.arc && ARCS[st.arc.id]);
+const arcStep = () => arcOn() ? ARCS[st.arc.id].steps[st.arc.s] : null;
+const arcNewDay = () => dayNum() > st.arc.d;
+const arcText = () => { const s = arcStep(); return s ? (typeof s.t === 'function' ? s.t() : s.t) : ''; };
+const arcNpc = () => { const s = arcStep(); return s ? (typeof s.npc === 'function' ? s.npc() : s.npc) : null; };
+function arcStart(id) { if (st.arcs[id]) return; st.arc = { id, s: 0, d: dayNum(), v: {} }; logLine('新劇情：' + ARCS[id].n); }
+function arcNext() {
+  const a = st.arc; if (!a) return; a.s++; a.d = dayNum();
+  if (a.s >= ARCS[a.id].steps.length) { st.arcs[a.id] = 1; st.arc = null; beep(1047, .12); setTimeout(() => ARCS[a.id].done(), 350); }
+  else toast('劇情更新：' + arcText());
+  hud(); persist();
+}
+function arcRun() { const s = arcStep(); if (!s) return; const g = s.gate && s.gate(); if (g) return ok(s.who || ARCS[st.arc.id].n, g); s.run(); }
+function arcTarget() {
+  const s = arcStep(); if (!s) return null; const n = arcNpc() || s.go;
+  if (n && QN[n]) return { scene: QN[n].scene, x: QN[n].x, y: QN[n].y - 6 };
+  return s.at ? { scene: s.at[0], x: s.at[1] * T, y: s.at[2] * T } : null;
+}
+function arcTick() { const s = arcStep(); if (s && s.auto && s.auto()) arcNext(); }
+let arcFixed = false;
+function arcFix() {
+  if (arcFixed || !st) return; arcFixed = true; st.arcs = st.arcs || {};
+  for (const k in ARC_AT) { const id = ARC_AT[k]; if (st.q.main > +k) st.arcs[id] = 1; else if (st.q.main === +k && !st.arcs[id] && !st.arc) arcStart(id); }
+}
+const tomorrow = t => () => arcNewDay() ? t : '明天' + t;
+const waitDay = who => () => arcNewDay() ? null : who + '\n\n（這一步要等到明天。先去做別的事，明天再來。）';
+function rehearse(n) {
+  const r = st.arc.v.role || 'show';
+  meterGame({ title: '社團排練（第 ' + n + ' 次）', desc: { host: '把主持稿念順。指針到綠色區域時按「念」。', show: '把表演的段落練熟。指針到綠色區域時按「練」。', crew: '把燈光和音樂的時間點對準。指針到綠色區域時按「下」。' }[r], btn: { host: '念', show: '練', crew: '下' }[r], rounds: 3, speed: 1 + .2 * n, zone: .3, shrink: .85,
+    hitT: ['這段順了。', '學姊在旁邊點頭。', '這次跟音樂對上了。'], missT: ['你卡住了，大家假裝沒聽到。', '晚了半拍。', '你念到一半忘詞，學姊幫你接下去。'],
+    end: h => { st.exp += 3 + h; st.arc.v.prac = (st.arc.v.prac || 0) + h; ok('排練結束', (h >= 2 ? '學姊說：「可以，照這樣上台就好。」' : '學姊說：「還好啦，正式上台的時候大家都會變強，大概。」') + '\n\n知識 +' + (3 + h) + '。'); arcNext(); } });
+}
+const ARCS = {
+  yun: { n: '大一下 · 阿芸的決定', done: () => { st.exp += 20; ach('arc_yun'); logLine('陪阿芸交出轉系申請表'); ok('大一結束了', '阿芸交出了轉系申請表。\n暑假過得比你想像中快，九月你搬回同一間宿舍，升上大二。\n\n知識 +20。\n主線繼續：' + mainText(st.q.main)); },
+    steps: [
+      { t: '回宿舍看看阿芸，她最近都很晚睡', npc: 'yun', run: () => dialog('室友阿芸', ['你回來了喔。', '（阿芸桌上攤著微積分考卷，分數被她用一張便利貼蓋住。）', '沒事啦。我只是在想，我是不是選錯系了。', '高中的時候覺得寫程式很酷，現在每天寫到半夜，寫出來的東西連我自己都看不懂。'], [
+        { label: '「晚上陪你去操場走走」', fn: () => { st.arc.v.walk = 1; ok('室友阿芸', '好啊。等天黑一點，人比較少。\n\n（晚上 6 點以後去操場找她。）'); arcNext(); } },
+        { label: '「你先睡一下」', fn: () => { ok('室友阿芸', '嗯⋯⋯謝謝。不過你晚上如果有空，我想去操場吹吹風。\n\n（晚上 6 點以後去操場找她。）'); arcNext(); } }]) },
+      { t: '晚上 6 點以後，去操場的看台找阿芸', at: ['playground', 22.2, 18.4], lb: '找阿芸', who: '操場', gate: () => inTime(18, 26) ? null : '操場上還有很多人在跑步。阿芸傳訊息說，等天黑一點再去。\n\n（晚上 6 點到凌晨 2 點之間再來。）',
+        run: () => dialog('操場看台', ['阿芸坐在看台最上面一排，手上拿著一罐還沒開的麥香。', '「我上禮拜偷偷去聽了轉系說明會。坐在最後一排，怕被同學看到。」', '「我其實比較喜歡設計。可是我媽一直說，資工以後比較好找工作。」'], [
+          { label: '「那你自己想要什麼？」', fn: () => { st.arc.v.talk = 'ask'; ok('操場看台', '她想了很久，說：「我想做那種，做完會想給別人看的東西。」\n說完她自己笑了，好像第一次聽到這句話。'); arcNext(); } },
+          { label: '「先不要急著決定」', fn: () => { st.arc.v.talk = 'slow'; ok('操場看台', '「可是申請截止日在下個月。」\n「那就還有一個月。」你說。\n她把麥香打開，喝了一口，說這是她今天第一次覺得沒那麼急。'); arcNext(); } },
+          { label: '陪她安靜坐一下', fn: () => { st.arc.v.talk = 'quiet'; ok('操場看台', '你們都沒有說話。跑道上有人在夜跑，一圈，兩圈。\n回宿舍的路上，她說：「謝謝你沒有給我建議。」'); arcNext(); } }]) },
+      { t: tomorrow('去健康中心，問校護林阿姨可以怎麼幫阿芸'), npc: 'nurse', who: '健康中心', gate: waitDay('阿芸今晚應該需要好好睡一覺。'),
+        run: () => dialog('校護 林阿姨', ['你是來問朋友的事對吧？很多人一開口都說「我有一個朋友」。', '我知道是真的朋友啦，你不用解釋。', '健康中心可以約諮商，不用錢，也不會通知家長。轉系的話，學務處的陳老師那邊有申請表。', '還有，你自己也要睡飽。陪人的那個人，常常是最先累倒的。'], [{ label: '謝謝阿姨', fn: () => { st.exp += 5; arcNext(); } }]) },
+      { t: '去學務處，跟陳老師拿轉系申請表', npc: 'chen', run: () => dialog('陳老師', ['轉系申請表？你要轉？', '喔，幫室友拿的。好，這種事我看多了。', '截止日是下個月十號，要附成績單和一篇自傳。自傳不用寫得很感人，寫清楚為什麼想轉就好。', '幫我跟她說，轉系的人沒有比較差，只是比較早知道自己要什麼。'], [{ label: '收下申請表', fn: arcNext }]) },
+      { t: '把轉系申請表拿回宿舍給阿芸', npc: 'yun', run: () => dialog('室友阿芸', ['這是⋯⋯轉系申請表？', '（她盯著表格看了很久。）', st.arc.v.talk === 'quiet' ? '那天晚上你什麼都沒說，我還以為你在想自己的事。' : '那天晚上講的話，我以為你聽聽就算了。', '好。我今天先把自傳寫一寫。寫不出來的話，你要請我喝珍奶。', '⋯⋯謝謝你。真的。'], [{ label: '「珍奶我請」', fn: arcNext }]) }] },
+  club: { n: '大二下 · 社團成果發表', done: () => { st.exp += 25; ach('arc_club'); logLine('從學姊小薰手上接下社團鑰匙'); ok('大二結束了', '學姊畢業了。社團教室的鑰匙現在掛在你的書包上。\n暑假社團教室很安靜，九月新生進來的時候，換你站在門口拉人。你升上大三了。\n\n知識 +25。\n主線繼續：' + mainText(st.q.main)); },
+    steps: [
+      { t: '去社團教室找學姊小薰', npc: 'xun', run: () => dialog('學姊小薰', ['你來得剛好。期末的社團成果發表，是我最後一次辦了。', '我下學期就畢業。所以今年想讓你接一塊，明年你就知道怎麼帶了。', '主持、表演、後台，你挑一個。'], [
+        { label: '主持', fn: () => { st.arc.v.role = 'host'; ok('學姊小薰', '主持喔。好，稿子我寫一半，你寫另一半。不要講冷笑話，講了我會在後台搖頭。'); arcNext(); } },
+        { label: '上台表演', fn: () => { st.arc.v.role = 'show'; ok('學姊小薰', '你要上台？太好了，大家都在推來推去。我們排一段三分鐘的，不會太難。'); arcNext(); } },
+        { label: '後台燈光音樂', fn: () => { st.arc.v.role = 'crew'; ok('學姊小薰', '後台最重要。台上的人出包，觀眾會笑；後台出包，全場一起黑掉。'); arcNext(); } }]) },
+      { t: '在社團教室跟學姊排練（第 1 次）', npc: 'xun', run: () => rehearse(1) },
+      { t: tomorrow('去社團教室排練（第 2 次）'), npc: 'xun', who: '學姊小薰', gate: waitDay('學姊說今天先這樣，嗓子要留給明天。'), run: () => rehearse(2) },
+      { t: '去便利商店找店長，買成發要用的道具（$150）', npc: 'boss', run: () => showModal({ title: '店長', text: '膠帶、螢光棒、一條延長線，總共 $150。\n店長說：「成發喔？我大學的時候也是後台，延長線永遠不夠長。」', choices: [
+        { label: '買道具 $150', fn: () => { if (st.money < 150) return ok('店長', '錢不夠的話，先去排個班吧。延長線我幫你留著。'); spend(150, '成發道具'); ok('店長', '店長多塞了一包喉糖給你：「上台前含一顆。」'); arcNext(); } }, { label: '等一下再買' }] }) },
+      { t: '晚上 6 點到 11 點，到噴水池旁邊的舞台上台', at: ['campus', 26.6, 13.6], lb: '上台', who: '噴水池旁的舞台', gate: () => inTime(18, 23) ? null : '舞台還在搭。學姊說晚上 6 點才開始，11 點以前要收完，不然警衛會來。',
+        run: () => { const r = st.arc.v.role || 'show'; meterGame({ title: '社團成果發表', desc: '台下坐滿了人。指針到綠色區域時按下去。', btn: { host: '講', show: '上', crew: '下' }[r], rounds: 4, speed: 1.3, zone: .28, shrink: .85,
+          hitT: ['台下有人笑了，是好的那種。', '燈光剛好打在對的地方。', '你聽到有人在喊你的名字。'], missT: ['你停了一秒，學姊在側台比了一個「沒事」。', '麥克風突然沒聲音，你乾脆用吼的。', '音樂慢了半拍，大家跟著慢半拍，好像本來就是這樣設計的。'],
+          end: h => { const p = h + Math.min(3, st.arc.v.prac || 0); st.exp += 4 + h; dialog('成果發表結束', [p >= 5 ? '謝幕的時候，掌聲比你想像中還久。' : p >= 3 ? '沒有很完美，但大家都很開心。' : '中間出了一點包。不過收場的時候，大家還是一起鞠躬了。', '學姊在後台抱了你一下，說：「好，我可以安心畢業了。」', '收完場已經快十二點。你們坐在噴水池邊吃雞排，誰都不想先回宿舍。'], [{ label: '回宿舍', fn: arcNext }]); } }); } },
+      { t: tomorrow('去社團教室，跟學姊小薰道別'), npc: 'xun', who: '學姊小薰', gate: waitDay('學姊傳訊息說她今天在收行李，明天再來社團教室找她。'),
+        run: () => dialog('學姊小薰', ['你來了。昨天的照片我挑了一張最不醜的，傳到群組了。', '我下禮拜就搬出宿舍。這個，社團教室的鑰匙，給你。', '不用當得很好。有人來的時候開門，沒人來的時候也開著，就夠了。'], [{ label: '收下鑰匙', fn: arcNext }]) }] },
+  home: { n: '大三下 · 家裡的電話', done: () => { st.exp += 20; ach('arc_home'); logLine('撐過家裡出事的那個月'); ok('大三結束了', '爸爸的腰好了，家裡的店又開了。\n媽媽每個禮拜都會傳一張麵店的照片給你，說今天的滷肉有多少人點。\n暑假一過，你升上大四。\n\n知識 +20。\n主線繼續：' + mainText(st.q.main)); },
+    steps: [
+      { t: '回宿舍，你的手機一直在響', at: ['dorm', 5.2, 4.8], lb: '接電話', run: () => dialog('媽媽', ['（是媽媽。她很少在平日打來。）', '「沒事啦，就跟你說一下。你爸前幾天搬貨閃到腰，醫生說要躺一個月。」', '「店裡我一個人顧不來，這個月先收起來。你不要擔心，好好讀書。」', '（她說不要擔心的時候，聲音比平常小。）'], [
+        { label: '「我多排一點班」', fn: () => { st.arc.v.plan = 'work'; ok('媽媽', '「你不要為了這個翹課喔。」\n她嘴上這樣說，掛電話前又問了一次你最近吃得好不好。'); arcNext(); } },
+        { label: '「我寄一點錢回去」', fn: () => { st.arc.v.plan = 'send'; ok('媽媽', '「不用啦，你自己留著。」\n你說好，然後開始算自己的存款。'); arcNext(); } }]) },
+      { t: '去學務處問陳老師，學校有沒有急難救助', npc: 'chen', run: () => dialog('陳老師', ['家裡出事了？先坐。', '學校有急難救助金，一次 $2,000，不用還。表格我幫你填好了，你簽名就好。', '還有，這種時候不要一個人扛。你室友知道嗎？'], [{ label: '簽名，謝謝老師', fn: () => { earn(2000, '急難救助金'); st.arc.v.w0 = st.q.c.workAll; ok('學務處', '急難救助金 $2,000 入帳了。'); arcNext(); } }]) },
+      { t: () => st.arc.v.plan === 'send' ? '去便利商店的 ATM 寄 $5,000 回家' : '去便利商店排班 2 次（' + Math.min(2, st.q.c.workAll - (st.arc.v.w0 || 0)) + ' / 2）', go: 'boss', npc: () => st.arc.v.plan === 'send' ? 'boss' : null,
+        auto: () => st.arc.v.plan !== 'send' && st.q.c.workAll - (st.arc.v.w0 || 0) >= 2,
+        run: () => showModal({ title: '便利商店 · ATM', text: '你站在 ATM 前面，螢幕上寫著「請輸入轉帳金額」。', choices: [{ label: '寄 $5,000 回家', fn: () => { if (st.money < 5000) return ok('ATM', '餘額不足。\n你看著螢幕想了一下，決定先去排幾次班。'); spend(5000, '寄錢回家'); ok('ATM', '轉帳成功。\n你拍了收據傳給媽媽，她回了一個「傻孩子」的貼圖。'); arcNext(); } }, { label: '改成去排班', fn: () => { st.arc.v.plan = 'work'; st.arc.v.w0 = st.q.c.workAll; hud(); persist(); ok('ATM', '你決定還是去排班。找店長排兩次。'); } }, { label: '先不用' }] }) },
+      { t: '回宿舍，室友小晴好像有話要說', npc: 'qing', run: () => dialog('室友小晴', ['阿芸跟我們說了。你這禮拜都好晚回來。', '這是我媽包的水餃，冷凍的。佳佳說她可以幫你點名，阿芸說你的報告她可以先幫你排版。', '你不要每件事都自己來啦。我們是室友欸。'], [{ label: '收下水餃', fn: () => { st.bag = st.bag || []; if (st.bag.length < BAG_MAX) st.bag.push({ n: '小晴媽媽的水餃', f: 50, t: '水餃是韭菜豬肉的，皮有點厚，是家裡的味道。', icon: 'bento', drink: 0 }); else feed(50); arcNext(); } }]) },
+      { t: tomorrow('晚上 6 點以後，在宿舍打視訊回家'), at: ['dorm', 5.2, 4.8], lb: '打視訊', who: '宿舍', gate: () => !arcNewDay() ? '媽媽說爸爸今天去復健，明天晚上再視訊。' : inTime(18, 25) ? null : '這個時間爸媽應該在忙。晚上 6 點以後再打。',
+        run: () => dialog('視訊', ['爸爸躺在沙發上，對著鏡頭揮手，鏡頭只拍到他的鼻孔。', '「腰好多了啦，是你媽太誇張。」', st.arc.v.plan === 'send' ? '媽媽在後面說：「錢收到了，下次不要再寄了。你自己吃好一點。」' : '媽媽在後面說：「聽說你一直在打工。不要太累，課要去上。」', '你說好。掛掉電話以後，你在書桌前坐了很久。'], [{ label: '把手機放下', fn: arcNext }]) }] }
+};
+/* 劇情地點的互動點 */
+[...new Set(Object.values(ARCS).flatMap(a => a.steps.filter(s => s.at).map(s => s.at[0])))].forEach(id => scenes[id].IT.push({ id: 'arc',
+  get label() { const s = arcStep(); return (s && s.lb) || '看看'; }, get x() { const s = arcStep(); return s && s.at ? s.at[1] * T : -999; }, get y() { const s = arcStep(); return s && s.at ? s.at[2] * T : -999; },
+  get ix() { return this.x; }, get iy() { return this.y - 28; }, r: 24, hide: () => { const s = arcStep(); return !s || !s.at || s.at[0] !== id; } }));
+/* ---------- 校園的小互動：橘貓學分、販賣機、地上撿到的東西 ---------- */
+function ccatPos() { const t = Date.now() / 9000; return [(36 + 7 * Math.sin(t)) * T, (26 + 1.1 * Math.sin(t * 2.3)) * T]; }
+function drawCcat(g) { const [x0, y0] = ccatPos(), x = Math.round(x0), y = Math.round(y0), d = Math.cos(Date.now() / 9000) >= 0 ? 1 : -1;
+  R(g, 'rgba(60,40,80,.2)', x - 4, y, 8, 1.5); R(g, '#e8954a', x - 3.5, y - 4, 7, 4); R(g, '#c96f2c', x - 2, y - 4, 1, 4); R(g, '#c96f2c', x + 0.5, y - 4, 1, 4); R(g, '#e8954a', x + d * 3, y - 6.5, 3.5, 3.5);
+  R(g, '#e8954a', x + d * 3, y - 7.5, 1, 1); R(g, '#e8954a', x + d * 3 + (d > 0 ? 2.5 : -.5), y - 7.5, 1, 1); R(g, '#3b2f4a', x + d * 3 + (d > 0 ? 2 : 0), y - 5.5, .5, .5); R(g, '#e8954a', x - d * 4.5, y - 6, 1, 3); R(g, '#fff', x + d * 3.5, y - 4, 1.5, 1); }
+const BOWL = { x: 32, y: 27 };
+const CATGIFT = 3 * H;
+campus.dyn.push({ get y() { return ccatPos()[1]; }, f: g => drawCcat(g) });
+campus.dyn.push({ y: BOWL.y * T + 8, f: g => { const x = BOWL.x * T + 4, y = BOWL.y * T + 4; R(g, 'rgba(60,40,80,.2)', x, y + 5, 9, 2); R(g, '#3b2f4a', x - 1, y, 11, 6); R(g, '#e5607f', x, y + 1, 9, 4); if (st && st.cat && st.cat.bowl) R(g, Date.now() - st.cat.bowl >= CATGIFT ? '#ffd45c' : '#a8745a', x + 2, y, 5, 2); } });
+campus.IT.push({ id: 'ccat', label: '橘貓學分', get x() { return ccatPos()[0]; }, get y() { return ccatPos()[1] + 4; }, get ix() { return ccatPos()[0]; }, get iy() { return ccatPos()[1] - 16; }, r: 20 });
+campus.IT.push({ id: 'bowl', label: '貓碗', x: BOWL.x * T + 8, y: BOWL.y * T + 16, r: 20, ix: BOWL.x * T + 8, iy: BOWL.y * T - 8 });
+function ccatTalk() {
+  st.cat = st.cat || { love: 0, bowl: 0, pet: 0, gifts: 0 }; const c = st.cat;
+  showModal({ title: '橘貓學分', text: '一隻橘貓在草地上巡邏。學生都叫牠「學分」，因為牠每學期都會出現，但沒有人抓得住。' + (c.love ? '\n牠看到你，尾巴豎起來了。（熟悉度 ' + c.love + '）' : ''), choices: [
+    { label: '蹲下來摸摸牠', fn: () => { if (Date.now() - c.pet < H) return ok('學分', pick(['學分打了一個哈欠，翻身背對你。牠今天被摸夠了。', '牠用尾巴拍了你的手一下，意思是「等一下」。'])); c.pet = Date.now(); c.love++; st.exp += 1; if (c.love >= 5) ach('ccat'); beep(880, .05); ok('學分', pick(['牠在你手底下發出呼嚕聲，像一台很小的機車。', '牠蹭了你的鞋子，然後假裝什麼都沒發生。', '你摸到牠背上有一塊沒舔乾淨的毛，牠瞪了你一眼。']) + '\n\n熟悉度 +1，知識 +1。'); persist(); } },
+    { label: (st.inv.catfood > 0 ? '把罐頭倒進貓碗（剩 ' + st.inv.catfood + ' 罐）' : '貓碗在旁邊'), fn: bowlMenu },
+    { label: '先不打擾' }] });
+}
+function bowlMenu() {
+  st.cat = st.cat || { love: 0, bowl: 0, pet: 0, gifts: 0 }; const c = st.cat;
+  if (c.bowl) { const left = CATGIFT - (Date.now() - c.bowl);
+    if (left > 0) return ok('貓碗', '碗裡的罐頭少了一半。學分吃一口就走，等牠吃完大概還要 ' + Math.ceil(left / 60000) + ' 分鐘。\n\n（可以先去做別的事，關掉遊戲也會繼續算。）');
+    c.bowl = 0; c.gifts++; c.love += 2; if (c.love >= 5) ach('ccat'); const r = Math.random(); let t;
+    if (r < .45) { const n = 30 + Math.floor(Math.random() * 90); earn(n, '學分叼來的零錢'); t = '碗吃空了。碗旁邊放著幾枚硬幣，不知道學分從哪裡叼來的。\n\n$' + n + '。'; }
+    else if (r < .75) { st.exp += 6; t = '碗吃空了。碗旁邊有一張被咬過的筆記，上面寫著微積分的重點，字很工整。\n\n知識 +6。'; }
+    else if (r < .9) { feed(5); t = '碗吃空了。旁邊放著一片很完整的落葉，葉脈像一張地圖。你把它夾進筆記本。'; }
+    else { st.inv.gift = (st.inv.gift || 0) + 1; t = '碗吃空了。旁邊有一個包裝完好的小禮物，上面寫著「給學分的乾爹乾媽」。你決定這也算你。\n\n禮物 +1。'; }
+    beep(988, .08); persist(); return ok('學分的回禮', t + '\n熟悉度 +2。'); }
+  if (!(st.inv.catfood > 0)) return ok('貓碗', '一個粉紅色的塑膠碗，旁邊用麥克筆寫著「學分專用」。\n便利商店有賣貓罐頭，倒一罐進來，過三個小時再回來看看。');
+  st.inv.catfood--; c.bowl = Date.now(); beep(660, .05); persist(); ok('貓碗', '你把罐頭倒進碗裡。學分從樹後面走出來，假裝沒有很想吃。\n\n三個小時後回來看看，牠吃飽了會留東西給你。');
+}
+const VEND = { x: 27, y: 16 };
+solid(campus, VEND.x, VEND.y, 1, 2);
+campus.dyn.push({ y: (VEND.y + 1) * T + 15, f: g => { const x = VEND.x * T, y = VEND.y * T - 6; R(g, 'rgba(60,40,80,.2)', x + 1, y + 37, 15, 3); R(g, '#3b2f4a', x, y, 16, 38); R(g, '#e5607f', x + 1, y + 1, 14, 36); R(g, '#cdeefa', x + 2, y + 3, 9, 20);
+  ['#ff8b3d', '#9bd8a0', '#fff3a8', '#7ec8f0', '#ffd1de', '#c9b6f5'].forEach((c, i) => R(g, c, x + 3 + (i % 3) * 3, y + 5 + Math.floor(i / 3) * 8, 2, 5)); R(g, '#3b2f4a', x + 12, y + 8, 2, 6); R(g, '#3b2f4a', x + 3, y + 28, 10, 4); R(g, '#fff', x + 4, y + 29, 8, 1); } });
+campus.IT.push({ id: 'vend', label: '販賣機', x: VEND.x * T + 8, y: (VEND.y + 2) * T + 10, r: 22, ix: VEND.x * T + 8, iy: VEND.y * T - 14 });
+function vending() {
+  const lucky = () => Math.random() < .1 ? '\n\n喀啦喀啦，掉出來兩瓶！今天運氣很好。' : '';
+  const it = (n, p, d, f, t) => ({ icon: 'can', n, p, d, buy: () => { dHit('market'); const extra = lucky(); const r = takeout({ n, icon: 'can', f, t, drink: 1 }); if (extra) { st.bag = st.bag || []; if (st.bag.length < BAG_MAX) st.bag.push({ n, f, t, icon: 'can', drink: 1 }); } return r + extra; } });
+  openShop({ title: '販賣機', led: '販賣機', poor: '你翻遍口袋只找到一枚五元。', intro: '販賣機的燈有一格壞掉了，在一閃一閃。按鈕旁邊貼著：「吃錢請找總務處」。', side: '販賣機側面被人貼了一張小紙條：「有一成的機率會多掉一瓶，不要跟別人說。」', items: [
+    it('礦泉水', 20, '最便宜的那一格', 5, '冰水下肚，腦袋清醒了一點。'), it('麥香紅茶', 15, '學生的精神支柱', 8, '鋁箔包戳開的那一聲，是大學的聲音。'), it('運動飲料', 25, '打完球必買', 8, '你一口氣喝掉半瓶，覺得自己剛跑完馬拉松，雖然你只是走過來。'), it('罐裝咖啡', 30, '比美式甜很多', 6, '罐裝咖啡甜到你懷疑它其實是牛奶。')] });
+}
+/* 地上撿到的東西 */
+const PICK_SPOT = [[9, 13], [30, 13], [40, 14], [14, 22], [33, 23], [5, 21], [19, 26], [37, 27], [44, 20], [2, 13], [27, 21], [12, 25]];
+let pickNow = null;
+function pickTick() {
+  if (!st || !started || cur.id !== 'campus' || pickNow) return; st.pickAt = st.pickAt || 0; if (Date.now() < st.pickAt) return;
+  const ok2 = PICK_SPOT.filter(([x, y]) => !campus.grid[y * campus.w + x] && Math.hypot(P.x - (x + .5) * T, P.y - (y + .5) * T) > 6 * T); if (!ok2.length) return;
+  const [x, y] = pick(ok2); pickNow = { x: (x + .5) * T, y: (y + .5) * T, k: pick(['coin', 'coin', 'coin', 'note', 'card']) };
+}
+campus.dyn.push({ get y() { return pickNow ? pickNow.y : 0; }, f: g => { if (!pickNow) return; const x = Math.round(pickNow.x), y = Math.round(pickNow.y), b = Math.sin(Date.now() / 200) > 0;
+  if (pickNow.k === 'coin') { R(g, '#3b2f4a', x - 3, y - 3, 6, 6); R(g, '#ffd45c', x - 2, y - 2, 4, 4); } else { R(g, '#3b2f4a', x - 4, y - 3, 8, 6); R(g, pickNow.k === 'card' ? '#7ec8f0' : '#fff', x - 3, y - 2, 6, 4); }
+  if (b) { R(g, '#fff', x + 3, y - 7, 1, 3); R(g, '#fff', x + 2, y - 6, 3, 1); } } });
+campus.IT.push({ id: 'pick', label: '撿起來', get x() { return pickNow ? pickNow.x : -999; }, get y() { return pickNow ? pickNow.y + 4 : -999; }, get ix() { return pickNow ? pickNow.x : -999; }, get iy() { return pickNow ? pickNow.y - 20 : -999; }, r: 18, hide: () => !pickNow });
+function pickUp() {
+  if (!pickNow) return; const k = pickNow.k; pickNow = null; st.pickAt = Date.now() + (4 + Math.random() * 6) * 60000; st.cnt.pick = (st.cnt.pick || 0) + 1; if (st.cnt.pick >= 10) ach('picker'); beep(988, .05);
+  if (k === 'coin') { const n = pick([5, 10, 10, 50]); earn(n, '撿到零錢'); persist(); return ok('撿到了', '一枚 ' + n + ' 元硬幣，在草地上閃了一下。\n你左右看了看，沒有人在找。'); }
+  if (k === 'note') { st.exp += 3; persist(); return ok('撿到了', pick(['一張被風吹走的筆記，上面寫著「期末考必考」，畫了三個星星。你默默記下來了。', '一張便利貼：「今天也辛苦了。」不知道是寫給誰的，你先收下了。', '一張社課的傳單，背面有人寫了一題機率的算式，還寫錯了。']) + '\n\n知識 +3。'); }
+  st.met.lostCard = (st.met.lostCard || 0) + 1; persist();
+  dialog('撿到了', ['一張別人的學生證，照片上的人笑得很尷尬，大家的學生證都長這樣。', '要送去學務處的失物招領嗎？'], [{ label: '順手送過去', fn: () => { earn(100, '失物招領的謝禮'); st.exp += 2; ok('學務處', '陳老師說：「又一張。這禮拜第四張了。」\n她把一張感謝卡和 $100 的超商禮券塞給你，說是失主留的。\n\n$100，知識 +2。'); persist(); } }, { label: '放回原處' }]);
+}
+/* 圖書館預約座位：放著讀 */
+function seatMenu() {
+  if (st.seat) { const hrs = (Date.now() - st.seat) / H, got = Math.round(Math.min(8, hrs) * 6);
+    return showModal({ title: '預約的座位', text: '你的座位上放著書包和一杯涼掉的咖啡。\n已經佔位 ' + (hrs < 1 ? Math.max(1, Math.floor(hrs * 60)) + ' 分鐘' : hrs.toFixed(1) + ' 小時') + '，現在收回來可以拿到知識 +' + got + '。' + (hrs >= 8 ? '\n（最多算 8 小時，再放下去館員伯伯要來敲桌子了。）' : ''), choices: [
+      { label: '收回座位', fn: () => { st.seat = 0; st.exp += got; st.lib++; dHit('study'); if (got >= 48) ach('seat8'); ok('自習區', (got >= 30 ? '你回到位子上，發現自己的筆記被翻得很整齊。原來你今天讀了這麼多。' : got > 0 ? '你翻了翻筆記，讀進去的比想像中多一點。' : '書包還是溫的。你才剛走開而已。') + '\n\n知識 +' + got + '。'); persist(); } },
+      { label: '繼續放著' }] }); }
+  showModal({ title: '預約自習座位', text: '自習區的座位可以用學生證預約。\n書包放著，人先去忙別的，回來的時候會發現自己讀了不少。\n每小時知識 +6，最多算 8 小時，關掉遊戲也會繼續算。', choices: [
+    { label: '預約一個靠窗的位子', fn: () => { st.seat = Date.now(); persist(); ok('自習區', '你把書包放在靠窗的位子，桌上貼了一張「有人」的便利貼。\n去忙吧，回來再收。'); } }, { label: '先不用' }] });
+}
 /* 校外：租屋看板、機車行、美甲店；拍貼機在夾娃娃機店和校園 */
 { const s = street, g = s.g;
   drawBoard(g, { x: 1, y: 10 }); R(g, '#ff8b3d', 1 * T + 2, 10 * T - 11, 2 * T - 4, 4); solid(s, 1, 10, 2, 1); s.labels.push({ t: '租屋看板', x: 2 * T, y: 9 * T + 2, size: 10 });
@@ -2030,7 +2182,7 @@ const MAIN = ['去學務處找陳老師報到', '去宿舍找室友阿芸', '去
   '去教學大樓找王教授，組畢業專題', '去市區的生涯博覽會找輔導老師練習面試', '修滿 64 學分和必修，回學務處辦離校手續', '回宿舍整理東西，跟室友道別', '到校園噴水池前拍畢業照', '回學務處參加畢業典禮'];
 const CHAPTERS = [{ n: '第一章 大一新生', a: 0, b: 6 }, { n: '第二章 畢業門檻', a: 6, b: 11 }, { n: '第三章 岔路', a: 11, b: 17 }, { n: '第四章 畢業', a: 17, b: 23 }];
 const ENG_PROG = () => st.q.main === 19 ? '（學分 ' + st.cred.total + ' / ' + CRED_NEED + (reqLeft().length ? '，必修還差 ' + reqLeft().length + ' 門' : '') + '）' : st.q.main === 7 ? '（' + Math.min(3, st.q.c.eng) + ' / 3）' : st.q.main === 12 ? '（' + Math.min(3, st.ch3.booths.length) + ' / 3）' : '';
-const grade = () => st.q.main >= 23 ? '校友' : st.q.main >= 17 ? '大四' : st.q.main >= 11 ? '大二' : '大一';
+const grade = () => { const m = st.q.main, a = st.arcs || {}; return m >= 23 ? '校友' : m >= 17 && a.home ? '大四' : m >= 11 && a.club ? '大三' : m >= 6 && a.yun ? '大二' : m >= 17 ? '大三' : m >= 11 ? '大二' : '大一'; };
 const mainText = i => i === 15 && st.ch3.path ? ch3Task() : MAIN[i];
 const sideSt = id => st.q.side[id] || 0;
 const SIDE = {
@@ -2051,7 +2203,7 @@ function track(ev, value = '', detail = '') {
   try { if (navigator.sendBeacon) navigator.sendBeacon(TRACK_URL, body); else fetch(TRACK_URL, { method: 'POST', mode: 'no-cors', body }); } catch (e) {}
 }
 const CH_END = { 6: 1, 11: 2, 17: 3, 23: 4 };
-function setMain(n) { if (CH_END[n] && st.q.main < n) track('chapter', CH_END[n]); if (n === 23 && st.q.main < 23) track('graduate'); st.q.main = n; if (n === 6) ach('ch1'); if (n === 11) ach('ch2'); if (n === 17) ach('ch3'); if (n === 23) ach('graduate'); if (n < MAIN.length) toast('主線更新：' + mainText(n)); hud(); persist(); }
+function setMain(n) { if (CH_END[n] && st.q.main < n) track('chapter', CH_END[n]); if (n === 23 && st.q.main < 23) track('graduate'); st.q.main = n; if (ARC_AT[n] && !st.arcs[ARC_AT[n]]) arcStart(ARC_AT[n]); if (n === 6) ach('ch1'); if (n === 11) ach('ch2'); if (n === 17) ach('ch3'); if (n === 23) ach('graduate'); if (n < MAIN.length) toast(arcOn() ? '新劇情：' + ARCS[st.arc.id].n : '主線更新：' + mainText(n)); hud(); persist(); }
 function chkReady() { for (const id in SIDE) if (sideSt(id) === 1 && SIDE[id].ready() && !st.q.notified[id]) { st.q.notified[id] = 1; toast('支線可以回報了：' + SIDE[id].n); } hud(); }
 function acceptSide(id) { st.q.side[id] = 1; if (id === 'store') st.q.c.workAt = st.q.c.work; if (id === 'wave') st.q.c.waves = []; if (id === 'hoop') st.q.c.hoop4 = 0; toast('接下支線：' + SIDE[id].n); chkReady(); persist(); }
 function finishSide(id) {
@@ -2072,6 +2224,7 @@ function sideFlow(npcName, id, offer, hint, thanks) {
 }
 function markOf(e) {
   if (e.kind !== 'quest' || !st) return null; const m = st.q.main;
+  if (arcOn()) { if (arcNpc() === e.id) return 'main'; if (['chen', 'desk', 'prof'].includes(e.id)) return null; }
   const side = id => { const s = sideSt(id); return s === 0 ? 'side' : (s === 1 && SIDE[id].ready()) ? 'turn' : null; };
   if (e.id === 'chen') return m === 0 ? 'main' : (m === 5 || m === 10 || m === 16 || m === 19 || m === 22) ? 'turn' : null;
   if (e.id === 'prof') return m === 17 ? 'main' : null;
@@ -2094,6 +2247,7 @@ function markOf(e) {
 /* NPC 對話 */
 QN.chen.talk = () => {
   const m = st.q.main, name = st.name;
+  if (arcOn()) return ok('陳老師', pick(['升年級之前，先把手邊的事處理好。我這裡不會跑掉。', '學務處的影印機今天又卡紙了。你的事先去辦，辦完再來。', '你看起來有心事。先去處理吧，處理完再來找我。']) + '\n\n（' + arcText() + '）');
   if (m === 0) return dialog('陳老師', ['來報到的對吧？' + name + '，名單上有你。', '學生證、選課、宿舍，這三件事今天會一件一件處理完。先從選課開始。', '傾向先填一個。填完還可以改，只是改的時候會有人嘆氣。'], [
     { label: '理工類', fn: () => pickTrack('sci', '好，理工類。以後會有很多公式，希望其中一些會對你友善。') },
     { label: '人文類', fn: () => pickTrack('art', '好，人文類。薪水之後再說，至少你讀的東西是你自己覺得有意思的。') },
@@ -2102,15 +2256,15 @@ QN.chen.talk = () => {
   if (m === 2) return ok('陳老師', '社團教室就在這排。社團不用一次選好，也不用待一輩子。');
   if (m === 3) return ok('陳老師', '期中考範圍在圖書館館員伯伯那裡。他很準時，你要比他更準時。');
   if (m === 4) return ok('陳老師', '讀書兩次，是讀進去兩次，不是坐著兩次。');
-  if (m === 5) return dialog('陳老師', ['來了。這學期的第一個月，你算有把作業交出去。', '我看了你的紀錄：' + (st.clubs.length ? '參加了 ' + st.clubs.length + ' 個社團' : '沒參加社團') + '，打工 ' + st.q.c.workAll + ' 次，知識 ' + st.exp + '。', '不算漂亮，但是真的。這樣就夠第一章了。'], [{ label: '收下 $2,000', fn: () => { earn(2000); logLine('完成第一章：大一新生'); ch2Start(); } }]);
+  if (m === 5) return dialog('陳老師', ['來了。這學期的第一個月，你算有把作業交出去。', '我看了你的紀錄：' + (st.clubs.length ? '參加了 ' + st.clubs.length + ' 個社團' : '沒參加社團') + '，打工 ' + st.q.c.workAll + ' 次，知識 ' + st.exp + '。', '不算漂亮，但是真的。這樣就夠第一章了。'], [{ label: '收下 $2,000', fn: () => { earn(2000); logLine('完成第一章：大一新生'); ok('陳老師', '對了，你室友阿芸最近還好嗎？我早上在走廊遇到她，眼睛腫腫的。\n有空的話回宿舍看看她。', () => setMain(6)); } }]);
   if (m === 6) return ch2Start();
   if (m === 7) return ok('陳老師', '報名了？很好。圖書館自習區可以讀英文，讀三次再去考，不要裸考。');
   if (m === 8) return ok('陳老師', '小薰手上有考古題，她每年都借，每年都說是最後一次。');
   if (m === 9) return ok('陳老師', '考試中心在校門外。記得帶學生證，手機要關機。');
-  if (m === 10) { const sc = st.q.c.examScore; return dialog('陳老師', ['給我看看。' + sc + ' 分。', sc >= 90 ? '這分數我可以拿去跟其他老師炫耀，我不會說是你的。' : sc >= 70 ? '穩穩過了。英文這件事，以後至少不會卡你畢業。' : '剛好及格。我跟你說實話，及格就是及格，畢業證書上不會寫幾分。', '畢業門檻過了一個。接下來的路會開始分岔：轉系、雙主修、交換學生、直接工作。那是第三章的事。'], [{ label: '收下 $3,000', fn: () => { earn(3000); setMain(11); logLine('完成第二章：畢業門檻'); ok('第二章 · 畢業門檻 完成', '第三章「岔路」開始了。\n大二了，每個人開始往不同方向走。去校外的公車站，搭車到市區的生涯博覽會看看。'); } }]); }
-  if (m === 11) return ok('陳老師', '大二了。市區有生涯博覽會，從校外的公車站搭車去。去看看各條路長什麼樣子。');
+  if (m === 10) { const sc = st.q.c.examScore; return dialog('陳老師', ['給我看看。' + sc + ' 分。', sc >= 90 ? '這分數我可以拿去跟其他老師炫耀，我不會說是你的。' : sc >= 70 ? '穩穩過了。英文這件事，以後至少不會卡你畢業。' : '剛好及格。我跟你說實話，及格就是及格，畢業證書上不會寫幾分。', '畢業門檻過了一個。接下來的路會開始分岔：轉系、雙主修、交換學生、直接工作。那是第三章的事。'], [{ label: '收下 $3,000', fn: () => { earn(3000); setMain(11); logLine('完成第二章：畢業門檻'); ok('第二章 · 畢業門檻 完成', '英檢過了，大二也快結束了。\n升大三之前，學姊小薰傳訊息給你：「期末成發，來社團教室一下。」'); } }]); }
+  if (m === 11) return ok('陳老師', '大三了。市區有生涯博覽會，從校外的公車站搭車去。去看看各條路長什麼樣子。');
   if (m >= 12 && m <= 15) return ok('陳老師', '慢慢想。現在選的路不是終點，是下一個岔路口。');
-  if (m === 16) { const p = PATHS[st.ch3.path]; return dialog('陳老師', ['你決定' + p.n + '了。', { transfer: '轉系不是逃跑，是換一條比較適合你的路。新系的課會很累，但你是自己選的。', double: '雙主修會很累，你會比別人晚睡很多年，大概。記得留時間給自己。', exchange: '交換學生啊。出去以後你會發現，世界比及格鎮大很多。也會發現及格鎮的雞排其實很好吃。', intern: '實習啊。進公司以後你會發現，很多事情學校沒教，但你會學得很快。' }[st.ch3.path], '第三章就到這裡。下一章是大三和大四：畢業、找工作、薪水。勞動部的調查說，大學畢業新鮮人平均起薪大約 3.6 萬。到時候你就知道那是什麼感覺了。'], [{ label: '收下 $5,000', fn: () => { earn(5000, '第三章獎勵'); ach(p.ach); setMain(17); logLine('完成第三章：岔路（' + p.n + '）'); ok('第三章 · 岔路 完成', '你選了' + p.n + '。\n\n第四章「畢業」還在準備。手冊的成就裡多了一個新稱號，可以戴上看看。'); } }]); }
+  if (m === 16) { const p = PATHS[st.ch3.path]; return dialog('陳老師', ['你決定' + p.n + '了。', { transfer: '轉系不是逃跑，是換一條比較適合你的路。新系的課會很累，但你是自己選的。', double: '雙主修會很累，你會比別人晚睡很多年，大概。記得留時間給自己。', exchange: '交換學生啊。出去以後你會發現，世界比及格鎮大很多。也會發現及格鎮的雞排其實很好吃。', intern: '實習啊。進公司以後你會發現，很多事情學校沒教，但你會學得很快。' }[st.ch3.path], '第三章就到這裡。下一章是大三和大四：畢業、找工作、薪水。勞動部的調查說，大學畢業新鮮人平均起薪大約 3.6 萬。到時候你就知道那是什麼感覺了。'], [{ label: '收下 $5,000', fn: () => { earn(5000, '第三章獎勵'); ach(p.ach); setMain(17); logLine('完成第三章：岔路（' + p.n + '）'); ok('第三章 · 岔路 完成', '你選了' + p.n + '。\n\n大三下學期過了一半。某天下午，你的手機響了。回宿舍看看吧。'); } }]); }
   if (m === 17) return ok('陳老師', '大四了。畢業專題要先找組員，去教學大樓找王教授。');
   if (m === 18) return ok('陳老師', '專題組好了？那去市區的生涯博覽會，找輔導老師練習面試。畢業以後的事，現在就要開始想。');
   if (m === 19) return leaveSchool();
@@ -2169,7 +2323,7 @@ QN.zhe.talk = () => {
   if (sideFlow('籃球隊阿哲', 'hoop', ['欸，你會投籃嗎？系隊下週比賽，我們少一個人。', '你一場能投進 4 球，我就讓你來湊人數。真的只是湊人數。'], '還沒投到 4 球嗎？籃框就在旁邊，多投幾場。', ['4 球！可以，下週來坐板凳。', '這是隊費退給你的，我們本來就沒在收。'])) return;
   ok('籃球隊阿哲', pick(['我們隊的戰術是：傳給我。', '投籃最重要的是手感，還有不要看籃框以外的地方。', '下週比賽記得來坐板凳。']));
 };
-QN.prof.talk = () => st.q.main === 17 ? projTalk() : classFlow();
+QN.prof.talk = () => st.q.main === 17 && !arcOn() ? projTalk() : classFlow();
 QN.qing.talk = () => ok('室友小晴', pick(['我每天六點起床跑步，你不用跟。', '冰箱裡貼了名字的不要吃，沒貼名字的也不要吃。', '熄燈是十二點，但我們房間的熄燈是佳佳決定的。']));
 QN.jia.talk = () => ok('室友佳佳', pick(['我的鬧鐘會響五次，先跟你說對不起。', '熄燈以後我會戴耳機，你們聊天吵不到我。', '你的角落布置得不錯耶，可以借我拍照嗎？']));
 const ROOMIE = { yun: [11.5 * T, 4 * T + 12, '阿芸'], qing: [3.5 * T, 8 * T + 4, '小晴'], jia: [10.5 * T, 8 * T + 4, '佳佳'] };
@@ -2258,7 +2412,7 @@ QN.bartender.talk = () => openShop({ title: '學生酒吧 · Menu', led: '學生
 QN.desk.talk = () => {
   const m = st.q.main;
   if (m < 6) return ok('櫃台人員', '這裡是英檢考場。先把學校那邊的事處理完，陳老師會叫你來的。');
-  if (m === 6) return dialog('櫃台人員', ['要報名英檢嗎？畢業門檻那個對吧，你們學校的人每年都這樣來。', '報名費 $800。考場在後面，準備好了找監考老師或直接坐下就可以考。'], [{ label: '報名 $800', fn: () => { if (st.money < 800) return ok('櫃台人員', '錢不太夠喔。便利商店在缺人，排個班再來。'); spend(800); logLine('報名英檢'); ok('櫃台人員', '好了，這是你的准考證。照片拍得不錯，大家都這樣說。', () => setMain(7)); } }, { label: '再想想' }]);
+  if (m === 6 && !arcOn()) return dialog('櫃台人員', ['要報名英檢嗎？畢業門檻那個對吧，你們學校的人每年都這樣來。', '報名費 $800。考場在後面，準備好了找監考老師或直接坐下就可以考。'], [{ label: '報名 $800', fn: () => { if (st.money < 800) return ok('櫃台人員', '錢不太夠喔。便利商店在缺人，排個班再來。'); spend(800); logLine('報名英檢'); ok('櫃台人員', '好了，這是你的准考證。照片拍得不錯，大家都這樣說。', () => setMain(7)); } }, { label: '再想想' }]);
   if (m < 9) return ok('櫃台人員', '准考證收好。考試前先去讀點書，考場不會等你。');
   if (m === 9) return ok('櫃台人員', '考場在後面，找監考老師或直接坐下。' + (st.q.c.examTry ? '\n補考要付 $400，在座位那邊付就好。' : ''));
   examMenu();
@@ -2281,6 +2435,7 @@ function study() {
         persist();
       } },
       ...(st.q.main >= 6 ? [{ label: '讀英文' + ENG_PROG(), fn: engPractice }] : []),
+      { label: st.seat ? '看看預約的座位' : '預約座位（放著讀）', fn: seatMenu },
       { label: '坐窗邊發呆', fn: () => { st.exp += 2; ok('自習區', '窗外有人在打籃球。你有一種自己也有在生活的錯覺。知識 +2。'); } },
       { label: '先離開' }]
   });
@@ -2506,13 +2661,25 @@ function clubBoard() {
     } }; }).concat([{ label: '看完了' }])
   });
 }
+const MICRO = [
+  ['bento', '雞腿便當', 89, '架上最後一個，排骨的賣完了', 60, '雞腿便當的醬汁滲到白飯裡，你把配菜的高麗菜也吃光了。'],
+  ['noodle', '肉醬義大利麵', 69, '微波三分鐘，記得掀開一角', 50, '肉醬比想像中多。你用叉子捲了半天，最後直接用吸的。'],
+  ['rice', '咖哩豬排飯', 79, '咖哩跟飯分開裝', 55, '咖哩有一點辣，豬排的麵衣微波完軟軟的，還是很好吃。'],
+  ['noodle', '炒烏龍麵', 65, '醬油口味', 45, '烏龍麵很Q，上面的柴魚片被熱氣吹得一直動。'],
+  ['rice', '起司焗烤飯', 75, '起司會牽絲那種', 55, '你用湯匙一挖，起司拉得比手機充電線還長。'],
+  ['hotdog', '大亨堡', 39, '熱狗夾麵包，醬自己擠', 25, '你擠了太多番茄醬，滴了一滴在褲子上。']];
+function microwave(n, icon, f, t) {
+  const r = takeout({ n, icon, f, t });
+  return pick(['店員把' + n + '放進微波爐，按了兩下。「叮」一聲，蓋子上起了一層霧。', '你自己把' + n + '放進微波爐。微波爐裡轉了兩圈，你一直盯著看，好像這樣會比較快。', '微波爐前面排了三個人，大家都在等宵夜。輪到你的時候，' + n + '熱到要用袖子墊著拿。']) + '\n\n' + r;
+}
 function shop() {
   const add = id => () => { if (id !== 'snack') st.inv[id]++; if (id === 'coffee') drinkCoffee(); chkReady(); return ''; };
   openShop({ title: '便利商店 · 型錄', poor: '錢包比你的心情還輕。', intro: '咖啡照 7-11 的原價算。大家都在等第二杯半價。', side: '型錄最後一頁畫著店長的簽名，旁邊寫：「垃圾要分類。」', items: [
     { icon: 'coffee', n: '大杯冰美式', p: 45, d: '早八續命用', buy: () => { add('coffee')(); return '冰美式到手，杯子外面已經在冒水珠了。'; } },
     { icon: 'big', n: '特大杯冰美式', p: 65, d: '期中考週限定的份量', buy: () => { add('coffee')(); return '特大杯拿起來有點重。今晚大概睡不著了。'; } },
     { icon: 'bag', n: '垃圾袋', p: 40, d: '宿舍要用的，室友一直忘記買', buy: () => { add('bag')(); return '你買了一捲垃圾袋。阿芸會感謝你的。'; } },
-    { icon: 'snack', n: '洋芋片', p: 30, d: '半夜讀書的時候吃', buy: () => takeout({ n: '洋芋片', icon: 'snack', f: 10, t: '你打開洋芋片，餅乾渣掉在口袋裡了。' }) }].concat(breakfastItems(), nightSnack()) });
+    { icon: 'snack', n: '洋芋片', p: 30, d: '半夜讀書的時候吃', buy: () => takeout({ n: '洋芋片', icon: 'snack', f: 10, t: '你打開洋芋片，餅乾渣掉在口袋裡了。' }) },
+    { icon: 'can', n: '貓罐頭', p: 35, d: '給校園的橘貓學分，倒進校園右下角的貓碗', buy: () => { st.inv.catfood = (st.inv.catfood || 0) + 1; return '你買了一罐鮪魚口味的貓罐頭。店長說：「學分喔？牠上禮拜在我們店門口睡了一下午。」'; } }].concat(MICRO.map(([icon, n, p, d, f, t]) => ({ icon, n: '微波 ' + n, p, d, buy: () => { dHit('eat'); return microwave(n, icon, f, t); } })), breakfastItems(), nightSnack()) });
 }
 const SEEN_KEY = 'jige-seen';
 const seen = (() => { try { return JSON.parse(localStorage.getItem(SEEN_KEY) || '{}'); } catch (e) { return {}; } })();
@@ -2645,11 +2812,13 @@ function goScene(id, sx, sy, dir) {
 function interact() {
   if (!started || locked()) return;
   const it = nearest(); if (!it) return;
-  if (it.id === 'ent') { const e = it.ent; if (e.kind === 'player') return wave(e); if (!e.loop) faceToward(e, P.x, P.y); if (e.wander) e.wait = Math.max(e.wait, 3); return e.talk(); }
+  if (it.id === 'ent') { const e = it.ent; if (e.kind === 'player') return wave(e); if (arcOn() && arcNpc() === e.id) { faceToward(e, P.x, P.y); return arcRun(); } if (!e.loop) faceToward(e, P.x, P.y); if (e.wander) e.wait = Math.max(e.wait, 3); return e.talk(); }
   if (it.id === 'real') return realChat(it.r);
   if (it.id === 'enter') { if (CLOSED[it.to]) return ok(CLOSED[it.to], '門口拉起了黃色膠帶，玻璃門上貼著一張紙：「裝潢中，敬請期待。」\n裡面傳來電鑽的聲音。'); return goScene(it.to, 7 * T, 8 * T + 12, 'up'); }
   if (it.id === 'stall') return stall(it.stall);
-  const f = { board, bench: () => bench(it), trash: trashCan, nails: () => outLink('nails'), photobooth: () => outLink('photo'), datecafe: () => outLink('situ'), fridge: fridgeMenu, study, clubboard: clubBoard, shop, decor, bed: bedView, mydesk: deskView, class: classFlow, examseat: examSeat, wall: openWall, psy: () => pickPsy(it.k), pk: pkGame, bar: barGame,
+  if (it.id === 'arc') return arcRun();
+  if (it.id === 'pick') return pickUp();
+  const f = { ccat: ccatTalk, bowl: bowlMenu, vend: vending, board, bench: () => bench(it), trash: trashCan, nails: () => outLink('nails'), photobooth: () => outLink('photo'), datecafe: () => outLink('situ'), fridge: fridgeMenu, study, clubboard: clubBoard, shop, decor, bed: bedView, mydesk: deskView, class: classFlow, examseat: examSeat, wall: openWall, psy: () => pickPsy(it.k), pk: pkGame, bar: barGame,
     water: () => ok('飲水機', pick(['你喝了一大口水。免費的東西最好喝，這是大學教你的第一件事。', '飲水機的水有點溫。你決定不要想太多。', '旁邊貼著「請勿直接對嘴」，你看了一下四周，乖乖拿出水壺。'])),
     gs: () => openGroupGame('分組報告總是遇到雷隊友？在《分組求生記》裡，看你能不能撐到上台那天。'),
     bus: () => busMenu('street'), busback: () => busMenu('city'), busair: () => busMenu('airport'), gate, flyback: () => showModal({ title: '機場巴士', text: '往楓葉國際機場的巴士，車資 $45。要回台灣得先到機場。', choices: [{ label: '上車 $45', fn: () => { if (st.money < 45) return ok('機場巴士', '錢不夠。'); spend(45, '機場巴士'); goScene('a_airport', 17 * T, 7 * T, 'left'); } }, { label: '不搭了' }] }),
@@ -2899,6 +3068,12 @@ const ACH = [
   { id: 'umbrella', n: '第五把傘', d: '幫 Ms. Lee 找回她的藍色雨傘', t: '失物獵人', h: 1 },
   { id: 'bike', n: '有腳踏車了', d: '在國外買了一台二手腳踏車', t: '單車留學生' },
   { id: 'cookbuddy', n: '台灣料理之夜', d: '幫應徵室友的 Mike 煮了一頓台灣菜', t: '宿舍廚神' },
+  { id: 'arc_yun', n: '我有一個朋友', d: '陪阿芸交出轉系申請表', t: '深夜的聽眾' },
+  { id: 'arc_club', n: '鑰匙交接', d: '從學姊小薰手上接下社團鑰匙', t: '社團的鑰匙' },
+  { id: 'arc_home', n: '報平安', d: '家裡出事的那個月撐過來了', t: '家裡的後盾' },
+  { id: 'ccat', n: '學分認得你', d: '跟校園的橘貓學分混熟', t: '學分的乾爹乾媽' },
+  { id: 'picker', n: '眼睛很利', d: '在校園撿到十樣東西', t: '路邊的尋寶人', h: 1 },
+  { id: 'seat8', n: '佔位專家', d: '在圖書館預約座位，放滿八小時', t: '書包代讀員', h: 1 },
   { id: 'cat', n: 'Dewey 的朋友', d: '跟圖書館的黑貓變成朋友', t: '貓的僕人', h: 1 },
   { id: 'green', n: '窗台農夫', d: '在宿舍窗台收成五次', t: '窗台農夫' },
   { id: 'pudding', n: '布丁被吃了', d: '冰箱的布丁放太久，被室友吃掉', t: '寬宏大量的室友', h: 1 },
@@ -3429,7 +3604,7 @@ function holResult(sc) {
     [{ label: '好', fn: () => { if (st.q.main === 13) setMain(14); persist(); } }]);
 }
 function choosePath() {
-  showModal({ title: '輔導老師', text: '大二了，接下來想往哪裡走？\n每條路都有門檻。還沒達到也沒關係，我會告訴你差什麼。' + (st.ch3.hol ? '\n你的興趣代碼是 ' + st.ch3.hol + '。' : ''), choices: Object.entries(PATHS).map(([id, p]) => ({ label: p.n, fn: () => {
+  showModal({ title: '輔導老師', text: '大三了，接下來想往哪裡走？\n每條路都有門檻。還沒達到也沒關係，我會告訴你差什麼。' + (st.ch3.hol ? '\n你的興趣代碼是 ' + st.ch3.hol + '。' : ''), choices: Object.entries(PATHS).map(([id, p]) => ({ label: p.n, fn: () => {
     if (!p.need()) return ok('輔導老師', '想走' + p.n + '的話：\n' + p.needF() + '\n\n準備好了再來找我，或先選別條路。', choosePath);
     dialog('輔導老師', ['好，' + p.n + '。', '接下來要做的事：' + p.task + '。', '選了也不代表不能改。很多人的路都是走一走才轉彎的。'], [{ label: '就這條', fn: () => { st.ch3.path = id; st.ch3.prog = 0; track('path', p.n); logLine('第三章選擇：' + p.n); setMain(15); } }, { label: '再想想', fn: choosePath }]);
   } })).concat([{ label: '還沒想好' }]) });
@@ -3468,7 +3643,7 @@ function busRide(to) {
   showModal({ title: '公車站', text: to === 'city' ? '往市區的公車來了。車資 $15。' : '回學校的公車來了。車資 $15。', choices: [{ label: '上車 $15', fn: () => {
     if (st.money < 15) return ok('公車站', '悠遊卡餘額不足。司機看著你，你看著司機。');
     spend(15, '公車');
-    if (to === 'city') { goScene('city', 3.5 * T, 12 * T + 10, 'right'); if (st.q.main === 11) setTimeout(() => setMain(12), 400); }
+    if (to === 'city') { goScene('city', 3.5 * T, 12 * T + 10, 'right'); if (st.q.main === 11 && !arcOn()) setTimeout(() => setMain(12), 400); }
     else goScene('street', 15.5 * T, 22 * T + 12, 'down');
   } }, { label: '不搭了' }] });
 }
@@ -3619,7 +3794,7 @@ function busMenu(from) {
   showModal({ title: '公車站', text: '要去哪裡？車資都是 $15。', choices: dest.map(([to, n]) => ({ label: n + ' $15', fn: () => {
     if (st.money < 15) return ok('公車站', '悠遊卡餘額不足。司機看著你，你看著司機。');
     spend(15, '公車'); const at = { street: [15.5 * T, 22 * T + 12, 'down'], city: [3.5 * T, 12 * T + 10, 'right'], airport: [2.5 * T, 9 * T + 12, 'right'] }[to];
-    goScene(to, at[0], at[1], at[2]); if (to === 'city' && st.q.main === 11) setTimeout(() => setMain(12), 400);
+    goScene(to, at[0], at[1], at[2]); if (to === 'city' && st.q.main === 11 && !arcOn()) setTimeout(() => setMain(12), 400);
   } })).concat([{ label: '不搭了' }]) });
 }
 function gate() {
@@ -3648,7 +3823,8 @@ function goals() {
   const out = [], m = st.q.main;
   if (m === 4 || m === 7) out.push({ at: 'library', c: '#ffd45c', ch: '!' });
   if (m === 9) out.push({ at: 'exam', c: '#ffd45c', ch: '!' });
-  if (m === 11) out.push({ at: { scene: 'street', x: 15.5 * T, y: 22 * T }, c: '#ffd45c', ch: '!' });
+  if (arcOn()) { const t = arcTarget(); if (t) out.push({ at: t, c: '#ffd45c', ch: '!' }); }
+  else if (m === 11) out.push({ at: { scene: 'street', x: 15.5 * T, y: 22 * T }, c: '#ffd45c', ch: '!' });
   if ((m >= 12 && m <= 14) || m === 18) out.push({ at: 'expo', c: '#ffd45c', ch: '!' });
   if (m === 21) out.push({ at: { scene: 'campus', x: 24 * T, y: 15.5 * T }, c: '#ffd45c', ch: '!' });
   if (anyReady()) out.push({ at: cur.id === 'dorm' ? { scene: 'dorm', x: 7 * T, y: 2 * T } : 'dorm', c: '#ff8fb1', ch: '收' });
@@ -3750,7 +3926,7 @@ function loop(now) {
     mutT -= dt; if (mutT <= 0) { mutT = rand(11, 19); if (!locked()) mutter(); }
     nearIt = locked() ? null : nearest();
     $('#act').classList.toggle('on', !!nearIt); $('#actLabel').textContent = nearIt ? nearIt.label : '互動';
-    hudT -= dt; if (hudT <= 0) { hudT = .25; curH = localH(); checkDay(); dayTick(); tellerTick(); catTick(); roomTick(); pubT -= .25; if (pubT <= 0) { pubT = 3; if (cur.id === 'a_pub') pubSync(false); } tutHud(); boardPush(); if (AU.music) bgmPlay(songFor()); { const r = payTick(); if (r) { toast('💰 定期入帳 +' + fmt(r.amt)); beep(988, .06); setTimeout(() => beep(1319, .1), 90); } } hud(); { const hr = new Date().getHours(); if (hr < 5) ach('night'); } if (!st.met.dailyIntro && st.q.main >= 2 && !locked()) introDaily(); }
+    hudT -= dt; if (hudT <= 0) { hudT = .25; curH = localH(); checkDay(); dayTick(); tellerTick(); catTick(); roomTick(); arcTick(); pickTick(); pubT -= .25; if (pubT <= 0) { pubT = 3; if (cur.id === 'a_pub') pubSync(false); } tutHud(); boardPush(); if (AU.music) bgmPlay(songFor()); { const r = payTick(); if (r) { toast('💰 定期入帳 +' + fmt(r.amt)); beep(988, .06); setTimeout(() => beep(1319, .1), 90); } } hud(); { const hr = new Date().getHours(); if (hr < 5) ach('night'); } if (!st.met.dailyIntro && st.q.main >= 2 && !locked()) introDaily(); }
     saveT -= dt; if (saveT <= 0) { saveT = 5; persist(); }
   }
   snapCam();
@@ -3764,7 +3940,7 @@ function hud() {
     $('#hRate').textContent = st.challenge ? '30,900 生存挑戰中 · 每天房租 $327' : '下次入帳 ' + fmt(payAmt()) + ' · ' + mm + ':' + String(ss).padStart(2, '0'); }
   $('#hMoney').style.color = st.money < 0 ? '#e5607f' : '';
   { const hg = Math.round(hungerNow()), el = $('#hHunger'); el.textContent = (hg < 25 ? '肚子餓 ' : '飽足 ') + hg + '%' + (st.sick ? ' · 感冒中' : ''); el.style.background = hg < 25 || st.sick ? '#ffd1de' : ''; if (hg < 25 && !st.met.hungryWarn) { st.met.hungryWarn = 1; toast('肚子餓了，去吃點東西吧'); } if (hg >= 25) st.met.hungryWarn = 0; }
-  const m = st.q.main; $('#hQuest').textContent = m < MAIN.length ? '主線：' + mainText(m) + ENG_PROG() : '畢業了 · 現在是及格鎮校友';
+  const m = st.q.main; arcFix(); $('#hQuest').textContent = arcOn() ? '劇情：' + arcText() : m < MAIN.length ? '主線：' + mainText(m) + ENG_PROG() : '畢業了 · 現在是及格鎮校友';
   { const ids = Object.keys(SIDE).filter(id => sideSt(id) === 1), rdy = ids.find(id => SIDE[id].ready()), cur1 = rdy || ids[0], el = $('#hSide');
     const line = id => { const q = SIDE[id]; return q.ready() ? '回去找' + q.who + '領獎勵（' + q.n + '）' : q.desc + '（' + q.prog() + '）'; };
     if (cur1) { el.style.display = ''; const open = st.met.sideOpen; const html = open && ids.length > 1 ? '支線 ' + ids.length + ' 條 ▴<br>' + ids.map(id => '・' + esc(line(id))).join('<br>') : '支線：' + esc(line(cur1)) + (ids.length > 1 ? '　▾ 還有 ' + (ids.length - 1) + ' 條' : ''); if (el.__h !== html) { el.innerHTML = html; el.__h = html; } } else el.style.display = 'none'; }
@@ -3820,7 +3996,7 @@ function bookHTML() {
     return h;
   }
   const cl = st.clubs.map(i => CLUBS.find(c => c.id === i).n).join('、') || '無';
-  let h = '<div class="sec"><h3>基本</h3><div class="item"><b>' + st.name + ' · 大一</b>選課傾向：' + (TRACK_NAME[st.track] || '未選') + '<br>知識：' + st.exp + '<br>社團：' + cl + '<br>便利商店打工：' + st.q.c.workAll + ' 次<br>宿舍家具：' + st.dorm.placed.length + ' 件' + (st.best.exam ? '<br>英檢最高：' + st.best.exam + ' 分' : '') + '</div></div>';
+  let h = '<div class="sec"><h3>基本</h3><div class="item"><b>' + st.name + ' · ' + grade() + '</b>選課傾向：' + (TRACK_NAME[st.track] || '未選') + '<br>知識：' + st.exp + '<br>社團：' + cl + '<br>便利商店打工：' + st.q.c.workAll + ' 次<br>宿舍家具：' + st.dorm.placed.length + ' 件' + (st.best.exam ? '<br>英檢最高：' + st.best.exam + ' 分' : '') + '</div></div>';
   h += '<div class="row" style="margin:4px 0 8px"><button type="button" class="pri" id="cardId">產生學生證圖卡</button><button type="button" id="cardTr">產生畢業成績單</button><button type="button" id="wardBtn">換裝</button></div>';
   h += '<div class="sec"><h3>證照</h3><div class="item">' + EXAMS.map(x => x.n + '：' + (st.certs[x.id] ? x.show(st.certs[x.id]) : '未考')).join('<br>') + '</div></div>';
   h += '<div class="sec"><h3>人生紀錄</h3>' + (st.log.length ? st.log.slice().reverse().map(l => '<div class="item">' + l + '</div>').join('') : '<div class="item done">還沒有紀錄。去走走。</div>') + '</div>';
